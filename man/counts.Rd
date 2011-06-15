@@ -1,5 +1,6 @@
 \name{counts}
 \alias{counts}
+\alias{counts<-}
 \title{
    Accessor for the 'counts' slot of a ExonCountSet object.
 }
@@ -10,13 +11,18 @@
 }
 \usage{
 counts(ecs)
+counts(ecs) <- value
 }
 \arguments{
   \item{ecs}{
      An ExonCountSet object
-}
+   }
+  \item{value}{
+     A matrix containing integer counts, each row corresponding to an exon and each column corresponding to a sample.
+   }
 }
 \examples{
-   ecs <- makeExampleCountDataSet()
-   head( counts( ecs ) )
+   library(DEXSeq)
+   data("pasillaExons", package="pasilla")
+   head( counts( pasillaExons ) )
 }   

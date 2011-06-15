@@ -19,11 +19,11 @@
 	An object of class ExonCountSet.
      }
      \seealso{
-       \code{\link{newCountDataSet}, \link{read.HTSeqCounts}}
+       \code{\link{read.HTSeqCounts}}
      }
      \examples{
-	ecs <- makeExampleExonCountSet()
-	ecs2 <- newExonCountSet(countData=counts(ecs), design=design(ecs), geneIDs=geneIDs(ecs), exonIDs=exonIDs)
+	data("pasillaExons", package="pasilla")
+	ecs <- newExonCountSet(countData=counts(pasillaExons), design=design(pasillaExons), geneIDs=geneIDs(pasillaExons), exonIDs=exonIDs(pasillaExons))
      }
 \keyword{ExonCountSet}
 

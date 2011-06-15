@@ -153,7 +153,7 @@ fitDispersions <- function( ecs )
 }
 
 
-estimateDispersions <- function( ecs, formula=NULL, file=NULL, initialGuess=0.01, quiet=FALSE)
+estimateDispersions <- function( ecs, formula=NULL, file=NULL, initialGuess=.01, quiet=FALSE)
 {
    stopifnot(is(ecs, "ExonCountSet"))
    if( all( is.na(sizeFactors(ecs)) ) ){
@@ -309,16 +309,18 @@ testGeneForDEU <- function (ecs, gene, formula0=NULL, formula1=NULL,
    environment(formula0) <- environment()
    environment(formula1) <- environment()
 
-   for( exonID in unique(as.character(mf$exon)) ) {
-      if( !nonzero[exonID] ) { 
-         next }
-      fam <- negative.binomial( 1 / mf$dispersion )
-      fam$family = "Negative Binomial(varying)"
-      fit0 <- try( 
+   fam <- negative.binomial( 1 / mf$dispersion )
+   fam$family = "Negative Binomial(varying)"
+   
+   fit0 <- try( 
          glm( formula0, data=mf, family = fam, offset = log(mf$sizeFactor), control=glm.control ),
          silent=TRUE )
-      if( inherits( fit0, "try-error" ) ) {
-         warning( sprintf( "Error in fit0 for gene %s, exon %s: %s", gene, exonID, fit0 ) )
+   if( inherits( fit0, "try-error" ) ) {
+      warning( sprintf( "Error in fit0 for gene %s: %s", gene, fit0 ) )
+      return(ans) }
+
+   for( exonID in unique(as.character(mf$exon)) ) {
+      if( !nonzero[exonID] ) { 
          next }
       fit1 <- try( 
          glm( formula1, data=mf, family = fam, offset = log(mf$sizeFactor), control=glm.control ),

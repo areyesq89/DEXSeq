@@ -18,7 +18,7 @@ subsetByGenes(ecs, genes)
   }
 }
 \examples{
-	ecs <- makeExampleExonCountSet()
-	ecs2<-subsetBygenes(ecs, sample(levels(geneIDs(ecs)), 10))
+	data("pasillaExons", package="pasilla")
+	ecs <- subsetByGenes(pasillaExons, sample(unique(geneIDs(pasillaExons)), 10))
 }
 

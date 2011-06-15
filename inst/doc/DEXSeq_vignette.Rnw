@@ -19,99 +19,171 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-In this package we provide a method to systematically detect differential exon usage using RNA-seq. We use as input the number of reads falling on each of the exons of a genome. To give a demonstration of this Bioconductor package implementation we will use of a public data set from GEO Data set database under the record GSE18508 \footnote{Brooks AN, Yang L, Duff MO et Hansen KD et al. Conservation of an RNA regulatory map between Drosophila and mammals. \textit{Genome Research}, 2010}. For practicality and speed, this vignette only uses a subset of genes and only the paired-end sequenced lanes. Apart from the package providing the analysis of differential exon usage, we provide tools for the easy generation of the input and functions for the visualization and exploration of the test results. The user can create the example dataset for this vignette directly with the function \texttt{makeExampleExonCountSet()}, in case you want to reproduce this vignette. 
+In this package we provide a method to systematically detect differential exon
+usage using RNA-seq. We use as input the number of reads falling on each of the
+exons of a genome. To give a demonstration of this Bioconductor package implementation 
+we will use of a public data set from GEO Data set database under the record GSE18508 
+\footnote{Brooks AN, Yang L, Duff MO et Hansen KD et al. Conservation of an RNA 
+regulatory map between Drosophila and mammals. \textit{Genome Research}, 2010}. 
+For practicality and speed, this vignette only uses a subset of genes. Apart from 
+the package providing the analysis of differential exon usage, we provide tools for 
+the easy generation of the input and functions for the visualization and exploration
+of the test results. The user can create the example dataset for this vignette directly
+with the function \texttt{makeExampleExonCountSet()}, in case you want to reproduce 
+this vignette. 
 \end{abstract}
 \section{Starting with DEXSeq}
-\subsection{Creating an ExonCountSet object}
-An ExonCountSet object maintains the structure of eSet object with additions of other data fields (see code), the package provides accesses for each of the fields contained in an ExonCountSet object. The user can create an ExonCountSet object by providing directly a matrix with the counts of reads for each of the exons (as rows) of each sample (as columns) and two vectors of length equal to the row numbers of the matrix containing gene identifiers and exon identifiers.
-
-<<echo=FALSE, eval=TRUE, fig=FALSE>>=
-countfiles <- dir(system.file("files/", package="DEXSeq"), pattern="counts")
-lf <- lapply(countfiles, 
-         function(x){
-           read.table(paste(system.file("files/", package="DEXSeq"), x, sep=""), header=FALSE)
-         })
-dcounts <- sapply(lf, function(x){x[,2]})
-rownames(dcounts) <- lf[[1]][,1]
-dcounts <- dcounts[-which( rownames(dcounts)=="_empty" | rownames(dcounts)=="_ambiguous" ),]
-genesrle <- sapply(strsplit(as.character(rownames(dcounts)), ":"), "[[", 1)
-exonID <- paste("E", sapply(strsplit(rownames(dcounts), ":"), function(x){return(x[2])}), sep="")
-colnames(dcounts) <- sapply(strsplit(countfiles, ".counts", perl=TRUE), "[[", 1)
-@
-<<echo=TRUE, eval=TRUE, fig=FALSE>>=
-head(dcounts)
-head(genesrle)
-head(exonID)
-library(DEXSeq)
-ecs <- newExonCountSet(dcounts, c("treated", "treated", "untreated", "untreated"), geneIDs=genesrle, exonIDs=exonID)
-design(ecs)
-@ 
 \normalsize
-\subsection{ExonCountSet object via HTSeq}
-Apart from the analysis for differential exon usage, DEXSeq provides a visualization function (\texttt{plotDEXSeq}) and a HTML report generator (\texttt{DEXSeqHTML}) for the visualization and exploration of the results, but this requires information about the transcript annotation.  To this extend, the python HTSeq package provides the scripts aggregate\_genes.py and exon\_counts.py.  aggregate\_genes.py parses an annotation gtf file to define non-overlapping exonic regions: e.g. if a gene contains 2 exons that overlap, the script would define 2 exonic regions for the non-overlapping part of each exon and a third one for the overlapping part. It gives as output a second gtf file with the defined aggregated exonic regions.  The script exon\_counts.py takes the gtf file provided by aggregate\_genes.py and an alignment in sam format and counts the number of reads falling in each of the defined exonic regions. \\ The DEXSeq function \texttt{read.HTSeqCounts} is able to read the output of these scripts and returns an ExonCountSet object with the proper information to make the analysis for differential exon usage and generate the visualization of the results. If preferred, the user could also insert the annotation information manually to the ExonCountSet object directly after creating it. The example files can be seen with the function \texttt{system.file}.
-
-<<echo=FALSE, eval=TRUE, fig=FALSE>>=
-countfiles <- dir(system.file("files/", package="DEXSeq"), pattern="counts")
-aggregatefile <- dir(system.file("files/", package="DEXSeq"), pattern="aggregate")
-aggregatefile <- paste(system.file("files/", package="DEXSeq"), aggregatefile, sep="")
-countfiles <- paste(system.file("files/", package="DEXSeq"), countfiles, sep="")
-@
+\subsection{\Rclass{ExonCountSet} object via \texttt{HTSeq}}
+Apart from the analysis for differential exon usage, DEXSeq provides a visualization function 
+(\texttt{plotDEXSeq}) and a HTML report generator (\Rfunction{DEXSeqHTML}) for the visualization 
+and exploration of the results, but this requires information about the transcript annotation.  
+To this extend, DEXSeq provides two python HTSeq scripts, dexseq\_prepare\_annotation.py and 
+dexseq\_count.py.  The first script parses an annotation gtf file to define non-overlapping 
+exonic regions: e.g. if a gene contains 2 exons that overlap, the script would define 2 exonic 
+regions for the non-overlapping part of each exon and a third one for the overlapping part. 
+It gives as output a second gtf file with the defined aggregated exonic regions.  The script 
+dexseq\_count.py takes the gtf file provided by dexseq\_prepare\_annotation.py and an alignment 
+in sam format and counts the number of reads falling in each of the defined exonic regions. 
+\\
+The DEXSeq function \Rfunction{read.HTSeqCounts} is able to read the output of these scripts 
+and returns an ExonCountSet object with the proper information to make the analysis for 
+differential exon usage as well as to generate the visualization of the results. If preferred, 
+the user could also insert the annotation information manually to the ExonCountSet object 
+directly after creating it. The example files can be seen with the function \Rfunction{system.file}.
+For more details about the data set information see the vignette of the package \Rpackage{pasilla}.
 <<echo=TRUE, eval=TRUE, fig=FALSE>>=
-countfiles
-aggregatefile
-ecs <- read.HTSeqCounts(countfiles, c("treated", "treated", "untreated", "untreated"), 
-                        aggregatefile=aggregatefile)
+library(DEXSeq)
+extDir <- system.file("extdata", package="pasilla")
+countfiles <- file.path(extDir, dir(extDir, pattern="fb.txt"))
+annotationfile <- file.path(extDir, "Dmel.BDGP5.25.62.DEXSeq.chr.gff")
+design <- data.frame(
+   condition=c("treated", "treated", "treated", "untreated", "untreated", "untreated", "untreated"),
+   replicate=c(1:3, 1:4),
+   type = c("single-read", "paired-end", "paired-end", "single-read", "single-read", "paired-end", "paired-end"))
+ecs <- read.HTSeqCounts(countfiles, design, aggregatefile=annotationfile)
+sampleNames(ecs) <- gsub("fb.txt", "", dir(extDir, pattern="fb.txt"))
 ecs
 varMetadata(featureData(ecs))
-head(featureData(ecs)$geneID)
-sampleNames(ecs) <- c("treated2", "treated3", "untreated3", "untreated4")
-head(counts(ecs))
 @
 %$
-\normalsize
-We can use the function \texttt{subsetByGenes} in order to a subset of the ExonCountSet object smaller in order.  Apart from speeding up this vignette, it shows how to subset the ExonCountSet object to a smaller object with only a subset of the total number of gene identificators. In this case we remove the first 799 gene identificators from the object.
+\subsection{New \Rclass{ExonCountSet} object}
+The user can also provide its own data directly to the function \Rfunction{newExonCountSet} without 
+using the HTSeq scripts.  To create an \Rclass{ExonCountSet} object, the minimum requirements are a exon count matrix
+containing a row for every exon and a column for every sample, a vector or matrix with the design of the samples
+and two vectors of gene and exon identificators of the same length as the number of rows of the count matrix.
+With this object it is possible to make the analysis for differential exon usage, but the visualization functions
+won't be so useful. Information about the exons (e.g. start and end positions) can be given as a data frame to 
+the \Rfunction{newExonCountSet} function, or can be added to the \Rclass{ExonCountSet} object after its creation
+via the \Rfunction{featureData}.
+For more specifics,  see the man pages of \Rfunction{newExonCountSet}.
 <<echo=TRUE, eval=TRUE, fig=FALSE>>=
-ecs <- subsetByGenes(ecs, genes=levels(geneIDs(ecs))[800:length(levels(geneIDs(ecs)))])
+ecs.without.annotation <- newExonCountSet(
+   countData=counts(ecs), 
+   design=design(ecs), 
+   geneIDs=geneIDs(ecs), 
+   exonIDs=exonIDs(ecs))
+
+head(fData(ecs.without.annotation))
+@
+%$
+\subsection{ExonCountSet from pasilla}
+For the next steps of this vignette we will use the \Robject{pasillaExons} object from the \Rpackage{pasilla} package.
+This object is an \Rclass{ExonCountSet} created with a subset of genes from the whole Drosophila melanogaster
+annotation file. This is for the purpose of speeding up this vignette. See function \Rfunction{subsetByGenes}
+and the vignette contained in the \Rpackage{pasilla} package.
+<<echo=TRUE, eval=TRUE, fig=FALSE>>=
+data("pasillaExons", package="pasilla")
 @
 \section{Size Factors and dispersion parameters}
-Different samples might be sequenced with different depths, so we introduce size factors parameters in order to make the samples comparable.  DEXSeq uses the same implementation as in \texttt{DESeq} \footnote{Anders, S and Huber W. Differential expression analysis for sequence count data. Genome Biology, 2010} using the function \texttt{estimateSizeFactors}. The size factors are estimated as the median of the ratios of observed counts. 
+Different samples might be sequenced with different depths, for that reason we introduce size factors 
+parameters in order to make the samples sizes comparable.  \Rpackage{DEXSeq} uses the same implementation 
+as in \Rpackage{DESeq} \footnote{Anders, S and Huber W. Differential expression analysis for sequence 
+count data. Genome Biology, 2010} using the function \Rfunction{estimateSizeFactors}. The size factors
+are estimated as the median of the ratios of observed counts.
 <<echo=TRUE, eval=TRUE, fig=FALSE>>=
-ecs <- estimateSizeFactors(ecs)
-sizeFactors(ecs)
+pasillaExons <- estimateSizeFactors(pasillaExons)
+sizeFactors(pasillaExons)
 @
-When testing for differential expression, one first need to have an estimate of the variance of the samples to distinguish between normal technical and biological variation (noise) from real effects of the different conditions in changes of gene expression.  However, biological replicates are necessary to estimate the dispersion between the samples, and this is not easy to estimate when the number of replicates is small. All the same applies for differential exon usage analysis.  In order to solve this problem, we make use of the Cox-Reid likelihood estimation of this parameters implemented by edgeR \footnote{Robinson Mark D. and McCarthy Davis J et al. edgeR: a Bioconductor package for differential expression analysis of digital gene expression data. Bioinformatics, 2009}, but with a slight modification at the time of testing. We estimate dispersions for each one of the exons as well as a common dispersion for all the exons, this is due to the fact that the common dispersion is not robust enough to manage with variance outliers, loosing control of type I error.  Because of this, we use the maximum between the common dispersion and the specific exon dispersion to test a specific exon. \\
-The function \texttt{estimateDispersion} will call \texttt{estimateExonDispersionsForModelFrame} and \texttt{estimateCommonDispersion}, and it will store this parameters in their respectives fields in the ExonCountSet object.
+When testing for differential expression, one first need to have an estimate of the variance of the 
+samples to distinguish between normal technical and biological variation (noise) from real effects 
+of the different conditions in changes of gene expression.  However, biological replicates are 
+necessary to estimate the dispersion between the samples, and this is not easy to estimate when the 
+number of replicates is small, as in most of all RNA-seq experiments. All the same applies for a
+differential exon usage analysis.  In order to solve this problem, we make use of the Cox-Reid 
+likelihood estimation implemented by the package \Rpackage{edgeR} \footnote{Robinson Mark D. and 
+McCarthy Davis J et al. edgeR: a Bioconductor package for differential expression analysis of digital 
+gene expression data. Bioinformatics, 2009}, but with a slight modification at the time of testing.
 <<echo=TRUE, eval=TRUE, fig=FALSE>>=
-ecs <- estimateDispersions(ecs)
-commonDispersion(ecs)
-head(featureData(ecs)$dispersion)
+pasillaExons <- estimateDispersions(pasillaExons)
+head(featureData(pasillaExons)$dispersion)
 @
 %$
 \section{Testing for differential exon usage}
-Having the dispersion estimates and the size factors, its possible to test for differential exon usage using a negative binomial distribution. For each gene we make a model frame with the function \texttt{modelFrameForGene} and use it to fit for every exon a generalized linear model with the interaction (formula=sample + exon + condition * I(exon == exonID)) and as a null model the glm without the interaction (formula=sample + exon + condition), then we compare the deviances of both regressions testing under a chi square distribution. All this is implemented in the function \texttt{testGeneForDEU}.  The function \texttt{testForDEU} will make a call to \texttt{testGeneForDEU} for all the genes, and will fill the featureData slots of the ExonCountSet object with the results.  The function \texttt{DEUresultTable} will give a summary of the results of the tests.
+Having the dispersion estimates and the size factors, its possible to test for differential exon usage 
+using a negative binomial distribution. For each gene we make a model frame with the function 
+\Rfunction{modelFrameForGene} and use it to fit for every exon a generalized linear model with the 
+interaction (formula=sample + exon + condition * I(exon == exonID)) and as a null model the glm 
+without the interaction (formula=sample + exon + condition), then we compare the deviances of both 
+regressions testing under a chi square distribution. All this is implemented in the function 
+\Rfunction{testGeneForDEU}.  The function \Rfunction{testForDEU} will make a call to 
+\Rfunction{testGeneForDEU} for all the genes, and will fill the featureData slots of the ExonCountSet 
+object with the results.  The function \Rfunction{DEUresultTable} will give a summary of the results 
+of the tests.
 <<echo=TRUE, eval=TRUE, fig=FALSE>>=
-head(modelFrameForGene(ecs, "SG7861"))
-testGeneForDEU(ecs, "SG7861")
-ecs <- testForDEU(ecs)
-head(DEUresultTable(ecs))
+head( modelFrameForGene( pasillaExons, "FBgn0010909" ) )
+testGeneForDEU( pasillaExons, "FBgn0010909" )
+pasillaExons <- testForDEU( pasillaExons )
+res <- DEUresultTable(pasillaExons)
+table ( res$padjust < 0.1 )
 @
+%$
+\section{Additional sources of noise}
+In the last section we did an analysis of differential exon usage ignoring the information regarding
+the library type preparation of the samples.  In this section, we take into account this information 
+as an additional source noise.  For this the \Rclass{ExonCountSet} object design needs to contain this 
+information and this is done by changing the default formulas of the glm's that are fitted in the
+functions \Rfunction{estimateDispersions} and \Rfunction{testForDEU}.
+<<echo=TRUE, eval=TRUE, fig=FALSE>>=
+design(pasillaExons)
+@
+To estimate the dispersion, we change the formula to fit the initial glm taking into account the effect of the 
+exon and the library type with interaction of the condition.  This allows the dispersion estimate to contemplate
+the variance that is being introduced by mixing different types of libraries.
+<<echo=TRUE, eval=TRUE, fig=FALSE>>=
+formuladispersion <- count ~ sample + ( exon + type ) * condition
+pasillaExons <- estimateDispersions( pasillaExons, formula=formuladispersion )
+@
+Now, in the actual testing, we will also change the formulas to contemplate the library type preparation. With this
+we are sure that the results that we are seeing of the exons are really effect of the condition, and not in the type
+of library preparation.
+<<echo=TRUE, eval=TRUE, fig=FALSE>>=
+formula0 <- count ~ sample + type * exon + condition
+formula1 <- count ~ sample + type * exon + condition * I(exon == exonID)
+pasillaExons <- testForDEU( pasillaExons, formula0=formula0, formula1=formula1 )
+res <- DEUresultTable( pasillaExons )
+table( res$padjust < 0.1 )
+@
+%$
 \section{Visualization}
-DEXSeq has a function to visualize the results of \texttt{testForDEU} with options for plotting the normalized counts for each of the exons or the coefficients estimates of the glm (Figure 1). It has also options for the visualization of the transcripts (Figure 2), which provides a good way to visualize the possible events of isoform regulation. \\
-
+DEXSeq has a function to visualize the results of \Rfunction{testForDEU} with options for plotting the 
+normalized counts for each of the exons or the fitted expression estimates of the glm (Figure 1). It has also 
+options for the visualization of the transcripts (Figure 2), which provides a good way to visualize 
+the possible events of isoform regulation. \\
 <<plot1, echo=TRUE, fig=TRUE, height=10, width=15>>=
-plotDEXSeq(ecs, "SG7861", cex.axis=1.2, cex=1.3, lwd=1.5)
+plotDEXSeq(pasillaExons, "FBgn0010909", cex.axis=1.2, cex=1.3, lwd=1.5)
 @
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{DEXSeq_vignette-plot1}
-\caption{Plot indicating the coefficient estimate values from \texttt{testForDEU}, in red are indicated the exons that showed significance, meaning differential exon usage.}
+\caption{Plot indicating the fitted expression estimates from \texttt{testForDEU}, in red are indicated the exons that showed significance, meaning differential exon usage.}
 \label{plot1}
 \end{figure}
 \normalsize
 This is the option of visualizing the transcripts (Figure 2): \\
 
 <<plot2, fig=TRUE, height=10, width=15>>=
-plotDEXSeq(ecs, "SG7861", displayTranscripts=TRUE, cex.axis=1.2, cex=1.3, lwd=2, legend=TRUE)
+plotDEXSeq(pasillaExons, "FBgn0010909", displayTranscripts=TRUE, cex.axis=1.2, cex=1.3, lwd=2, legend=TRUE)
 @
 \begin{figure}
 \centering
@@ -121,9 +193,8 @@ plotDEXSeq(ecs, "SG7861", displayTranscripts=TRUE, cex.axis=1.2, cex=1.3, lwd=2,
 \end{figure}
 \normalsize
 Or visualize the counts normalized by the size factor (Figure 3): \\
-
 <<plot3, fig=TRUE, height=10, width=15>>=
-plotDEXSeq(ecs, "SG7861", coefficients=FALSE, norCounts=TRUE, cex.axis=1.2, cex=1.3, lwd=2)
+plotDEXSeq(pasillaExons, "FBgn0010909", coefficients=FALSE, norCounts=TRUE, cex.axis=1.2, cex=1.3, lwd=2)
 @
 \begin{figure}
 \centering
@@ -131,42 +202,19 @@ plotDEXSeq(ecs, "SG7861", coefficients=FALSE, norCounts=TRUE, cex.axis=1.2, cex=
 \caption{Plot indicating the normalized count values in the exon for each of the samples.}
 \label{plot3}
 \end{figure}
-The package also provides an HTML report generator implemented in the function \texttt{DEXSeqHTML}.  This report will generate a result table with links to plots for the significant results, allowing a more detailed exploration of the results. To see an example of it, visit the an example \url{http://www.embl.de/$\sim$reyes/Example/Example/testForDEU.html}. This report was generated using the code:
+The package also provides an HTML report generator implemented in the function \Rpackage{DEXSeqHTML}.  
+This function uses \Rpackage{hwriter} to create a result table with links to plots for the significant results, allowing 
+a more detailed exploration of the results. To see an example of it, visit the an example 
+\url{http://www.embl.de/~reyes/Example/Example/testForDEU.html}. This report was generated using the code:
 <<echo=TRUE, eval=FALSE, fig=FALSE>>=
-DEXSeqHTML(ecs, path="/home/alejandro/Work/Functions/DEXSeq/trunk/test/Prueba/", file="testForDEU.html")
-@
-\section{Parallelization}
-In the case when we are dealing with very large datasets (e.g. human samples), one might want to parallelize the process in order to get the results faster.  This section shows an example of how this could be done in the analysis of differential exon usage.  Both the size factor and common dispersion estimations can't be parallelize because their calculation depends on the entire sample.
-<<echo=TRUE, eval=TRUE, fig=FALSE>>=
-ecs <- makeExampleExonCountSet()
-sampleNames(ecs) <- c("treated2", "treated3", "untreated3", "untreated4")
-ecs <- estimateSizeFactors(ecs)
-ecs <- estimateDispersions(ecs, what="common")
-@
-The most time consuming parts of the analysis are the estimation of the individual exon dispersions and the actual test for differential exon usage and both can be parallelized.  Just as an example, this vignette uses the package \texttt{multicore} to show that parallelization is possible. We can subset the ExonCountSet object in smaller objects, its important to subset by complete genes given that the model frame for the test uses all the information of the exons of a gene.
-<<echo=TRUE, eval=TRUE, fig=FALSE>>=
-library(multicore)
-subgenes <- split(levels(geneIDs(ecs)), rep(1:6, each=197))
-allecs <- lapply(subgenes, function(genes){subsetByGenes(ecs, genes)})
-@
-Now the object \texttt{allecs} contains a list of 6 ExonCountSet objects (each one with 197 gene identificators). Then one can use the function \texttt{mclapply} to distribute the analysis in different CPUs or cores.
-<<echo=TRUE, eval=TRUE, fig=FALSE>>=
-allecs <- mclapply(allecs, estimateDispersions, what="exon")
-allecs <- mclapply(allecs, testForDEU, padjust=FALSE)
-@
-Once done this part of the analysis, one can merge back the ExonCountSet objects to a single one to proceed with the analysis. Note that the p-value correction is done after merging the objects to take into account all of the p-values.
-<<echo=TRUE, eval=TRUE, fig=FALSE>>=
-ecs <- allecs[[1]]
-for(i in 2:6){
-	ecs <- combine(ecs, allecs[[i]])
-}
-featureData(ecs)$padjust <- p.adjust(featureData(ecs)$pvalue, method="BH")
-ecs
+DEXSeqHTML(pasillaExons)
 @
 \section{Gene count table}
-The user can also create gene count tables.  This might be useful to give an input to other packages like DESeq.
+The user can also create gene count tables with the function \Rfunction{geneCountTable}, which basically sums
+all the count exons with the same geneID.  This might be useful to give an input to other packages like 
+\Rpackage{DESeq} or \Rpackage{edgeR}.
 <<echo=TRUE, eval=TRUE, fig=FALSE>>=
-head(geneCountTable(ecs))
+head(geneCountTable(pasillaExons))
 @
 \section{Session Information}
 <<echo=TRUE, eval=TRUE, fig=FALSE>>=

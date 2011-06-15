@@ -26,9 +26,9 @@ sizeFactors(ecs) <- value
 \code{\link{estimateSizeFactors}}
 }
 \examples{
-   ecs <- makeExampleCountDataSet()
-   ecs <- estimateSizeFactors( ecs )
-   sizeFactors(ecs)
+   data("pasillaExons", package="pasilla")
+   pasillaExons <- estimateSizeFactors( pasillaExons )
+   sizeFactors(pasillaExons)
 }
 \author{
    Simon Anders, sanders@fs.tum.de

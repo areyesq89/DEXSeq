@@ -5,7 +5,7 @@
        This function makes a report from the results from \code{testForDEU} saved in an ExonCountSet object. It allows an easy way of exploring the results of the test.
      }
      \usage{
-     DEXSeqHTML(ecs, geneIDs=NULL, path = "DEXSeqReport", file = "testForDEU.html", FDR = 0.05, foldChange = FALSE, color = NULL)
+     DEXSeqHTML(ecs, geneIDs=NULL, path = "DEXSeqReport", file = "testForDEU.html", FDR = 0.05, color = NULL)
      }
      \arguments{
        \item{ecs}{An ExonCountSet object}
@@ -22,10 +22,10 @@
        \code{hwrite}
      }
      \examples{
-	ecs <- makeExampleExonCountSet()
-	ecs <- estimateSizeFactors(ecs)
-	ecs <- estimateDispersions(ecs)
-	ecs <- testForDEU(ecs)
-	DEXSeqHTML(ecs)
+	\dontrun{data("pasillaExons", package="pasilla")}
+	\dontrun{pasillaExons <- estimateSizeFactors( pasillaExons )}
+	\dontrun{pasillaExons <- estimateDispersions( pasillaExons )}
+	\dontrun{pasillaExons <- testForDEU( pasillaExons )}
+	\dontrun{DEXSeqHTML( pasillaExons )}
      }
 \keyword{ExonCountSet}

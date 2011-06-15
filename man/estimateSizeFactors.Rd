@@ -28,7 +28,7 @@ estimateSizeFactors(ecs)
    Simon Anders, sanders@fs.tum.de
 }
 \examples{
-ecs <- makeExampleExonCountSet()
-ecs <- estimateSizeFactors( ecs )
-sizeFactors( ecs )
+	data("pasillaExons", package="pasilla")
+	pasillaExons <- estimateSizeFactors( pasillaExons )
+        sizeFactors( pasillaExons )
 }

@@ -1,7 +1,7 @@
-DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", FDR=0.05, foldChange=FALSE, color=NULL){
+DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", FDR=0.05, color=NULL){
         stopifnot(is(ecs, "ExonCountSet"))
 #       assertOneWay(ecs)
-	results<-DEUresultTable(ecs, foldChange)
+	results<-DEUresultTable(ecs)
 	results$dispersion <- round(results$dispersion, 4)
 	results$pvalue <- round(results$pvalue, 3)
 	results$padjust <- round(results$padjust, 3)

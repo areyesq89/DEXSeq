@@ -1,4 +1,4 @@
-plotDEXSeq <- function(ecs, geneID, FDR=0.05, coefficients=TRUE, norCounts=FALSE, expression=TRUE, displayTranscripts=FALSE, names=FALSE, legend=FALSE, color=NULL, ...){
+plotDEXSeq <- function(ecs, geneID, FDR=0.1, coefficients=TRUE, norCounts=FALSE, expression=TRUE, displayTranscripts=FALSE, names=FALSE, legend=FALSE, color=NULL, ...){
 	stopifnot(is(ecs, "ExonCountSet"))
 	if(any(is.na(sizeFactors(ecs)))){
 		stop("Please estimate sizeFactors first\n")

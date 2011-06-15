@@ -21,7 +21,7 @@ modelFrameForGene(ecs, geneID)
 	A data.frame containing the model frame for a gene.
 }
 \examples{
-   ecs <- makeExampleExonCountSet()
-   modelFrameForGene(ecs, "SG10020")
+   data("pasillaExons", package="pasilla")
+   modelFrameForGene(pasillaExons, "FBgn0085442")
 }
 

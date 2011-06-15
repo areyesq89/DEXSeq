@@ -5,7 +5,7 @@
        This function reads the output files from HTSeq python script \code{X.py}, it provides an ExonCountSet object.
      }
      \usage{
-     read.HTSeqCount(countfiles, design, aggregatefile=NULL)
+     read.HTSeqCounts(countfiles, design, aggregatefile=NULL)
      }
      \arguments{
        \item{countfiles}{A string vector containing the output files with the paths from \code{aggregate_genes.py} to read.}
@@ -16,10 +16,22 @@
 	An ExonCount object.
      }
      \examples{
-	countfiles <- dir(system.file("files/", package="DEXSeq"), pattern="counts")
-	aggregatefile <- dir(system.file("files/", package="DEXSeq"), pattern="aggregate")
-	aggregatefile <- paste(system.file("files/", package="DEXSeq"), aggregatefile, sep="")
-	countfiles <- paste(system.file("files/", package="DEXSeq"), countfiles, sep="")
-	ecs <- read.HTSeqCounts(c("untreated3.counts", "untreated4.counts", "gsm461180.counts", "gsm461181.counts"), c("un", "un", "gs", "gs"), aggregatefile="aggregates_dm3_refgene2.gff")
-     }
+	library(DEXSeq)
+
+        inDir = system.file("extdata", package="pasilla", mustWork=TRUE)
+        annotationfile = file.path(inDir, "Dmel.BDGP5.25.62.DEXSeq.chr.gff")
+        samples = data.frame(
+           condition = c("treated", "treated", "treated", "untreated", "untreated", "untreated", "untreated"),
+           replicate = c(1:3, 1:4),
+           type = c("single-read", "paired-end", "paired-end", "single-read", "single-read", "paired-end", "paired-end"),
+           row.names = dir(system.file("extdata", package="pasilla", mustWork=TRUE), pattern="fb.txt"),
+           stringsAsFactors = FALSE,
+           check.names = FALSE)
+
+        annotationfile = file.path(inDir, "Dmel.BDGP5.25.62.DEXSeq.chr.gff")
+
+        \dontrun{ecs = read.HTSeqCounts(countfiles = file.path(inDir, rownames(samples)), 
+           design = samples, 
+           aggregatefile = annotationfile)}
+	}
 \keyword{ExonCountSet}

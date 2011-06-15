@@ -283,7 +283,7 @@ geneCountTable <- function( ecs ) {
          colSums( counts(ecs)[rows,,drop=FALSE] ) ) )
 }
 
-DEUresultTable <- function(ecs, foldChange=FALSE){
+DEUresultTable <- function(ecs){
 
 	result <- data.frame(geneID=geneIDs(ecs), 
 			     exonID=exonIDs(ecs), 
@@ -292,37 +292,5 @@ DEUresultTable <- function(ecs, foldChange=FALSE){
 			     pvalue=fData(ecs)$pvalue, 
 			     padjust=fData(ecs)$padjust)
 
-	if(length(levels(design(ecs))) == 2 && foldChange){
-		result$log2change <- rep(NA, nrow(result))
-		for(geneID in unique(geneIDs(ecs))){
-			rt<-which(featureData(ecs)$geneID==geneID)
-			if(length(rt) < 2){next}
-			count <- t(t(counts(ecs)[rt,])/sizeFactors(ecs))
-			numcond<-length(unique(design(ecs)))
-			numexons<-nrow(count)
-			mf<-modelFrameForGene(ecs, geneID)
-			mf$offset <- log(mf$sizeFactor)
-			fam <- negative.binomial( 1 / commonDispersion(ecs) )   # <<-- TODO Replace commonDispersion
-			fam$family = "Negative Binomial(varying)"
-			fit1 <- try(glm( count~condition*exon, mf, family = fam, offset = mf$offset ))
-			if(inherits(fit1, "try-error")){
-				next
-			}else{
-				intercept<-fit1$coefficients["(Intercept)"]
-				treatments<-fit1$coefficients[2:numcond]
-				treatments<-treatments[order(names(treatments))]
-				untr<-fit1$coefficients[(numcond+1):(numexons+numcond-1)]
-				treatedcoef<-fit1$coefficients[(numcond+numexons):length(fit1$coefficients)]
-				treatedcoef<-treatedcoef[order(sapply(strsplit(names(treatedcoef), ":"), "[[", 1))]
-				coeff<-data.frame(c(intercept, untr+intercept))
-				ini<-seq(1, 1+((numexons-1)*(numcond-1)), numexons-1)
-				end<-seq(numexons-1, ((numexons-1)*(numcond-1)), numexons-1)
-				for(i in 1:length(end)){
-				coeff<-cbind(coeff, c(treatments[i]+intercept, treatedcoef[ini[i]:end[i]]+intercept+treatments[i]+untr))
-				}
-				result$log2change[result$geneID %in% geneID] <- log2(exp(coeff[,2])/exp(coeff[,1]))
-			}
-		}
-	}
 	result
 }

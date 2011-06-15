@@ -15,7 +15,8 @@ assertOneWay(ecs)
 }
 }
 \examples{
-   ecs <- makeExampleExonCountSet()
-   assertOneWay(ecs)
+   	data("pasillaExons", package="pasilla")
+	design( pasillaExons) <- design(pasillaExons)[,1]
+	assertOneWay(pasillaExons)
 }
 

@@ -18,7 +18,7 @@ geneCountTable(ecs)
    \code{DESeq}
 }   
 \examples{
-   ecs <- makeExampleExonCountSet()
-   head(geneCountTable(ecs))
+   	data("pasillaExons", package="pasilla")
+	head(geneCountTable(pasillaExons))
 }   
 
