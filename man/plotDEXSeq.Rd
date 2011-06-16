@@ -11,13 +11,13 @@
        \item{ecs}{An ExonCountSet object.}
        \item{geneID}{geneID to visualize.}
        \item{FDR}{A false discovery rate threshold used to indicate the significant exons.}
-       \item{coefficients}{If TRUE, the function plots of the fitted expression or splicing estimates from the glm regression depending on the expression parameter (see below).}
+       \item{coefficients}{If TRUE, the function plots of the fitted expression or fitted splicing estimates from the glm regression depending on the expression parameter (see below).}
        \item{norCounts}{If TRUE, provides a plot of the normalized counts by the size factors.}
        \item{expression}{Logical argument, if TRUE, the fitted expression in the gene is included in the plot. IF FALSE, pure fitted splicing effect is plotted.}
        \item{displayTranscripts}{Logic argument which indicates if the annotated transcripts want to be plotted or not, the upper limit is 45 transcripts.}
-       \item{color}{A vector of colors foreach condition.}
-       \item{legend}{Logical. A legend indicating the colors for each condition will be added.}
-       \item{names}{Logical whether or not indicating if the names of the transcriptIDs want to be written.}
+       \item{color}{A vector of colors for each condition.}
+       \item{legend}{Logical indicating if the legend of colors and conditions should be added.}
+       \item{names}{Logical indicating if the names of the transcriptIDs should to be written.}
        \item{...}{Further graphical parameters (from par)}
      }
      \seealso{

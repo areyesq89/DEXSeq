@@ -1,4 +1,4 @@
-read.HTSeqCounts <- function( countfiles, design, aggregatefile=NULL ) {
+read.HTSeqCounts <- function( countfiles, design, flattenedfile=NULL ) {
 	lf <- lapply( countfiles, function(x)
 	   read.table( x, header=FALSE,stringsAsFactors=FALSE ) )
 	if( !all( sapply( lf[-1], function(x) all( x$V1 == lf[1]$V1 ) ) ) )
@@ -20,8 +20,8 @@ read.HTSeqCounts <- function( countfiles, design, aggregatefile=NULL ) {
 		sapply(strsplit(x[[i]][grepl(attribute, x[[i]])], " "), "[[", 2)
 		})
 	}
-	if(!is.null(aggregatefile)){
-		aggregates<-read.delim(aggregatefile, stringsAsFactors=FALSE, header=FALSE)
+	if(!is.null(flattenedfile)){
+		aggregates<-read.delim(flattenedfile, stringsAsFactors=FALSE, header=FALSE)
 		colnames(aggregates)<-c("chr", "source", "class", "start", "end", "ex", "strand", "ex2", "attr")
 		aggregates<-aggregates[-which(aggregates$class!="exonic_part"),]
 		aggregates$gene_id <- get_attribute(aggregates$attr, attribute="gene_id")

@@ -358,13 +358,3 @@ testForDEU <- function( ecs, formula0=NULL, formula1=NULL, padjust=TRUE, quiet=F
       cat( "\n" )
    ecs   
 }
-
-makeExampleExonCountSet <- function(){
-   countfiles <- dir(system.file("files/", package="DEXSeq"), pattern="fbsubset.txt")[c(2, 3, 6, 7)]
-   aggregatefile <- dir(system.file("files/", package="DEXSeq"), pattern="subset.gff")
-   aggregatefile <- paste(system.file("files/", package="DEXSeq"), aggregatefile, sep="")
-   countfiles <- paste(system.file("files/", package="DEXSeq"), countfiles, sep="")
-   ecs <- read.HTSeqCounts(countfiles, c("treated", "treated", "untreated", "untreated"), aggregatefile=aggregatefile)
-   ecs
-}
-

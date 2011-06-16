@@ -21,7 +21,7 @@
       Initial values for the coefficients in the optimization.  If NULL, initial values will be calculated using the "initialGuess" dispersion value.
      }
      \item{initialGuess}{
-        An arbitraty initial guess to initiate the optimization.
+        An arbitrary initial guess to initiate the optimization.
      }
 }
 \value{

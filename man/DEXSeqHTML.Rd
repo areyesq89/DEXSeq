@@ -10,7 +10,7 @@
      \arguments{
        \item{ecs}{An ExonCountSet object}
        \item{geneIDs}{A character vector of gene identificators to be included in the report. The default is NULL and the default genes included in the report are the ones with significant changes in exon usage below the FDR.}
-       \item{path}{A path where to write the HTML file and plots for the visalization of the results of \code{testForDEU}.}
+       \item{path}{A path where to write the HTML file and plots for the visualization of the results of \code{testForDEU}.}
        \item{file}{A file to write the html report}
        \item{FDR}{A false discovery rate for the results.}
        \item{color}{Vector of colors to be used in the plot for the different conditions.}

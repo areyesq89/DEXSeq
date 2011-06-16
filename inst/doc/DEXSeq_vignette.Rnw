@@ -61,7 +61,7 @@ design <- data.frame(
    condition=c("treated", "treated", "treated", "untreated", "untreated", "untreated", "untreated"),
    replicate=c(1:3, 1:4),
    type = c("single-read", "paired-end", "paired-end", "single-read", "single-read", "paired-end", "paired-end"))
-ecs <- read.HTSeqCounts(countfiles, design, aggregatefile=annotationfile)
+ecs <- read.HTSeqCounts(countfiles, design, flattenedfile=annotationfile)
 sampleNames(ecs) <- gsub("fb.txt", "", dir(extDir, pattern="fb.txt"))
 ecs
 varMetadata(featureData(ecs))

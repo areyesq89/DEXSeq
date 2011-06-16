@@ -176,9 +176,17 @@ setValidity( "ExonCountSet", function( object ) {
    TRUE
 } )
 
-counts <- function( ecs ) {
+counts <- function( ecs, normalized=FALSE) {
    stopifnot( is( ecs, "ExonCountSet" ) )
-   assayData( ecs )[[ "counts" ]]
+   if(!normalized){
+      assayData( ecs )[[ "counts" ]]
+   }else{
+      if( any( is.na( sizeFactors(ecs) ) ) ){
+         stop( "Please first calculate size factors or set normalized=FALSE")
+      }else{
+         t(t( assayData( ecs )[[ "counts" ]] )/sizeFactors(ecs))
+      }
+   }
 }
 
 `counts<-` <- function( ecs, value ) {

@@ -1,7 +1,7 @@
 \name{subsetByGenes}
 \alias{subsetByGenes}
 \title{
-    Making a subsetting the ExonCountSet object by geneIDs.
+    Making an ExonCountSet out of a bigger ExonCountSet object given a subset of geneIDs.
 }
 \description{
     Generates an ExonCountSet object containing a subset of genes from another ExonCountSet.
