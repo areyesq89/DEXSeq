@@ -1,4 +1,4 @@
-DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", FDR=0.05, color=NULL){
+DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", FDR=0.1, color=NULL){
         stopifnot(is(ecs, "ExonCountSet"))
 #       assertOneWay(ecs)
 	results<-DEUresultTable(ecs)

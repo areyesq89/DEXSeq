@@ -12,10 +12,10 @@ estimateDispersions(ecs, formula=NULL, file=NULL, initialGuess=.01, quiet=FALSE)
      An ExonCountSet object.
    }
   \item{formula}{
-     Formula for the initial glm used to calculate the dispersion values.  The values are going to be taken from the column names of the model frame generated from the function modelFrameForGene. If it is left in NULL, the default formula is going to be "count~sample+condition*exon".
+     Formula for the initial glm used to calculate the dispersion values.  The factors of the formula must be present as column names in the model frame generated from the function modelFrameForGene. If it is left in NULL, the default formula is going to be "count~sample+condition*exon".
    }
     \item{file}{
-    A file where to write the iterations and dispersion and profile log likelihood values foreach of the exons of the genes.
+    A file where to write the iteration progress with dispersions and profile log likelihood values foreach of the exons of the genes.
    }
   \item{initialGuess}{
 	An arbitrary initial guess to start with the iterations.

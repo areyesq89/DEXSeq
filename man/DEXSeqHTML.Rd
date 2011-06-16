@@ -5,11 +5,11 @@
        This function makes a report from the results from \code{testForDEU} saved in an ExonCountSet object. It allows an easy way of exploring the results of the test.
      }
      \usage{
-     DEXSeqHTML(ecs, geneIDs=NULL, path = "DEXSeqReport", file = "testForDEU.html", FDR = 0.05, color = NULL)
+     DEXSeqHTML(ecs, geneIDs=NULL, path = "DEXSeqReport", file = "testForDEU.html", FDR = 0.1, color = NULL)
      }
      \arguments{
        \item{ecs}{An ExonCountSet object}
-       \item{geneIDs}{A character vectors of gene identificators to be included in the report. The default is NULL, and the default genes included in the report are the ones with significant changes in exon usage below the FDR.}
+       \item{geneIDs}{A character vector of gene identificators to be included in the report. The default is NULL and the default genes included in the report are the ones with significant changes in exon usage below the FDR.}
        \item{path}{A path where to write the HTML file and plots for the visalization of the results of \code{testForDEU}.}
        \item{file}{A file to write the html report}
        \item{FDR}{A false discovery rate for the results.}
