@@ -6,6 +6,7 @@
 \usepackage{Sweave}
 \usepackage[a4paper]{geometry}
 \usepackage{hyperref,graphicx}
+\usepackage{cite}
 
 \SweaveOpts{keep.source=FALSE,eps=FALSE,include=FALSE,height=4.5, width=4} 
 \newcommand{\Robject}[1]{\texttt{#1}}
@@ -19,18 +20,17 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-In this package we provide a method to systematically detect differential exon
-usage using RNA-seq. We use as input the number of reads falling on each of the
-exons of a genome. To give a demonstration of this Bioconductor package implementation 
-we will use of a public data set from GEO Data set database under the record GSE18508 
-\footnote{Brooks AN, Yang L, Duff MO et Hansen KD et al. Conservation of an RNA 
-regulatory map between Drosophila and mammals. \textit{Genome Research}, 2010}. 
-For practicality and speed, this vignette only uses a subset of genes. Apart from 
-the package providing the analysis of differential exon usage, we provide tools for 
-the easy generation of the input and functions for the visualization and exploration
-of the test results. The user can create the example dataset for this vignette directly
-with the function \texttt{makeExampleExonCountSet()}, in case you want to reproduce 
-this vignette. 
+RNA-seq is a powerful tool for transcriptome studies, providing novel discovery of
+splice sites and isoforms and allowing the quantification and comparison between samples.
+There are several methods that try to call differential expression between conditions, but just a few make
+a proper estimation of the dispersion between biological replicates \cite{edgeR, DESeq} and none 
+of them focus on the exon level expression, i.e differential exon usage. 
+In this package we provide a method to systematically detect differential exon usage using RNA-seq. 
+We use as input the number of reads falling on each of the
+exons of a genome. To give a demonstration of this Bioconductor package implementation
+we will use the package \Rpackage{pasilla} which contains preprocessed data from
+GEO Data set database under the record GSE18508 \cite{psKD}. For more information 
+of the preprocessing of this dataset, please take a look to the vignette of the \Rpackage{pasilla}.
 \end{abstract}
 \section{Starting with DEXSeq}
 \normalsize
@@ -98,8 +98,7 @@ data("pasillaExons", package="pasilla")
 \section{Size Factors and dispersion parameters}
 Different samples might be sequenced with different depths, for that reason we introduce size factors 
 parameters in order to make the samples sizes comparable.  \Rpackage{DEXSeq} uses the same implementation 
-as in \Rpackage{DESeq} \footnote{Anders, S and Huber W. Differential expression analysis for sequence 
-count data. Genome Biology, 2010} using the function \Rfunction{estimateSizeFactors}. The size factors
+as in \Rpackage{DESeq} \cite{DESeq} using the function \Rfunction{estimateSizeFactors}. The size factors
 are estimated as the median of the ratios of observed counts.
 <<echo=TRUE, eval=TRUE, fig=FALSE>>=
 pasillaExons <- estimateSizeFactors(pasillaExons)
@@ -111,14 +110,14 @@ of the different conditions in changes of gene expression.  However, biological 
 necessary to estimate the dispersion between the samples, and this is not easy to estimate when the 
 number of replicates is small, as in most of all RNA-seq experiments. All the same applies for a
 differential exon usage analysis.  In order to solve this problem, we make use of the Cox-Reid 
-likelihood estimation implemented by the package \Rpackage{edgeR} \footnote{Robinson Mark D. and 
-McCarthy Davis J et al. edgeR: a Bioconductor package for differential expression analysis of digital 
-gene expression data. Bioinformatics, 2009}, but with a slight modification at the time of testing.
+likelihood estimation implemented by the package \Rpackage{edgeR} \cite{edgeR}, and fit a mean
+dependent regression over the dispersions, all this is implemented in the function \Rfunction{estimateDispersions}.
+One might vary the formula to contemplate other sources of noise (see section 4).
 <<echo=TRUE, eval=TRUE, fig=FALSE>>=
 pasillaExons <- estimateDispersions(pasillaExons)
 head(featureData(pasillaExons)$dispersion)
+head(featureData(pasillaExons)$dispersion_CR_est)
 @
-%$
 \section{Testing for differential exon usage}
 Having the dispersion estimates and the size factors, its possible to test for differential exon usage 
 using a negative binomial distribution. For each gene we make a model frame with the function 
@@ -127,8 +126,8 @@ interaction (formula=sample + exon + condition * I(exon == exonID)) and as a nul
 without the interaction (formula=sample + exon + condition), then we compare the deviances of both 
 regressions testing under a chi square distribution. All this is implemented in the function 
 \Rfunction{testGeneForDEU}.  The function \Rfunction{testForDEU} will make a call to 
-\Rfunction{testGeneForDEU} for all the genes, and will fill the featureData slots of the ExonCountSet 
-object with the results.  The function \Rfunction{DEUresultTable} will give a summary of the results 
+\Rfunction{testGeneForDEU} for all the genes, and will fill the pvalue and padjust slots of the featureData 
+of the \Rclass{ExonCountSet} object with the results.  The function \Rfunction{DEUresultTable} will give a summary of the results 
 of the tests.
 <<echo=TRUE, eval=TRUE, fig=FALSE>>=
 head( modelFrameForGene( pasillaExons, "FBgn0010909" ) )
@@ -146,6 +145,7 @@ information and this is done by changing the default formulas of the glm's that 
 functions \Rfunction{estimateDispersions} and \Rfunction{testForDEU}.
 <<echo=TRUE, eval=TRUE, fig=FALSE>>=
 design(pasillaExons)
+head(modelFrameForGene(pasillaExons, "FBgn0010909"))
 @
 To estimate the dispersion, we change the formula to fit the initial glm taking into account the effect of the 
 exon and the library type with interaction of the condition.  This allows the dispersion estimate to contemplate
@@ -205,9 +205,9 @@ plotDEXSeq(pasillaExons, "FBgn0010909", coefficients=FALSE, norCounts=TRUE, cex.
 The package also provides an HTML report generator implemented in the function \Rpackage{DEXSeqHTML}.  
 This function uses \Rpackage{hwriter} to create a result table with links to plots for the significant results, allowing 
 a more detailed exploration of the results. To see an example of it, visit the an example 
-\url{http://www.embl.de/~reyes/Example/Example/testForDEU.html}. This report was generated using the code:
+\url{http://www.embl.de/~reyes/DEXSeqReport/testForDEU.html}. This report was generated using the code:
 <<echo=TRUE, eval=FALSE, fig=FALSE>>=
-DEXSeqHTML(pasillaExons)
+DEXSeqHTML( pasillaExons, FDR=0.1, color=c("#FF000080", "#0000FF80") )
 @
 \section{Gene count table}
 The user can also create gene count tables with the function \Rfunction{geneCountTable}, which basically sums
@@ -216,6 +216,8 @@ all the count exons with the same geneID.  This might be useful to give an input
 <<echo=TRUE, eval=TRUE, fig=FALSE>>=
 head(geneCountTable(pasillaExons))
 @
+\bibliography{DEXseq_ref}
+\bibliographystyle{plain}
 \section{Session Information}
 <<echo=TRUE, eval=TRUE, fig=FALSE>>=
 sessionInfo()
