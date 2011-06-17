@@ -176,57 +176,54 @@ setValidity( "ExonCountSet", function( object ) {
    TRUE
 } )
 
-counts <- function( ecs, normalized=FALSE) {
-   stopifnot( is( ecs, "ExonCountSet" ) )
-   if(!normalized){
-      assayData( ecs )[[ "counts" ]]
-   }else{
-      if( any( is.na( sizeFactors(ecs) ) ) ){
+setMethod("counts", signature(cds="ExonCountSet"),
+  function( cds, normalized=FALSE) {
+    if(!normalized){
+      assayData(cds)[["counts"]]
+    } else {
+      if(any(is.na( sizeFactors(cds)))) {
          stop( "Please first calculate size factors or set normalized=FALSE")
-      }else{
-         t(t( assayData( ecs )[[ "counts" ]] )/sizeFactors(ecs))
+      } else {
+         t(t( assayData( cds )[["counts"]] ) / sizeFactors(cds) )
       }
    }
-}
+})
 
-`counts<-` <- function( ecs, value ) {
-   stopifnot( is( ecs, "ExonCountSet" ) )
-   assayData( ecs )[[ "counts" ]] <- value
-   validObject( ecs )
-   ecs
-}   
+setMethod("counts<-", signature(cds="ExonCountSet"),
+  function( cds, value ) {
+   assayData(cds)[[ "counts" ]] <- value
+   validObject(cds)
+   cds
+})   
 
-sizeFactors <- function( ecs ) {
-   stopifnot( is( ecs, "ExonCountSet" ) )
-   sf <- pData(ecs)$sizeFactor
-   names( sf ) <- colnames( counts(ecs) )
+setMethod("sizeFactors",  signature(cds="ExonCountSet"),
+  function(cds) {
+   sf <- pData(cds)$sizeFactor
+   names( sf ) <- colnames( counts(cds) )
    sf
-}
+})
 
-`sizeFactors<-` <- function( ecs, value ) {
-   stopifnot( is( ecs, "ExonCountSet" ) )
-   pData(ecs)$sizeFactor <- value
-   validObject( ecs )
-   ecs
-}
+setMethod("sizeFactors<-",  signature(cds="ExonCountSet"),
+  function(cds, value ) {
+   pData(cds)$sizeFactor <- value
+   validObject( cds )
+   cds
+})
       
-design <- function( ecs, drop=TRUE, asAnnotatedDataFrame=FALSE ) {
-   stopifnot( is( ecs, "ExonCountSet" ) )
+.design <- function( cds, drop=TRUE, asAnnotatedDataFrame=FALSE ) {
    if( asAnnotatedDataFrame )
-      return( phenoData(ecs)[, ecs@designColumns ] )
-   ans <- pData(ecs)[, ecs@designColumns, drop=FALSE ]
+      return( phenoData(cds)[, cds@designColumns ] )
+   ans <- pData(cds)[, cds@designColumns, drop=FALSE ]
    if( ncol(ans) == 1 && drop ) {
       ans <- ans[,1]
-      names(ans) <- colnames( counts(ecs) ) }
+      names(ans) <- colnames( counts(cds) ) }
    else
-      rownames( ans ) <- colnames( counts(ecs) )
+      rownames( ans ) <- colnames( counts(cds) )
    ans
 }
 
-`design<-` <- function( ecs, value ) {
-   stopifnot( is( ecs, "ExonCountSet" ) )
-   
-   # Is it multivariate or just a vector?
+`.design<-` <- function( cds, value ) {
+   ## Is it multivariate or just a vector?
    if( ncol(cbind(value)) > 1 )
       value <- as( value, "AnnotatedDataFrame" )
    else {
@@ -235,16 +232,21 @@ design <- function( ecs, drop=TRUE, asAnnotatedDataFrame=FALSE ) {
       varMetadata( value )[ "condition", "labelDescription" ] <-
          "experimental condition, treatment or phenotype" }
 
-   rownames( pData(value) ) <- rownames( pData(ecs) )
-   dimLabels( value ) <- dimLabels( phenoData(ecs) )
-   phenoData(ecs) <- combine( 
-      phenoData(ecs)[ , !( colnames(pData(ecs)) %in% ecs@designColumns ), drop=FALSE ], 
+   rownames( pData(value) ) <- rownames( pData(cds) )
+   dimLabels( value ) <- dimLabels( phenoData(cds) )
+   phenoData(cds) <- combine( 
+      phenoData(cds)[ , !( colnames(pData(cds)) %in% cds@designColumns ), drop=FALSE ], 
       value )
-   ecs@designColumns <- colnames( pData(value) )   
-   validObject(ecs)
-   ecs
+   cds@designColumns <- colnames( pData(value) )   
+   validObject(cds)
+   cds
 }
-      
+
+setMethod(`design`,       signature(cds="ExonCountSet"), .design)
+setMethod(`design<-`,     signature(cds="ExonCountSet"), `.design<-`)
+setMethod(`conditions`,   signature(cds="ExonCountSet"), .design)
+setMethod(`conditions<-`, signature(cds="ExonCountSet"), `.design<-`)
+
 geneIDs <- function( ecs ) {
    stopifnot( is( ecs, "ExonCountSet" ) )
    g <- fData(ecs)$geneID
@@ -273,9 +275,6 @@ exonIDs <- function( ecs ) {
    ecs
 }
             
-conditions <- design
-`conditions<-` <- `design<-`            
-
 
 subsetByGenes <- function( ecs, genes ) {
    stopifnot( is( ecs, "ExonCountSet" ) )
