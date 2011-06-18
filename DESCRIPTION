@@ -1,5 +1,5 @@
 Package: DEXSeq
-Version: 0.1.5
+Version: 0.1.6
 Title: Inference of differential expression and splicing in RNA-Seq
 Author: Simon Anders <sanders@fs.tum.de> and Alejandro Reyes <areyes@lcg.unam.mx>, both at EMBL Heidelberg
 Maintainer: Simon Anders <sanders@fs.tum.de>
