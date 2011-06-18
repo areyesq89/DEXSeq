@@ -149,53 +149,67 @@ weird(fData(pasillaExons)$dispersion_CR_est)
 %--------------------------------------------------
 \section{Testing for differential exon usage}
 %--------------------------------------------------
-Having the dispersion estimates and the size factors, its possible to test for differential exon usage 
-using a negative binomial distribution. For each gene we make a model frame with the function 
-\Rfunction{modelFrameForGene} and use it to fit for every exon a generalized linear model with the 
-interaction (formula=sample + exon + condition * I(exon == exonID)) and as a null model the glm 
-without the interaction (formula=sample + exon + condition), then we compare the deviances of both 
-regressions testing under a chi square distribution. All this is implemented in the function 
-\Rfunction{testGeneForDEU}.  The function \Rfunction{testForDEU} will make a call to 
-\Rfunction{testGeneForDEU} for all the genes, and will fill the pvalue and padjust slots of the featureData 
-of the \Rclass{ExonCountSet} object with the results.  The function \Rfunction{DEUresultTable} will give a summary of the results 
-of the tests.
-
+Having the dispersion estimates and the size factors, we can now test for differential exon usage. 
+For each gene, we fit a generalized linear model with the formula
+\[
+\mbox{\texttt{sample + exon + condition * I(exon == exonID)}}
+\]
+and compare it to the smaller model (the null model) 
+\[
+\mbox{\texttt{sample + exon + condition}.}
+\]
+We compare the deviances of both fits using a $\chi^2$-distribution. 
+To create a data frame that encodes the model for a gene, with
+columns \texttt{sample}, \texttt{exon}, \texttt{condition}, \texttt{sizeFactors} and 
+\texttt{count}, the function \Rfunction{modelFrameForGene} is used.
 <<mffg1>>=
 head( modelFrameForGene( pasillaExons, "FBgn0010909" ) )
+@ 
+The actual test (which already includes a call to \Rfunction{modelFrameForGene}) is
+performed by the function \Rfunction{testGeneForDEU}:  
+<<mffg2>>=
 testGeneForDEU( pasillaExons, "FBgn0010909" )
-<<mffg2,cache=TRUE>>=
+@
+<<mffg3,echo=FALSE,results=hide>>=
+tgdeu = testGeneForDEU( pasillaExons, "FBgn0010909" )
+specialExon = "E010"
+stopifnot(tgdeu[specialExon,"pvalue"]<1e-7)
+@ 
+We see that there is one exon, \texttt{\Sexpr{specialExon}}, with a very small $p$ value, while for all other exons,
+the $p$ values are unremarkable.
+
+A convenient interface which calls \Rfunction{testGeneForDEU} for all genes
+and fills the \Robject{pvalue} and \Robject{padjust} columns of the \Robject{featureData} slots 
+of the \Rclass{ExonCountSet} object with the results is provided by the
+function \Rfunction{testForDEU}.  
+<<testForDEU1,cache=TRUE>>=
 pasillaExons <- testForDEU( pasillaExons )
+@ 
+The function \Rfunction{DEUresultTable} provides a summary table of the results.
+<<testForDEU2,cache=TRUE>>=
 res <- DEUresultTable(pasillaExons)
-<<mffg3,cache=TRUE>>=
+<<testForDEU3>>=
 table ( res$padjust < 0.1 )
 @
 %$
 %------------------------------------------------------------
-\section{Additional sources of noise}\label{sec:glm}
+\section{Batch effects}\label{sec:glm}
 %------------------------------------------------------------
-In the last section we did an analysis of differential exon usage ignoring the information regarding
-the library type preparation of the samples.  In this section, we take into account this information 
-as an additional source noise.  For this the \Rclass{ExonCountSet} object design needs to contain this 
-information and this is done by changing the default formulas of the glm's that are fitted in the
-functions \Rfunction{estimateDispersions} and \Rfunction{testForDEU}.
-%
+In the last section we performed the analysis of differential exon usage ignoring the information regarding
+the library type of the samples.  
 <<design>>=
 design(pasillaExons)
-head(modelFrameForGene(pasillaExons, "FBgn0010909"))
 @
-%
-To estimate the dispersion, we change the formula to fit the initial glm taking into account the effect of the 
-exon and the library type with interaction of the condition.  This allows the dispersion estimate to contemplate
-the variance that is being introduced by mixing different types of libraries.
+In this section, we show how to take the factor \Robject{type} into account in the analysis.
+First, we need to provide the function \Rfunction{estimateDispersions} with a formula that makes
+it aware of the additional factor (besides \Robject{condition}, which it considers by default).
 %
 <<formuladispersion,cache=TRUE>>=
 formuladispersion <- count ~ sample + ( exon + type ) * condition
-pasillaExons <- estimateDispersions( pasillaExons, formula=formuladispersion )
+pasillaExons <- estimateDispersions( pasillaExons, formula = formuladispersion )
 @
 %
-Now, in the actual testing, we will also change the formulas to contemplate the library type preparation. With this
-we are sure that the results that we are seeing of the exons are really effect of the condition, and not in the type
-of library preparation.
+Second, for the testing, we will also change the two formulas to take into account the library type. 
 %
 <<formula1>>=
 formula0 <- count ~ sample + type * exon + condition
@@ -208,49 +222,62 @@ table( res$padjust < 0.1 )
 @
 %$
 
+
+Are the results better? Compare.
+
 %--------------------------------------------------
 \section{Visualization}
 %--------------------------------------------------
-DEXSeq has a function to visualize the results of \Rfunction{testForDEU} with options for plotting the 
-normalized counts for each of the exons or the fitted expression estimates of the glm (Figure 1). It has also 
-options for the visualization of the transcripts (Figure 2), which provides a good way to visualize 
-the possible events of isoform regulation. \\
-<<plot1, echo=TRUE, fig=TRUE, height=10, width=15>>=
+\Rpackage{DEXSeq} has a function to visualize the results of \Rfunction{testForDEU} with options for plotting the 
+normalized counts for each of the exons, or the fitted expression estimates of the glm (Figure~\ref{figplot1}). 
+%
+<<plot1, fig=TRUE, height=8, width=12>>=
 plotDEXSeq(pasillaExons, "FBgn0010909", cex.axis=1.2, cex=1.3, lwd=1.5)
 @
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{DEXSeq-plot1}
-\caption{Plot indicating the fitted expression estimates from \texttt{testForDEU}, in red are indicated the exons that showed significance, meaning differential exon usage.}
+\caption{The plot represents the expression estimates from a call to \texttt{testForDEU}.
+Shown in red is the exon that showed significant differential exon usage.}
 \label{figplot1}
 \end{figure}
 
-This is the option of visualizing the transcripts (Figure 2): \\
+<<checkClaim,echo=FALSE>>=
+wh = (fData(pasillaExons)$geneID=="FBgn0010909")
+stopifnot(sum(fData(pasillaExons)$padjust[wh] < formals(plotDEXSeq)$FDR)==1)
+@ 
 
-<<plot2, fig=TRUE, height=10, width=15>>=
+Optionally, one can also visualize the transcript models (Figure~\ref{figplot2}), which might be
+useful for putting differential exon usage results into the context of isoform regulation.
+%
+<<plot2, fig=TRUE, height=8, width=12>>=
 plotDEXSeq(pasillaExons, "FBgn0010909", displayTranscripts=TRUE, cex.axis=1.2, cex=1.3, lwd=2, legend=TRUE)
 @
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{DEXSeq-plot2}
-\caption{The same as Figure~\ref{figplot1}, but plotting it with the annotated transcripts.}
-\label{plot2}
+\caption{As in Figure~\ref{figplot1}, but including the annotated transcript models.}
+\label{figplot2}
 \end{figure}
-\normalsize
-Or visualize the counts normalized by the size factor (Figure 3): \\
-<<plot3, fig=TRUE, height=10, width=15>>=
+
+Another useful option is to look at the count values from the individual samples, rather than at the
+model effect estimates. For this display, it is useful to normalize the counts by the size factors (Figure~\ref{figplot3}).
+%
+<<plot3, fig=TRUE, height=8, width=12>>=
 plotDEXSeq(pasillaExons, "FBgn0010909", coefficients=FALSE, norCounts=TRUE, cex.axis=1.2, cex=1.3, lwd=2)
 @
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{DEXSeq-plot3}
-\caption{Plot indicating the normalized count values in the exon for each of the samples.}
+\caption{As in Figure~\ref{figplot1}, with normalized count values of each exon in each of the samples.}
 \label{plot3}
 \end{figure}
-The package also provides an HTML report generator implemented in the function \Rpackage{DEXSeqHTML}.  
-This function uses \Rpackage{hwriter} to create a result table with links to plots for the significant results, allowing 
-a more detailed exploration of the results. To see an example of it, visit the an example 
-\url{http://www.embl.de/~reyes/DEXSeqReport/testForDEU.html}. This report was generated using the code:
+
+To generate an easily browsable, detailed overview over all analysis results, 
+the package provides an HTML report generator, implemented in the function \Rpackage{DEXSeqHTML}.  
+This function uses the package \Rpackage{hwriter} to create a result table with links to plots for the 
+significant results, allowing a more detailed exploration of the results. To see an example of it, visit 
+\url{http://www.embl.de/~reyes/DEXSeqReport/testForDEU.html}. The report shown there was generated using the code:
 %
 <<DEXSeqHTML,cache=TRUE>>=
 DEXSeqHTML( pasillaExons, FDR=0.1, color=c("#FF000080", "#0000FF80") )
