@@ -5,7 +5,7 @@ Author: Simon Anders <sanders@fs.tum.de> and Alejandro Reyes <areyes@lcg.unam.mx
 Maintainer: Simon Anders <sanders@fs.tum.de>
 Imports: MASS, hwriter, methods
 Depends: Biobase (>= 2.13.5)
-Suggests: pasilla
+Suggests: pasilla (>= 0.2.0)
 Description: The package looks for alternative isoform regulation using a generalized lineal model with a negative binomial distribution in RNA-seq count data
 License: GPL (>= 3)
 URL: 
