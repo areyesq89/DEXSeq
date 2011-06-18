@@ -1,0 +1,322 @@
+%\VignetteIndexEntry{Analyzing RNA-seq data for differential exon usage with the "DEXSeq" package}
+%\VignettePackage{DEXSeq}
+
+% To compile this document
+% library('weaver'); rm(list=ls()); unlink("DEXSeqReport", recursive=TRUE); Sweave('DEXSeq.Rnw', driver=weaver()); system('pdflatex DEXSeq')
+
+\documentclass{article}
+
+\usepackage{Sweave}
+\usepackage[a4paper]{geometry}
+\usepackage{hyperref,graphicx}
+\usepackage{cite}
+\usepackage{color}
+
+\SweaveOpts{keep.source=FALSE,eps=FALSE,include=FALSE,width=4,height=4.5} 
+\newcommand{\Robject}[1]{\texttt{#1}}
+\newcommand{\Rpackage}[1]{\textit{#1}}
+\newcommand{\Rclass}[1]{\textit{#1}}
+\newcommand{\Rfunction}[1]{{\small\texttt{#1}}}
+\newcommand{\fixme}[1]{{\textbf{Fixme:} \textit{\textcolor{blue}{#1}}}}
+
+\renewcommand{\floatpagefraction}{0.7}	
+
+\title{\textsf{\textbf{Analyzing RNA-seq data for differential exon usage with the \Rpackage{DEXSeq} package}}}
+\author{Alejandro Reyes, Simon Anders, Wolfgang Huber}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\begin{abstract}
+  RNA-seq is a powerful tool for transcriptome analysis. It enables
+  the discovery of novel transcript splice sites and isoforms, and
+  there is interest in the quantitative comparison of exon usage
+  between different conditions.  For the analysis of differential
+  expression between conditions, appropriate modeling of the
+  experimental and biological variability is important, and such
+  capabilities are offered, for instance, by the packages
+  \Rpackage{edgeR}~\cite{edgeR} and
+  \Rpackage{DESeq}~\cite{Anders:2010:GB}. However, there is currently no
+  software that specifically addresses exon level expression and
+  differential exon usage.  In this package, we provide a method to
+  systematically detect differential exon usage using RNA-seq.  We use
+  as input the number of reads mapping to each of the exons of a
+  genome. The method is demonstrated on the data from the package
+  \Rpackage{pasilla}. 
+\end{abstract}
+
+%-----------------------------------------------------------
+\section{The Pasilla dataset}
+%-----------------------------------------------------------
+We will use the \Robject{pasillaExons} dataset from the \Rpackage{pasilla} package. 
+\Robject{pasillaExons} is an object of class \Rclass{ExonCountSet}.
+Brooks et al.~\cite{Brooks2010} investigated the effect of siRNA knock-down of Pasilla, whose protein
+is known to bind to mRNA in the spliceosome, and which is thought to be involved 
+in the regulation of splicing, on the transcriptome of fly S2-DRSC cells.  
+Pasilla is the Drosophila melanogaster ortholog of mammalian NOVA1 and NOVA2.
+The dataset, which is provided by NCBI Gene Expression Omnibus (GEO) under the accession number
+GSE18508\footnote{\url{http://www.ncbi.nlm.nih.gov/projects/geo/query/acc.cgi?acc=GSE18508}}, 
+contains 3 biological replicates of the knockdown as well as 4 biological replicates for the untreated control. 
+
+In the \Rpackage{pasilla} package, we provide data from a subset of
+genes.  A subset was chosen in order to speed up the computations
+shown in this vignette. We start by loading the \Rpackage{DEXSeq}
+package and the example data.
+
+<<options,results=hide,echo=FALSE>>=
+options(digits=3)
+@  
+<<start,results=hide>>=
+library("DEXSeq")
+<<datapasilla>>=
+data("pasillaExons", package="pasilla")
+@ 
+The \Rfunction{pData} accessor function shows the available sample annotations.
+<<pData>>=
+pData(pasillaExons)
+@ 
+We also print the first \Sexpr{formals(utils:::head.data.frame)$n} lines of selected
+columns of the feature data annotation:
+<<fData>>=
+head(fData(pasillaExons)[,c(1,2,7:10)])
+@   
+<<tabtab1,echo=FALSE>>=
+tg = table(geneIDs(pasillaExons)) 
+tt = table(tg)
+stopifnot(tt["36"]==1, tt["16"]==3)
+@ 
+There are \Sexpr{sum(tg>0)} genes in the dataset, of these, there is one with 36 exons, and for instance,
+three with 16 exons:
+<<tabtab2>>=
+table(table(geneIDs(pasillaExons))) 
+@ 
+In Section~\ref{sec:creating}, we explain how to create analogous data objects from your own data.
+
+%--------------------------------------------------
+\section{Normalisation and dispersion estimation}\label{sec:norm}
+%--------------------------------------------------
+Different samples might be sequenced with different depths. In order to adjust for such coverage biases, 
+we introduce size factor parameters.  \Rpackage{DEXSeq} uses the same method
+as \Rpackage{DESeq}, which is provided in the function \Rfunction{estimateSizeFactors}. 
+<<sizeFactors1,cache=TRUE>>=
+pasillaExons <- estimateSizeFactors(pasillaExons)
+<<sizeFactors2>>=
+sizeFactors(pasillaExons)
+@
+
+To test for differential expression, we need to estimate the data's variance, in order
+to distinguish between normal technical and biological variation (noise) and real effects
+on gene expression between the different conditions.  
+The information on the size of the noise is drawn from the biological replicates in the dataset.
+However, as typical for RNA-seq experiments, the number of replicates is too small to estimate
+vatiance or dispesion parameters individually gene by gene. Instead, variance information is shared
+across genes, in an intensity dependent manner. Computationally, this is done through Cox-Reid 
+likelihood estimation (our method follows that of the package \Rpackage{edgeR}~\cite{edgeR}), and 
+by fitting a mean dependent regression over the dispersions. These steps are implemented in the 
+function \Rfunction{estimateDispersions}.
+%
+<<estDisp1,cache=TRUE,results=hide>>=
+pasillaExons <- estimateDispersions(pasillaExons)
+<<estDisp2>>=
+head(featureData(pasillaExons)$dispersion)
+head(featureData(pasillaExons)$dispersion_CR_est)
+@
+%
+In Section~\ref{sec:glm}, we will see how to incorporate further experimental or technical variables
+into the dispersion estimation.
+
+\fixme{Why are the two dispersion estimates so different, and why do we need to show them both? 
+See Figure~\ref{figCR} and below.}
+
+<<figCR,fig=TRUE>>=
+plot(fData(pasillaExons)[,c("dispersion","dispersion_CR_est")], xlim=c(0,50))
+abline(a=0,b=1,col="orange")
+@ 
+<<weird>>=
+weird = function(x) table( (x>50) | (!is.finite(x)))
+weird(fData(pasillaExons)$dispersion)
+weird(fData(pasillaExons)$dispersion_CR_est)
+@ 
+\begin{figure}
+\centering
+\includegraphics[width=0.5\textwidth]{DEXSeq-figCR}
+\caption{Comparison of two different dispersion estimates.}
+\label{figCR}
+\end{figure}
+     
+
+%--------------------------------------------------
+\section{Testing for differential exon usage}
+%--------------------------------------------------
+Having the dispersion estimates and the size factors, its possible to test for differential exon usage 
+using a negative binomial distribution. For each gene we make a model frame with the function 
+\Rfunction{modelFrameForGene} and use it to fit for every exon a generalized linear model with the 
+interaction (formula=sample + exon + condition * I(exon == exonID)) and as a null model the glm 
+without the interaction (formula=sample + exon + condition), then we compare the deviances of both 
+regressions testing under a chi square distribution. All this is implemented in the function 
+\Rfunction{testGeneForDEU}.  The function \Rfunction{testForDEU} will make a call to 
+\Rfunction{testGeneForDEU} for all the genes, and will fill the pvalue and padjust slots of the featureData 
+of the \Rclass{ExonCountSet} object with the results.  The function \Rfunction{DEUresultTable} will give a summary of the results 
+of the tests.
+
+<<mffg1>>=
+head( modelFrameForGene( pasillaExons, "FBgn0010909" ) )
+testGeneForDEU( pasillaExons, "FBgn0010909" )
+<<mffg2,cache=TRUE>>=
+pasillaExons <- testForDEU( pasillaExons )
+res <- DEUresultTable(pasillaExons)
+<<mffg3,cache=TRUE>>=
+table ( res$padjust < 0.1 )
+@
+%$
+%------------------------------------------------------------
+\section{Additional sources of noise}\label{sec:glm}
+%------------------------------------------------------------
+In the last section we did an analysis of differential exon usage ignoring the information regarding
+the library type preparation of the samples.  In this section, we take into account this information 
+as an additional source noise.  For this the \Rclass{ExonCountSet} object design needs to contain this 
+information and this is done by changing the default formulas of the glm's that are fitted in the
+functions \Rfunction{estimateDispersions} and \Rfunction{testForDEU}.
+%
+<<design>>=
+design(pasillaExons)
+head(modelFrameForGene(pasillaExons, "FBgn0010909"))
+@
+%
+To estimate the dispersion, we change the formula to fit the initial glm taking into account the effect of the 
+exon and the library type with interaction of the condition.  This allows the dispersion estimate to contemplate
+the variance that is being introduced by mixing different types of libraries.
+%
+<<formuladispersion,cache=TRUE>>=
+formuladispersion <- count ~ sample + ( exon + type ) * condition
+pasillaExons <- estimateDispersions( pasillaExons, formula=formuladispersion )
+@
+%
+Now, in the actual testing, we will also change the formulas to contemplate the library type preparation. With this
+we are sure that the results that we are seeing of the exons are really effect of the condition, and not in the type
+of library preparation.
+%
+<<formula1>>=
+formula0 <- count ~ sample + type * exon + condition
+formula1 <- count ~ sample + type * exon + condition * I(exon == exonID)
+<<formula2,cache=TRUE>>=
+pasillaExons <- testForDEU( pasillaExons, formula0=formula0, formula1=formula1 )
+res <- DEUresultTable( pasillaExons )
+<<formula3>>=
+table( res$padjust < 0.1 )
+@
+%$
+
+%--------------------------------------------------
+\section{Visualization}
+%--------------------------------------------------
+DEXSeq has a function to visualize the results of \Rfunction{testForDEU} with options for plotting the 
+normalized counts for each of the exons or the fitted expression estimates of the glm (Figure 1). It has also 
+options for the visualization of the transcripts (Figure 2), which provides a good way to visualize 
+the possible events of isoform regulation. \\
+<<plot1, echo=TRUE, fig=TRUE, height=10, width=15>>=
+plotDEXSeq(pasillaExons, "FBgn0010909", cex.axis=1.2, cex=1.3, lwd=1.5)
+@
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{DEXSeq-plot1}
+\caption{Plot indicating the fitted expression estimates from \texttt{testForDEU}, in red are indicated the exons that showed significance, meaning differential exon usage.}
+\label{figplot1}
+\end{figure}
+
+This is the option of visualizing the transcripts (Figure 2): \\
+
+<<plot2, fig=TRUE, height=10, width=15>>=
+plotDEXSeq(pasillaExons, "FBgn0010909", displayTranscripts=TRUE, cex.axis=1.2, cex=1.3, lwd=2, legend=TRUE)
+@
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{DEXSeq-plot2}
+\caption{The same as Figure~\ref{figplot1}, but plotting it with the annotated transcripts.}
+\label{plot2}
+\end{figure}
+\normalsize
+Or visualize the counts normalized by the size factor (Figure 3): \\
+<<plot3, fig=TRUE, height=10, width=15>>=
+plotDEXSeq(pasillaExons, "FBgn0010909", coefficients=FALSE, norCounts=TRUE, cex.axis=1.2, cex=1.3, lwd=2)
+@
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{DEXSeq-plot3}
+\caption{Plot indicating the normalized count values in the exon for each of the samples.}
+\label{plot3}
+\end{figure}
+The package also provides an HTML report generator implemented in the function \Rpackage{DEXSeqHTML}.  
+This function uses \Rpackage{hwriter} to create a result table with links to plots for the significant results, allowing 
+a more detailed exploration of the results. To see an example of it, visit the an example 
+\url{http://www.embl.de/~reyes/DEXSeqReport/testForDEU.html}. This report was generated using the code:
+%
+<<DEXSeqHTML,cache=TRUE>>=
+DEXSeqHTML( pasillaExons, FDR=0.1, color=c("#FF000080", "#0000FF80") )
+@
+
+%--------------------------------------------------
+\section{Gene count table}
+%--------------------------------------------------
+The user can also create gene count tables with the function \Rfunction{geneCountTable}, which basically sums
+all the count exons with the same geneID.  This might be useful to give an input to other packages like 
+\Rpackage{DESeq} or \Rpackage{edgeR}.
+<<gct>>=
+head(geneCountTable(pasillaExons))
+@ 
+
+%--------------------------------------------------
+\section{Creating \Rclass{ExonCountSet} objects}\label{sec:creating}
+%--------------------------------------------------
+\subsection{From files produced by \texttt{HTSeq}}
+and exploration of the results, but this requires information about the transcript annotation.  
+To this extend, DEXSeq provides two python HTSeq scripts, dexseq\_prepare\_annotation.py and 
+dexseq\_count.py.  The first script parses an annotation gtf file to define non-overlapping 
+exonic regions: e.g. if a gene contains 2 exons that overlap, the script would define 2 exonic 
+regions for the non-overlapping part of each exon and a third one for the overlapping part. 
+It gives as output a second gtf file with the defined aggregated exonic regions.  The script 
+dexseq\_count.py takes the gtf file provided by dexseq\_prepare\_annotation.py and an alignment 
+in sam format and counts the number of reads falling in each of the defined exonic regions. 
+\\
+The DEXSeq function \Rfunction{read.HTSeqCounts} is able to read the output of these scripts 
+and returns an ExonCountSet object with the proper information to make the analysis for 
+differential exon usage as well as to generate the visualization of the results. If preferred, 
+the user could also insert the annotation information manually to the ExonCountSet object 
+directly after creating it. The example files can be seen with the function \Rfunction{system.file}.
+For more details about the data set information see the vignette of the package \Rpackage{pasilla}.
+
+For more
+  information of the preprocessing of this dataset, please take a look
+  to the vignette of the \Rpackage{pasilla}.
+
+\subsection{From elementary R data structures}
+The user can also provide its own data directly to the function \Rfunction{newExonCountSet} without 
+using the HTSeq scripts.  To create an \Rclass{ExonCountSet} object, the minimum requirements are a exon count matrix
+containing a row for every exon and a column for every sample, a vector or matrix with the design of the samples
+and two vectors of gene and exon identificators of the same length as the number of rows of the count matrix.
+With this object it is possible to make the analysis for differential exon usage, but the visualization functions
+won't be so useful. Information about the exons (e.g. start and end positions) can be given as a data frame to 
+the \Rfunction{newExonCountSet} function, or can be added to the \Rclass{ExonCountSet} object after its creation
+via the \Rfunction{featureData}.
+For more specifics,  see the man pages of \Rfunction{newExonCountSet}.
+%
+<<ecswithout,eval=FALSE>>=
+ecs.without.annotation <- newExonCountSet(
+   countData=counts(ecs), 
+   design=design(ecs), 
+   geneIDs=geneIDs(ecs), 
+   exonIDs=exonIDs(ecs))
+
+head(fData(ecs.without.annotation))
+@
+%$
+
+\bibliography{DEXseq}
+\bibliographystyle{plain}
+
+\section{Session Information}
+<<sessionInfo>>=
+sessionInfo()
+@ 
+\end{document}
