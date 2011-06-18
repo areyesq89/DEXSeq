@@ -2,6 +2,7 @@
 \docType{methods}
 \alias{counts,ExonCountSet-method}
 \alias{counts<-,ExonCountSet,matrix-method}
+\alias{counts}
 \title{
    Accessors for the 'counts' slot of a ExonCountSet object.
 }
