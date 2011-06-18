@@ -6,7 +6,7 @@ exportMethods(
   counts, "counts<-",
   sizeFactors, "sizeFactors<-",
   conditions,  "conditions<-",
-  design, "design<-"
+  design, "design<-",
   estimateSizeFactors,
   estimateDispersions
 )

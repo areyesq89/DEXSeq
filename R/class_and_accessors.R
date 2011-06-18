@@ -189,7 +189,7 @@ setMethod("counts", signature(cds="ExonCountSet"),
    }
 })
 
-setMethod("counts<-", signature(cds="ExonCountSet"),
+setReplaceMethod("counts", signature(cds="ExonCountSet", value="matrix"),
   function( cds, value ) {
    assayData(cds)[[ "counts" ]] <- value
    validObject(cds)
@@ -203,7 +203,7 @@ setMethod("sizeFactors",  signature(cds="ExonCountSet"),
    sf
 })
 
-setMethod("sizeFactors<-",  signature(cds="ExonCountSet"),
+setReplaceMethod("sizeFactors",  signature(cds="ExonCountSet"),
   function(cds, value ) {
    pData(cds)$sizeFactor <- value
    validObject( cds )

@@ -1,6 +1,7 @@
 \name{counts}
-\alias{counts}
-\alias{counts<-}
+\docType{methods}
+\alias{counts,ExonCountSet-method}
+\alias{counts<-,ExonCountSet,matrix-method}
 \title{
    Accessors for the 'counts' slot of a ExonCountSet object.
 }
@@ -10,22 +11,16 @@
    one column for each sample.
 }
 \usage{
-counts(ecs, normalized=FALSE)
-counts(ecs) <- value
+\S4method{counts}{ExonCountSet}(cds, normalized=FALSE)
+\S4method{counts}{ExonCountSet,matrix}(cds) <- value
 }
 \arguments{
-  \item{ecs}{
-     An ExonCountSet object
-   }
-  \item{normalized}{
-     Logical indication if the counts want to be normalized by the size factor.
-   }
-  \item{value}{
-     A matrix containing integer counts, each row corresponding to an exon and each column corresponding to a sample.
-   }
+  \item{cds}{an \code{ExonCountSet} object.}
+  \item{normalized}{logical indicating whether or not to divide the
+    counts by the size factors before returning.}
+  \item{value}{an integer matrix of counts, each row corresponding to an exon and each column corresponding to a sample.}
 }
 \examples{
-   library(DEXSeq)
    data("pasillaExons", package="pasilla")
    head( counts( pasillaExons ) )
 }   
