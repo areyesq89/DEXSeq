@@ -118,35 +118,45 @@ function \Rfunction{estimateDispersions}.
 %
 <<estDisp1,cache=TRUE,results=hide>>=
 pasillaExons <- estimateDispersions(pasillaExons)
+@
+
+The result from the Cox-Reid estimation is stored in the column \Robject{dispersion\_CR\_est}
+of the feature data. Then, the dispersion-mean relation $\alpha = \alpha_0 + \alpha_1/\mu$ is
+fit to these values (and the coefficients stored in slot \Robject{dispFitCoefs}).
+Finally, for each exon, the maximum of the CR estiomate and the fitted value
+is taken as the exon's final dispersion value and stored in the \Robject{dispersion} slot.
+
 <<estDisp2>>=
-head(featureData(pasillaExons)$dispersion)
-head(featureData(pasillaExons)$dispersion_CR_est)
+head(fData(pasillaExons)$dispersion_CR_est)
+pasillaExons@dispFitCoefs
+head(fData(pasillaExons)$dispersion)
 @
 %
+
 In Section~\ref{sec:glm}, we will see how to incorporate further experimental or technical variables
 into the dispersion estimation.
 
-\fixme{Why are the two dispersion estimates so different, and why do we need to show them both? 
-See Figure~\ref{figCR} and below.}
+%\fixme{Why are the two dispersion estimates so different, and why do we need to show them both? 
+%See Figure~\ref{figCR} and below.}
 
-\fixme{Insert a sentence to give some intuition on how ``large'' or ``small'' these dispersion values are.}
+%\fixme{Insert a sentence to give some intuition on how ``large'' or ``small'' these dispersion values are.}
 
-<<figCR,fig=TRUE>>=
-plot(fData(pasillaExons)[,c("dispersion","dispersion_CR_est")], xlim=c(0,50))
-abline(a=0,b=1,col="orange")
-@ 
-<<weird>>=
-weird = function(x) table( (x>50) | (!is.finite(x)))
-weird(fData(pasillaExons)$dispersion)
-weird(fData(pasillaExons)$dispersion_CR_est)
-@ 
-\begin{figure}
-\centering
-\includegraphics[width=0.5\textwidth]{DEXSeq-figCR}
-\caption{Comparison of two different dispersion estimates.}
-\label{figCR}
-\end{figure}
-     
+%<<figCR,fig=TRUE>>=
+%plot(fData(pasillaExons)[,c("dispersion","dispersion_CR_est")], xlim=c(0,50))
+%abline(a=0,b=1,col="orange")
+%@ 
+%<<weird>>=
+%weird = function(x) table( (x>50) | (!is.finite(x)))
+%weird(fData(pasillaExons)$dispersion)
+%weird(fData(pasillaExons)$dispersion_CR_est)
+%@ 
+%\begin{figure}
+%\centering
+%\includegraphics[width=0.5\textwidth]{DEXSeq-figCR}
+%\caption{Comparison of two different dispersion estimates.}
+%\label{figCR}
+%\end{figure}
+%     
 
 %--------------------------------------------------
 \section{Testing for differential exon usage}\label{sec:deu}
