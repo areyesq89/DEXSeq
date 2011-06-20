@@ -5,7 +5,7 @@ exportClasses( "ExonCountSet" )
 exportMethods(
   counts, "counts<-",
   sizeFactors, "sizeFactors<-",
-  conditions,  "conditions<-",
+#  conditions,  "conditions<-",
   design, "design<-",
   estimateSizeFactors,
   estimateDispersions

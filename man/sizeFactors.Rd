@@ -1,6 +1,8 @@
 \name{sizeFactors}
+\docType{methods}
+\alias{sizeFactors,ExonCountSet-method}
+\alias{sizeFactors<-,ExonCountSet,numeric-method}
 \alias{sizeFactors}
-\alias{sizeFactors<-}
 \title{
     Accessor functions for the sizeFactors information in a ExonCountSet
 }
@@ -10,11 +12,11 @@
     a common scale by dividing by the corresponding size factor.
 }
 \usage{
-sizeFactors(ecs)
-sizeFactors(ecs) <- value
+\S4method{sizeFactors}{ExonCountSet}(cds)
+\S4method{sizeFactors}{ExonCountSet,numeric}(cds) <- value
 }
 \arguments{
-  \item{ecs}{
+  \item{cds}{
       An ExonCountSet
 }
   \item{value}{

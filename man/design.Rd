@@ -1,6 +1,8 @@
 \name{design}
+\docType{methods}
+\alias{design,ExonCountSet-method}
+\alias{design<-,ExonCountSet-method}
 \alias{design}
-\alias{design<-}
 \title{
     Accessor function for the design information in a ExonCountSet object
 }
@@ -10,11 +12,11 @@
     in the ExonCountSet's "phenoData" slot as a row named "design".
 }
 \usage{
-design(ecs, drop=TRUE, asAnnotatedDataFrame=FALSE)
-design(ecs) <- value
+\S4method{design}{ExonCountSet}(cds, drop=TRUE, asAnnotatedDataFrame=FALSE)
+\S4method{design}{ExonCountSet}(cds) <- value
 }
 \arguments{
-  \item{ecs}{
+  \item{cds}{
       An ExonCountSet
    }
   \item{drop}{

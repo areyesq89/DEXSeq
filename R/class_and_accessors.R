@@ -203,49 +203,52 @@ setMethod("sizeFactors",  signature(cds="ExonCountSet"),
    sf
 })
 
-setReplaceMethod("sizeFactors",  signature(cds="ExonCountSet"),
+setReplaceMethod("sizeFactors",  signature(cds="ExonCountSet", value="numeric"),
   function(cds, value ) {
    pData(cds)$sizeFactor <- value
    validObject( cds )
    cds
 })
-      
-.design <- function( cds, drop=TRUE, asAnnotatedDataFrame=FALSE ) {
-   if( asAnnotatedDataFrame )
-      return( phenoData(cds)[, cds@designColumns ] )
-   ans <- pData(cds)[, cds@designColumns, drop=FALSE ]
-   if( ncol(ans) == 1 && drop ) {
-      ans <- ans[,1]
-      names(ans) <- colnames( counts(cds) ) }
-   else
-      rownames( ans ) <- colnames( counts(cds) )
-   ans
-}
 
-`.design<-` <- function( cds, value ) {
-   ## Is it multivariate or just a vector?
-   if( ncol(cbind(value)) > 1 )
-      value <- as( value, "AnnotatedDataFrame" )
-   else {
-      value <- new( "AnnotatedDataFrame",
-         data = data.frame( condition = value ) )
-      varMetadata( value )[ "condition", "labelDescription" ] <-
-         "experimental condition, treatment or phenotype" }
 
-   rownames( pData(value) ) <- rownames( pData(cds) )
-   dimLabels( value ) <- dimLabels( phenoData(cds) )
-   phenoData(cds) <- combine( 
-      phenoData(cds)[ , !( colnames(pData(cds)) %in% cds@designColumns ), drop=FALSE ], 
-      value )
-   cds@designColumns <- colnames( pData(value) )   
-   validObject(cds)
-   cds
-}
+setMethod("design", signature(cds="ExonCountSet"),
+   function( cds, drop=TRUE, asAnnotatedDataFrame=FALSE ) {
+      if( asAnnotatedDataFrame )
+         return( phenoData(cds)[, cds@designColumns ] )
+      ans <- pData(cds)[, cds@designColumns, drop=FALSE ]
+      if( ncol(ans) == 1 && drop ) {
+         ans <- ans[,1]
+         names(ans) <- colnames( counts(cds) ) }
+      else
+         rownames( ans ) <- colnames( counts(cds) )
+      ans
+})
 
-setMethod(`design`,       signature(cds="ExonCountSet"), .design)
-setMethod(`design<-`,     signature(cds="ExonCountSet"), `.design<-`)
-setMethod(`conditions`,   signature(cds="ExonCountSet"), .design)
-setMethod(`conditions<-`, signature(cds="ExonCountSet"), `.design<-`)
+setReplaceMethod("design", signature(cds="ExonCountSet"),
+      function( cds, value ) {
+      ## Is it multivariate or just a vector?
+      if( ncol(cbind(value)) > 1 )
+         value <- as( value, "AnnotatedDataFrame" )
+      else {
+         value <- new( "AnnotatedDataFrame",
+            data = data.frame( condition = value ) )
+         varMetadata( value )[ "condition", "labelDescription" ] <-
+            "experimental condition, treatment or phenotype" }
+
+      rownames( pData(value) ) <- rownames( pData(cds) )
+      dimLabels( value ) <- dimLabels( phenoData(cds) )
+      phenoData(cds) <- combine( 
+         phenoData(cds)[ , !( colnames(pData(cds)) %in% cds@designColumns ), drop=FALSE ], 
+         value )
+      cds@designColumns <- colnames( pData(value) )   
+      validObject(cds)
+      cds
+})
+
+#setMethod("design",       signature(cds="ExonCountSet"), .design)
+#setMethod("design<-",     signature(cds="ExonCountSet"), `.design<-`)
+#setMethod("conditions",   signature(cds="ExonCountSet"), .design)
+#setMethod("conditions<-", signature(cds="ExonCountSet"), `.design<-`)
 
 geneIDs <- function( ecs ) {
    stopifnot( is( ecs, "ExonCountSet" ) )
