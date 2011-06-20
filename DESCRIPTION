@@ -2,11 +2,18 @@ Package: DEXSeq
 Version: 0.1.9
 Title: Inference of differential expression and splicing in RNA-Seq
 Author: Simon Anders <sanders@fs.tum.de> and Alejandro Reyes <areyes@lcg.unam.mx>, both at EMBL Heidelberg
-Maintainer: Simon Anders <sanders@fs.tum.de>
+Maintainer: Alejandro Reyes <reyes@embl.de>
 Imports: MASS, hwriter, methods
 Depends: Biobase (>= 2.13.5)
 Suggests: pasilla (>= 0.2.2)
-Description: The package looks for alternative isoform regulation using a generalized lineal model with a negative binomial distribution in RNA-seq count data
+Description: The package is focused on finding differential 
+   exon usage using RNA-seq exon counts from samples with 
+   different experimental designs. It provides functions 
+   that allows the user to make the necessary statistical 
+   tests based on a model that uses the negative binomial 
+   distribution to estimate the variance between biological 
+   replicates. The package also provides functions for the 
+   visualization and exploration of the results.
 License: GPL (>= 3)
 URL: 
 biocViews: HighThroughputSequencing, RNAseq, DifferentialExpression
