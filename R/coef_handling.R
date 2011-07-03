@@ -1,5 +1,3 @@
-library( DEXSeq )
-
 arrangeCoefs <- function( frm, mf, mm = model.matrix( frm, mf ), fit = NULL, insertValues = TRUE ) {
 
    if( any( attr( mm, "contrasts" ) != "contr.treatment" ) )
@@ -148,14 +146,16 @@ getEffectsForPlotting <- function( coefs, groupingVar = "condition" )
    fittedValues
 }
 
-load( "Graveley_unstranded_fd.rda" )
-frm <- count ~ ( condition + libType ) * exon
-i <- 0
-coefs <- new.env( hash=TRUE )
-for( geneID in unique(geneIDs(ecs)) ) {
-   coefs[[ geneID ]] <- fitAndArrangeCoefs( ecs, frm )
-   i <- i + 1
-   if( i %% 100 == 0 )
-      cat(sprintf( "%d genes processed.\n", i ))
-}
+# Tesing code:
+
+#load( "Graveley_unstranded_fd.rda" )
+#frm <- count ~ ( condition + libType ) * exon
+#i <- 0
+#coefs <- new.env( hash=TRUE )
+#for( geneID in unique(geneIDs(ecs)) ) {
+#   coefs[[ geneID ]] <- fitAndArrangeCoefs( ecs, frm )
+#   i <- i + 1
+#   if( i %% 100 == 0 )
+#      cat(sprintf( "%d genes processed.\n", i ))
+#}
 
