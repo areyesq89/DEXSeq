@@ -1,14 +1,16 @@
 \name{estimateDispersions}
+\docType{methods}
+\alias{estimateDispersions,ExonCountSet-method}
 \alias{estimateDispersions}
 \title{Estimate exon dispersions}
 \description{
       Makes for every gene a call to the internal functions estimateExonDispersionsForModelFrame, fits a mean dependent regression on them.
 }
 \usage{
-estimateDispersions(ecs, formula=NULL, file=NULL, initialGuess=.01, quiet=FALSE)
+\S4method{estimateDispersions}{ExonCountSet}(cds, formula=NULL, file=NULL, initialGuess=.01, quiet=FALSE)
 }
 \arguments{
-  \item{ecs}{
+  \item{cds}{
      An ExonCountSet object.
    }
   \item{formula}{
@@ -25,7 +27,7 @@ estimateDispersions(ecs, formula=NULL, file=NULL, initialGuess=.01, quiet=FALSE)
    }
 }
 \value{
-	An ExonCountSet object with dispersion (\code{featureData(ecs)$dispersion} and \code{featureData(ecs)$dispersion_CR_est}) parameters filled as a featureData field for the Cox Reid dispersions as well as the dispersion values that will be used for the test (maximum between Cox-Reid dispersion and mean fitted dispersion).
+	An ExonCountSet object with dispersion (\code{featureData(cds)$dispersion} and \code{featureData(cds)$dispersion_CR_est}) parameters filled as a featureData field for the Cox Reid dispersions as well as the dispersion values that will be used for the test (maximum between Cox-Reid dispersion and mean fitted dispersion).
 }
 \examples{
 	\dontrun{data("pasillaExons", package="pasilla")}

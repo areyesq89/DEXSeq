@@ -1,11 +1,13 @@
-estimateSizeFactors <- function( ecs ){
-   stopifnot( is( ecs, "ExonCountSet") )
-   geomeans <- exp( rowMeans( log( counts(ecs) ) ) )
-   sizeFactors(ecs) <- 
-      apply( counts(ecs), 2, function(cnts) 
-         median( ( cnts / geomeans )[ geomeans>0 ] ) )
-   ecs
-}
+setMethod("estimateSizeFactors", signature(cds="ExonCountSet"),
+   function( cds ){
+      stopifnot( is( cds, "ExonCountSet") )
+      geomeans <- exp( rowMeans( log( counts(cds) ) ) )
+      sizeFactors(cds) <- 
+         apply( counts(cds), 2, function(cnts) 
+            median( ( cnts / geomeans )[ geomeans>0 ] ) )
+      cds
+   }
+)
 
 countTableForGene <- function( ecs, geneID, normalized=FALSE, withDispersion=FALSE ) {
    stopifnot( is( ecs, "ExonCountSet") )
@@ -153,124 +155,125 @@ fitDispersions <- function( ecs )
 }
 
 
-estimateDispersions <- function( ecs, formula=NULL, file=NULL, initialGuess=.01, quiet=FALSE)
-{
-   stopifnot(is(ecs, "ExonCountSet"))
-   if( all( is.na(sizeFactors(ecs)) ) ){
-      stop( "Estimate size factors first." )	
-   }
-   
-   # Which exons are actually testable? 
-   # An all-zero gene is not testable
-   fData(ecs)$testable <- rowSums(counts(ecs)) > 0
-   # If a gene contains less then two non-zero exons, all its exons non-testable
-   fData(ecs)$testable <- unlist( tapply( fData(ecs)$testable, geneIDs(ecs), function(x) 
-      if( sum(x) > 1 ) x else rep( FALSE, length(x) ) ) ) 
-   testableGenes <- names( which( tapply( fData(ecs)$testable, geneIDs(ecs), any ) ) )
-
-   if( !quiet ) {
-      cat( "Dispersion estimation. (Progress report: one dot per 100 genes)\n" )
-      cat( "  Setting up model frames ")
-   }
-   i <- 0
-   modelFrames <- sapply( testableGenes, function(gs) {
-      mf <- modelFrameForGene(ecs, gs)
-      mf$offset <- log(mf$sizeFactor)
-      if( !quiet ) {
-         i <<- i + 1
-         if( i %% 100 == 0 )
-            cat( "." )
+setMethod("estimateDispersions", signature(cds="ExonCountSet"),
+   function( cds, formula=NULL, file=NULL, initialGuess=.01, quiet=FALSE)
+   {
+      stopifnot(is(cds, "ExonCountSet"))
+      if( all( is.na(sizeFactors(cds)) ) ){
+         stop( "Estimate size factors first." )	
       }
-      mf }, simplify=FALSE )
    
-   
-   if( is.null(formula) ){
-      formula <- count ~ sample + condition*exon
-   }
-   
-   
-   if( !quiet )
-      cat( "\n  Setting up model matrices." )
-   modelmatrices <- sapply( modelFrames, function(mf)
-      model.matrix( formula, data = mf ), simplify=FALSE )
+      # Which exons are actually testable? 
+       # An all-zero gene is not testable   
+      fData(cds)$testable <- rowSums(counts(cds)) > 0
+      # If a gene contains less then two non-zero exons, all its exons non-testable
+      fData(cds)$testable <- unlist( tapply( fData(cds)$testable, geneIDs(cds), function(x) 
+         if( sum(x) > 1 ) x else rep( FALSE, length(x) ) ) ) 
+      testableGenes <- names( which( tapply( fData(cds)$testable, geneIDs(cds), any ) ) )
 
-   if( !quiet )
-      cat( "\n  Calculating initial fits." )
-
-   # warnOpt <- getOption( "warn" )
-   # options( warn=-1 )  # TODO: Write a proper handler to silence 
-      
-   muhats <- sapply( testableGenes, function( gn ) { 
-      try( 
-        fitted.values(glm.fit( 
-            modelmatrices[[gn]], modelFrames[[gn]]$count, 
-            family = negative.binomial(1/initialGuess), 
-            offset = modelFrames[[gn]]$offset )),
-         silent=TRUE ) },
-      simplify=FALSE )
-   # options( warn=warnOpt )
-
-   badones <- which( sapply( muhats, inherits, "try-error") )
-   if( length(badones) > 0 ) {
-      testableGenes <- testableGenes[ ! testableGenes %in% names(badones) ]
-	   warning( paste( "Failed to set up model frames for genes ", 
-	      paste( names(badones), collapse=", " ) ) )
-   }
-   
-   fData(ecs)$dispersion_CR_est <- NA_real_
-   
-   if( !quiet ) {
-      cat( "\n  Performing Cox-Reid dispersion estimation " )
-      i <- 0 }
-   for( genename in testableGenes ){
-
-      mf <- modelFrames[[genename]]
-      # warnOpt <- getOption( "warn" )
-      # options( warn=-1 )  # TODO: Write a proper handler to silence warnings
-      disps <- try( 
-         estimateExonDispersionsForModelFrame( mf, 
-            mm=modelmatrices[[genename]], muhat=muhats[[genename]] ),
-         silent=TRUE )
-      # options( warn=warnOpt )
-      if( inherits( disps, "try-error" ) ) {
-         disps <- rep( NA_real_, length( muhats[[genename]] ) )
-         warning( sprintf( "Failed to fit dispersion for gene %s", genename ) )
-      }   
-
-      if( !is.null(file) ) {
-         countsums <- tapply( mf$count, mf$exon, sum )
-         stopifnot( identical( names(disps), names(countsums) ) )   # What is this for?
-         write.table( 
-            data.frame( gene=genename, exon=names(disps), disp=disps, countsum=countsums ), 
-            quote=FALSE, row.names=FALSE, col.names=FALSE, sep="\t", file=file )
-         flush( file ) }
-
-      rows <- as.character(geneIDs(ecs)) %in% genename
-#     stopifnot( identical( names(disps), unname(exonIDs(ecs)[rows])) ) for the momment
-      fData(ecs)$dispersion_CR_est[rows] <- disps 
-      
       if( !quiet ) {
-         i <- i + 1
-         if( i %% 100 == 0 )
-            cat( "." ) }      
-   }
-
-   if( !quiet )
-      cat( "\n  Fitting mean-dispersion relation" )
-   ecs@dispFitCoefs <- fitDispersions( ecs )  
+         cat( "Dispersion estimation. (Progress report: one dot per 100 genes)\n" )
+         cat( "  Setting up model frames ")
+      }
+      i <- 0
+      modelFrames <- sapply( testableGenes, function(gs) {
+         mf <- modelFrameForGene(cds, gs)
+         mf$offset <- log(mf$sizeFactor)
+         if( !quiet ) {
+            i <<- i + 1
+            if( i %% 100 == 0 )
+               cat( "." )
+         }
+         mf }, simplify=FALSE )
    
-   fData(ecs)$dispersion <- pmin(
-      pmax( 
-         fData(ecs)$dispersion_CR_est, 
-         ecs@dispFitCoefs[1] + ecs@dispFitCoefs[2] / colMeans( t(counts(ecs))/sizeFactors(ecs) ),
-         na.rm = TRUE ),
-      1e8 )   # 1e8 as an arbitrary way-too-large value to capture infinities
- 
-   if( !quiet )
-      cat( "\nFinished with dispersion estimation.\n" )
-   ecs
-}
+   
+      if( is.null(formula) ){
+         formula <- count ~ sample + condition*exon
+      }
+   
+   
+      if( !quiet )
+         cat( "\n  Setting up model matrices." )
+      modelmatrices <- sapply( modelFrames, function(mf)
+         model.matrix( formula, data = mf ), simplify=FALSE )
 
+      if( !quiet )
+         cat( "\n  Calculating initial fits." )
+
+      # warnOpt <- getOption( "warn" )
+      # options( warn=-1 )  # TODO: Write a proper handler to silence 
+      
+      muhats <- sapply( testableGenes, function( gn ) { 
+         try( 
+           fitted.values(glm.fit( 
+               modelmatrices[[gn]], modelFrames[[gn]]$count, 
+               family = negative.binomial(1/initialGuess), 
+               offset = modelFrames[[gn]]$offset )),
+            silent=TRUE ) },
+         simplify=FALSE )
+      # options( warn=warnOpt )
+   
+      badones <- which( sapply( muhats, inherits, "try-error") )
+      if( length(badones) > 0 ) {
+         testableGenes <- testableGenes[ ! testableGenes %in% names(badones) ]
+    	   warning( paste( "Failed to set up model frames for genes ", 
+	         paste( names(badones), collapse=", " ) ) )
+      }
+   
+      fData(cds)$dispersion_CR_est <- NA_real_
+   
+      if( !quiet ) {
+         cat( "\n  Performing Cox-Reid dispersion estimation " )
+         i <- 0 }
+      for( genename in testableGenes ){
+
+         mf <- modelFrames[[genename]]
+         # warnOpt <- getOption( "warn" )
+         # options( warn=-1 )  # TODO: Write a proper handler to silence warnings
+         disps <- try( 
+            estimateExonDispersionsForModelFrame( mf, 
+               mm=modelmatrices[[genename]], muhat=muhats[[genename]] ),
+            silent=TRUE )
+         # options( warn=warnOpt )
+         if( inherits( disps, "try-error" ) ) {
+            disps <- rep( NA_real_, length( muhats[[genename]] ) )
+            warning( sprintf( "Failed to fit dispersion for gene %s", genename ) )
+         }   
+   
+         if( !is.null(file) ) {
+            countsums <- tapply( mf$count, mf$exon, sum )
+            stopifnot( identical( names(disps), names(countsums) ) )   # What is this for?
+            write.table( 
+               data.frame( gene=genename, exon=names(disps), disp=disps, countsum=countsums ), 
+               quote=FALSE, row.names=FALSE, col.names=FALSE, sep="\t", file=file )
+            flush( file ) }
+
+         rows <- as.character(geneIDs(cds)) %in% genename
+#        stopifnot( identical( names(disps), unname(exonIDs(cds)[rows])) ) for the momment
+         fData(cds)$dispersion_CR_est[rows] <- disps 
+      
+         if( !quiet ) {
+            i <- i + 1
+            if( i %% 100 == 0 )
+               cat( "." ) }      
+      }
+
+      if( !quiet )
+         cat( "\n  Fitting mean-dispersion relation" )
+      cds@dispFitCoefs <- fitDispersions( cds )  
+   
+      fData(cds)$dispersion <- pmin(
+         pmax( 
+            fData(cds)$dispersion_CR_est, 
+            cds@dispFitCoefs[1] + cds@dispFitCoefs[2] / colMeans( t(counts(cds))/sizeFactors(cds) ),
+            na.rm = TRUE ),
+         1e8 )   # 1e8 as an arbitrary way-too-large value to capture infinities
+ 
+      if( !quiet )
+         cat( "\nFinished with dispersion estimation.\n" )
+      cds
+   }
+)
 
 testGeneForDEU <- function (ecs, gene, formula0=NULL, formula1=NULL, 
       glm.control = list( maxit=100, epsilon=3e-4 ) ){
