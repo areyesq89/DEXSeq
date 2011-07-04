@@ -70,33 +70,17 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, coefficients=TRUE, norCounts=FALSE,
 		if(sum(is.na(featureData(ecs)$dispersion))==nrow(counts(ecs))){
 			stop("No dispersion parameters found, first call function estimateDispersions...\n")		
 		}
-		mf<-modelFrameForGene(ecs, geneID)
-		mf$offset <- log(mf$sizeFactor)
-		fam <- negative.binomial( 1 / ecs@dispFitCoefs[2] )
-		fam$family = "Negative Binomial(varying)"
-
-		fit1 <- glm( count~C(condition,sum)*C(exon,sum), mf, family = fam, offset = mf$offset )
-		nam <- sub(pattern="\\w+(\\d*)$", replacement="", names(fit1$coefficients), perl=TRUE)
-		lst <- split(fit1$coefficients, factor(nam, levels=unique(nam)))
-		intercept <- lst[[1]]
 		if( expression ){
-			treatments <- lst[[2]]
 			mtext("Fitted expression", side=2, adj=0.5, padj=1, line=1.5, outer=FALSE, ...)
 		}else{
-			treatments <- rep(0, numcond-1)
 			mtext("Fitted splicing", side=2, adj=0.5, padj=1, line=1.5, outer=FALSE, ...)
 		}
-		untr <- lst[[3]]
-		treated <- lst[4:length(lst)]
-		sumlastex <- -sapply(treated, sum)-sum(untr)
-		sumlastcond <- -rowSums(do.call(cbind, treated))-sum(untr)
-		coeff <- sapply(1:(numcond-1), function(i){treated[[i]]+intercept+treatments[i]+untr})
-		coeff <- rbind(coeff, sumlastex + treatments + intercept)
-		coeff <- cbind(coeff, c(intercept-rowSums(do.call(cbind, treated))-sum(treatments)+untr, intercept-sum(treatments)-sum(untr)+sum(unlist(treated))))
+
+		coeff <- as.data.frame( t( getEffectsForPlotting( fitAndArrangeCoefs( ecs, geneID ), averageOutExpression=!expression) ) )
 		coeff <- exp(coeff)
 
 		ylimn <- c(min(coeff, na.rm=TRUE), max(coeff, na.rm=TRUE))
-		coeff <- vst( coeff )
+		coeff <- vst( coeff  )
 		plot.window(xlim=c(0, 1), ylim=c(min(coeff), max(coeff)))
 		minlog10 <- floor( log10( 1/ncol(counts(ecs)) ) )
 		maxlog10 <- ceiling( log10( ylimn[2] ) )
@@ -170,7 +154,6 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, coefficients=TRUE, norCounts=FALSE,
 		middle <- apply(cbind(intervals[rango], (intervals[rango+1]-((intervals[rango+1])-intervals[rango])*0.2)), 1, median)
 		count<-rbind(count, NA)
 
-#		for(j in order(as.character(design(ecs, drop=FALSE)$condition))){
 		for(j in 1:ncol(count)){
 			segments(intervals[rango], 
 			         count[rango,j], 

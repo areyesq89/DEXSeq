@@ -5,7 +5,6 @@ exportClasses( "ExonCountSet" )
 exportMethods(
   counts, "counts<-",
   sizeFactors, "sizeFactors<-",
-#  conditions,  "conditions<-",
   design, "design<-",
   estimateSizeFactors,
   estimateDispersions
@@ -27,12 +26,7 @@ export(
   read.HTSeqCounts,
   DEXSeqHTML,
   DEUresultTable,
-  plotDEXSeq,
-  arrangeCoefs,
-  apply2,
-  balanceExons,
-  fitAndArrangeCoefs,
-  getEffectsForPlotting
+  plotDEXSeq
 )
 
 
