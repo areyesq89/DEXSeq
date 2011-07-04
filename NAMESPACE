@@ -27,7 +27,12 @@ export(
   read.HTSeqCounts,
   DEXSeqHTML,
   DEUresultTable,
-  plotDEXSeq
+  plotDEXSeq,
+  arrangeCoefs,
+  apply2,
+  balanceExons,
+  fitAndArrangeCoefs,
+  getEffectsForPlotting
 )
 
 

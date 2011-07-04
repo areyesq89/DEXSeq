@@ -100,7 +100,7 @@ balanceExons <- function( coefs, dispersions ) {
 }         
 
 
-fitAndArrangeCoefs <- function( ecs, frm = count ~ sample + condition * exon, balanceExons = TRUE )
+fitAndArrangeCoefs <- function( ecs, geneID, frm = count ~ condition * exon, balanceExons = TRUE )
 {
    mf <- modelFrameForGene( ecs, geneID )
    if( length(levels(mf$exon)) <= 1 )
@@ -118,7 +118,7 @@ fitAndArrangeCoefs <- function( ecs, frm = count ~ sample + condition * exon, ba
       coefs
 }
 
-getEffectsForPlotting <- function( coefs, groupingVar = "condition" )
+getEffectsForPlotting <- function( coefs, groupingVar = "condition", averageOutExpression=FALSE )
 {
    groupingExonInteraction <- which( sapply( coefs, function(x) 
       all( c( groupingVar, "exon") %in% names(dimnames(x)) ) & length(dim(x)) == 2 ) ) 
@@ -130,6 +130,8 @@ getEffectsForPlotting <- function( coefs, groupingVar = "condition" )
       if( all( c( groupingVar, "exon") %in% names(dimnames(x)) ) )
          stop( "Cannot yet deal with third-order terms." )
       if( !any( c( groupingVar, "exon") %in% names(dimnames(x)) ) ) {
+         fittedValues <- fittedValues + mean( x )
+      } else if( averageOutExpression & identical( names(dimnames(x)), groupingVar ) ) {
          fittedValues <- fittedValues + mean( x )
       } else if( groupingVar %in% names(dimnames(x)) ) {
          groupMeans <- apply2( x, groupingVar, mean )
