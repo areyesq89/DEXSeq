@@ -1,3 +1,7 @@
+2011-07-12: version 0.1.10
+
+- Parallelization possibility added to the code, with its description in the vignette and single exon genes ignored properly.
+
 2011-07-01: version 0.1.10
 
 - 'estimateSizeFactors' and 'estimatedispersions' function added as S4 methods, no more problems when loading DESeq and DEXSeq in the same R session
