@@ -1,4 +1,4 @@
-2011-07-12: version 0.1.10
+2011-07-12: version 0.1.11
 
 - Parallelization possibility added to the code, with its description in the vignette and single exon genes ignored properly.
 
