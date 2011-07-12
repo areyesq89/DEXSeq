@@ -21,6 +21,7 @@ export(
   assertOneWay,
   profileLogLikelihood,
   estimateExonDispersionsForModelFrame,
+  fitDispersions,
   testGeneForDEU,
   testForDEU,
   read.HTSeqCounts,

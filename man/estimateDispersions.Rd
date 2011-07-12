@@ -7,7 +7,7 @@
       Makes for every gene a call to the internal functions estimateExonDispersionsForModelFrame, fits a mean dependent regression on them.
 }
 \usage{
-\S4method{estimateDispersions}{ExonCountSet}(cds, formula=NULL, file=NULL, initialGuess=.01, quiet=FALSE)
+\S4method{estimateDispersions}{ExonCountSet}(cds, formula=NULL, file=NULL, initialGuess=.01, quiet=FALSE, fitDispersions=TRUE)
 }
 \arguments{
   \item{cds}{
@@ -24,6 +24,9 @@
    }
   \item{quiet}{
 	If TRUE, no progress report is shown.
+   }
+  \item{fitDispersions}{
+	Logical, indicating if the function fitDispersions should be called internally.
    }
 }
 \value{

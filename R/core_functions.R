@@ -151,12 +151,19 @@ fitDispersions <- function( ecs )
          warning( "Dispersion fit did not converge." )
          break }
     }
-  return(coefs)
+    ecs@dispFitCoefs <- coefs
+    fData(ecs)$dispersion <- pmin(
+       pmax( 
+          fData(ecs)$dispersion_CR_est, 
+          ecs@dispFitCoefs[1] + ecs@dispFitCoefs[2] / colMeans( t(counts(ecs))/sizeFactors(ecs) ),
+          na.rm = TRUE ),
+          1e8 )   # 1e8 as an arbitrary way-too-large value to capture infinities
+    return(ecs)
 }
 
 
 setMethod("estimateDispersions", signature(cds="ExonCountSet"),
-   function( cds, formula=NULL, file=NULL, initialGuess=.01, quiet=FALSE)
+   function( cds, formula=NULL, file=NULL, initialGuess=.01, quiet=FALSE, fitDispersions=TRUE)
    {
       stopifnot(is(cds, "ExonCountSet"))
       if( all( is.na(sizeFactors(cds)) ) ){
@@ -169,6 +176,10 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
       # If a gene contains less then two non-zero exons, all its exons non-testable
       fData(cds)$testable <- unlist( tapply( fData(cds)$testable, geneIDs(cds), function(x) 
          if( sum(x) > 1 ) x else rep( FALSE, length(x) ) ) ) 
+      # take away genes with just one exon
+      generle <- rle( as.character( geneIDs(cds) ) )
+      fData(cds)$testable[which(geneIDs(cds) %in% generle$values[which( generle$lengths ==1 )])] <- FALSE
+
       testableGenes <- names( which( tapply( fData(cds)$testable, geneIDs(cds), any ) ) )
 
       if( !quiet ) {
@@ -258,17 +269,12 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
                cat( "." ) }      
       }
 
-      if( !quiet )
+      if( !quiet & fitDispersions )
          cat( "\n  Fitting mean-dispersion relation" )
-      cds@dispFitCoefs <- fitDispersions( cds )  
+
+      if( fitDispersions )
+         cds <- fitDispersions( cds )  
    
-      fData(cds)$dispersion <- pmin(
-         pmax( 
-            fData(cds)$dispersion_CR_est, 
-            cds@dispFitCoefs[1] + cds@dispFitCoefs[2] / colMeans( t(counts(cds))/sizeFactors(cds) ),
-            na.rm = TRUE ),
-         1e8 )   # 1e8 as an arbitrary way-too-large value to capture infinities
- 
       if( !quiet )
          cat( "\nFinished with dispersion estimation.\n" )
       cds
@@ -344,7 +350,8 @@ testForDEU <- function( ecs, formula0=NULL, formula1=NULL, padjust=TRUE, quiet=F
    i <- 0
    if( !quiet )
       cat( "Testing for differential exon usage " )
-   for( genename in as.character( unique( geneIDs(ecs) ) ) ) {
+   testablegenes <- names( which( tapply( fData(ecs)$testable, geneIDs(ecs), any ) ) )
+   for( genename in testablegenes ) {
       i <- i + 1
       if( !quiet & i %% 100 == 0 )
          cat( "." )
