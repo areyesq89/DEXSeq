@@ -329,7 +329,7 @@ For this particular case, we will divide our \Robject{ExonCountSet} object into 
 %
 <<subset1, cache=TRUE>>=
 forsubset <- rep(1:5, each=length( levels( geneIDs(pasillaExons) ) )/5)
-subgenes <- tapply(levels(geneIDs(pasillaExons)), forsubset, c)
+subgenes <- split(levels(geneIDs(pasillaExons)), forsubset)
 allecs <- sapply(subgenes, 
    function(x){ 
       subsetByGenes( pasillaExons, x ) 
