@@ -93,9 +93,9 @@ balanceExons <- function( coefs, dispersions ) {
       if( length( whichShift ) > 1 )
          stop( "Confused about selecting shift." )
       if( "exon" %in% names(dimnames(x)) )
-         x + shifts[[ whichShift ]]$wmeans
-      else
          x - shifts[[ whichShift ]]$wmeans
+      else
+         x + shifts[[ whichShift ]]$wmeans
     } )
 }         
 
