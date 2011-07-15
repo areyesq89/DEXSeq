@@ -316,7 +316,7 @@ parts that are most time consuming can be paralellized (functions \Rfunction{est
 \Rfunction{testForDEU}).  This section of the vignette shows which parts of the analysis can be paralellized, 
 using as an example the library \Rpackage{multicore}.
 %
-<<para1,cache=TRUE>>=
+<<para1,cache=TRUE,eval=FALSE>>=
 data("pasillaExons", package="pasilla")
 pasillaExons <- estimateSizeFactors( pasillaExons )
 @
@@ -327,7 +327,7 @@ important to subet it using the whole exons of the genes because of the way the 
 For this particular case, we will divide our \Robject{ExonCountSet} object into a list containing 5 smaller
 \Robject{ExonCountSet} objects.
 %
-<<subset1, cache=TRUE>>=
+<<subset1, cache=TRUE,eval=FALSE>>=
 forsubset <- rep(1:5, each=length( levels( geneIDs(pasillaExons) ) )/5)
 subgenes <- split(levels(geneIDs(pasillaExons)), forsubset)
 allecs <- sapply(subgenes, 
@@ -342,7 +342,7 @@ Dividing the object into smaller parts allow us to parallelize the exon dispersi
 but the fitting might be recommendable using the whole dataset.  We do this by setting the parameter fitDispersions to FALSE when calling \Rfunction{estimateDispersions} and then call
 \Rfunction{fitDispersions} after putting the all the parts together.
 %
-<<par-dispersions, cache=TRUE>>=
+<<par-dispersions, cache=TRUE,eval=FALSE>>=
 library(multicore)
 allecs <- mclapply(allecs, 
    estimateDispersions, 
@@ -357,7 +357,7 @@ pasillaExons <- fitDispersions( pasillaExons )
 @
 We divide again the \Robject{ExonCountSet} object to divide the testing part in several cores. From this part it is 
 reccomendable to make the multiple testing correction after joining all the parts.
-<<par-testing, cache=TRUE>>=
+<<par-testing,cache=TRUE,eval=FALSE>>=
 allecs <- sapply(subgenes, 
    function(x){ 
       subsetByGenes( pasillaExons, x ) 
