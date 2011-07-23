@@ -24,7 +24,7 @@ samples = data.frame(
    replicate = c(1:3, 1:4),
    type = c("single-read", "paired-end", "paired-end", "single-read", "single-read", "paired-end", "paired-end"),
    row.names = dir(system.file("extdata", package="pasilla", mustWork=TRUE), pattern="fb.txt"),
-   stringsAsFactors = FALSE,
+   stringsAsFactors = TRUE,
    check.names = FALSE)
 
 annotationfile = file.path(inDir, "Dmel.BDGP5.25.62.DEXSeq.chr.gff")

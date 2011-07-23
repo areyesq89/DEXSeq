@@ -5,7 +5,7 @@ Author: Simon Anders <sanders@fs.tum.de> and Alejandro Reyes <areyes@lcg.unam.mx
 Maintainer: Alejandro Reyes <reyes@embl.de>
 Imports: MASS, hwriter, methods, stringr
 Depends: Biobase (>= 2.13.5)
-Suggests: pasilla (>= 0.2.2), multicore
+Suggests: pasilla (>= 0.2.2)
 Description: The package is focused on finding differential 
    exon usage using RNA-seq exon counts from samples with 
    different experimental designs. It provides functions 
