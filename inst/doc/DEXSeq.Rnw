@@ -11,6 +11,7 @@
 \usepackage{hyperref,graphicx}
 \usepackage{cite}
 \usepackage{color}
+\usepackage{xstring}
 
 \SweaveOpts{keep.source=FALSE,eps=FALSE,include=FALSE,width=4,height=4.5} 
 \newcommand{\Robject}[1]{\texttt{#1}}
@@ -23,6 +24,10 @@
 
 \title{\textsf{\textbf{Analyzing RNA-seq data for differential exon usage with the \Rpackage{DEXSeq} package}}}
 \author{Alejandro Reyes, Simon Anders, Wolfgang Huber}
+
+% The following command makes use of SVN's $Date$ keyword substitution
+% To activate this, I used: svn propset svn:keywords "Date" DEXSeq.Rnw
+\date{\StrMid{$Date$}{8}{18}}
 
 \begin{document}
 \maketitle
@@ -72,6 +77,13 @@ library("DEXSeq")
 <<datapasilla>>=
 data("pasillaExons", package="pasilla")
 @ 
+
+If you have not yet installed the \Rpackage{pasilla} package, you can do so with
+<<install_pasilla,eval=FALSE>>
+source("http://www.bioconductor.org/biocLite.R")
+biocLite("pasilla")
+@
+
 The \Rfunction{pData} accessor function shows the available sample annotations.
 <<pData>>=
 pData(pasillaExons)
