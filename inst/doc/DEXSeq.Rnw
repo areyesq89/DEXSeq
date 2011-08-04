@@ -25,7 +25,7 @@
 \title{\textsf{\textbf{Analyzing RNA-seq data for differential exon usage with the \Rpackage{DEXSeq} package}}}
 \author{Alejandro Reyes, Simon Anders, Wolfgang Huber}
 
-% The following command makes use of SVN's $Date$ keyword substitution
+% The following command makes use of SVN's 'Date' keyword substitution
 % To activate this, I used: svn propset svn:keywords "Date" DEXSeq.Rnw
 \date{\StrMid{$Date$}{8}{18}}
 

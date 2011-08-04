@@ -135,7 +135,7 @@ else: # paired-end
          counts[ '_notaligned' ] += 1
          continue
       if af and ar and not af.aQual < minaqual and ar.aQual < minaqual:
-         counts[ '_loqaqual' ] += 1
+         counts[ '_lowaqual' ] += 1
          continue
       if af and af.aligned and af.aQual >= minaqual and af.iv.chrom in features.chrom_vectors.keys():
          for cigop in af.cigar:
