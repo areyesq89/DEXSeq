@@ -118,7 +118,7 @@ if not is_PE:
       if len( set_of_gene_names ) == 0:
          counts[ '_empty' ] += 1
       elif len( set_of_gene_names ) > 1:
-         counts[ '_ambiguous' ] = 0
+         counts[ '_ambiguous' ] +=1
       else:
          for f in rs:
             counts[ f.name ] += 1
