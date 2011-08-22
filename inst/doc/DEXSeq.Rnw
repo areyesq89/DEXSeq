@@ -79,7 +79,7 @@ data("pasillaExons", package="pasilla")
 @ 
 
 If you have not yet installed the \Rpackage{pasilla} package, you can do so with
-<<install_pasilla,eval=FALSE>>
+<<installpasilla,eval=FALSE>>
 source("http://www.bioconductor.org/biocLite.R")
 biocLite("pasilla")
 @
