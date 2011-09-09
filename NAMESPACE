@@ -27,7 +27,8 @@ export(
   read.HTSeqCounts,
   DEXSeqHTML,
   DEUresultTable,
-  plotDEXSeq
+  plotDEXSeq,
+  estimatelog2FoldChanges
 )
 
 

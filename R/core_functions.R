@@ -38,7 +38,7 @@ modelFrameForGene <- function( ecs, geneID ) {
       exon = exonCol,
       sizeFactor = rep( sizeFactors(ecs), each = numExons ) )
    for( cn in colnames( design(ecs,drop=FALSE) ) )
-      modelFrame[[cn]] <- rep( design(ecs,drop=FALSE)[[cn]], each=numExons )
+      modelFrame[[cn]] <- factor(rep( design(ecs,drop=FALSE)[[cn]], each=numExons ))
    modelFrame$dispersion <- fData(ecs)$dispersion[ rows ][ 
       match( modelFrame$exon, exonIDs(ecs)[rows] ) ]
    modelFrame$count <- as.vector( counts(ecs)[rows,] )
@@ -163,13 +163,13 @@ fitDispersions <- function( ecs )
 
 
 setMethod("estimateDispersions", signature(cds="ExonCountSet"),
-   function( cds, formula=NULL, file=NULL, initialGuess=.01, quiet=FALSE, fitDispersions=TRUE)
+   function( cds, formula=count ~ sample + condition*exon, file=NULL, initialGuess=.01, n.cores=1, quiet=FALSE, fitDispersions=TRUE)
    {
       stopifnot(is(cds, "ExonCountSet"))
       if( all( is.na(sizeFactors(cds)) ) ){
          stop( "Estimate size factors first." )	
       }
-   
+      cds@formulas[["formula.dispersion"]] <- deparse(formula)
       # Which exons are actually testable? 
        # An all-zero gene is not testable   
       fData(cds)$testable <- rowSums(counts(cds)) > 0
@@ -181,103 +181,117 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
       fData(cds)$testable[which(geneIDs(cds) %in% generle$values[which( generle$lengths ==1 )])] <- FALSE
 
       testableGenes <- names( which( tapply( fData(cds)$testable, geneIDs(cds), any ) ) )
-
-      if( !quiet ) {
+      if( !quiet & n.cores==1 ) {
          cat( "Dispersion estimation. (Progress report: one dot per 100 genes)\n" )
-         cat( "  Setting up model frames ")
       }
       i <- 0
-      modelFrames <- sapply( testableGenes, function(gs) {
-         mf <- modelFrameForGene(cds, gs)
-         mf$offset <- log(mf$sizeFactor)
-         if( !quiet ) {
-            i <<- i + 1
-            if( i %% 100 == 0 )
-               cat( "." )
-         }
-         mf }, simplify=FALSE )
-   
-   
-      if( is.null(formula) ){
-         formula <- count ~ sample + condition*exon
-      }
-   
-   
-      if( !quiet )
-         cat( "\n  Setting up model matrices." )
-      modelmatrices <- sapply( modelFrames, function(mf)
-         model.matrix( formula, data = mf ), simplify=FALSE )
+      if(n.cores > 1){
+         if(!is.loaded("mc_fork", PACKAGE="multicore")){
+            stop("Please load first multicore package or set parameter n.cores to 1...")
+	 }
+         mc.lapply <- get("mclapply", envir=getNamespace("multicore"))
+         cat(sprintf("Estimating Cox-Reid dispersion using mclapply in %d cores\n", n.cores)) 
+         forsubset <- sort(rep(1:n.cores, length.out=length(testableGenes)))
+         subgenes <- split(testableGenes, forsubset)
+         allecs <- sapply(subgenes, function(x){
+	    subsetByGenes(cds, x)})
+         allecs <- mc.lapply(allecs,
+            estimateDispersions,
+            formula=formula,
+            file=file,
+            initialGuess=initialGuess,
+            quiet=quiet,
+            fitDispersions=FALSE,
+            n.cores=1)
+         fData(cds)$dispersion_CR_est[as.character(geneIDs(cds)) %in% testableGenes] <- do.call(c, sapply(allecs, function(x){fData(x)$dispersion_CR_est}))
+         cds <- fitDispersions(cds)
+         cds
+      }else{
+         modelFrames <- sapply( testableGenes, function(gs) {
+            mf <- modelFrameForGene(cds, gs)
+            mf$offset <- log(mf$sizeFactor)
+#            if( !quiet ) {
+#               i <<- i + 1
+#               if( i %% 100 == 0 )
+#                  cat( "." )
+#            }
+            mf }, simplify=FALSE )
+         
+#         if( !quiet ){
+#            cat( "\n  Setting up model matrices." )}
+         modelmatrices <- sapply( modelFrames, function(mf){
+            model.matrix( formula, data = mf )}, simplify=FALSE )
 
-      if( !quiet )
-         cat( "\n  Calculating initial fits." )
+#         if( !quiet )
+#            cat( "\n  Calculating initial fits." )
 
       # warnOpt <- getOption( "warn" )
       # options( warn=-1 )  # TODO: Write a proper handler to silence 
       
-      muhats <- sapply( testableGenes, function( gn ) { 
-         try( 
-           fitted.values(glm.fit( 
-               modelmatrices[[gn]], modelFrames[[gn]]$count, 
-               family = negative.binomial(1/initialGuess), 
-               offset = modelFrames[[gn]]$offset )),
-            silent=TRUE ) },
-         simplify=FALSE )
+         muhats <- sapply( testableGenes, function( gn ) { 
+            try( 
+              fitted.values(glm.fit( 
+                  modelmatrices[[gn]], modelFrames[[gn]]$count, 
+                  family = negative.binomial(1/initialGuess), 
+                  offset = modelFrames[[gn]]$offset )),
+               silent=TRUE ) },
+            simplify=FALSE )
       # options( warn=warnOpt )
    
-      badones <- which( sapply( muhats, inherits, "try-error") )
-      if( length(badones) > 0 ) {
-         testableGenes <- testableGenes[ ! testableGenes %in% names(badones) ]
-    	   warning( paste( "Failed to set up model frames for genes ", 
-	         paste( names(badones), collapse=", " ) ) )
-      }
+         badones <- which( sapply( muhats, inherits, "try-error") )
+         if( length(badones) > 0 ) {
+            testableGenes <- testableGenes[ ! testableGenes %in% names(badones) ]
+    	      warning( paste( "Failed to set up model frames for genes ", 
+   	         paste( names(badones), collapse=", " ) ) )
+         }
    
-      fData(cds)$dispersion_CR_est <- NA_real_
+         fData(cds)$dispersion_CR_est <- NA_real_
    
-      if( !quiet ) {
-         cat( "\n  Performing Cox-Reid dispersion estimation " )
-         i <- 0 }
-      for( genename in testableGenes ){
-
-         mf <- modelFrames[[genename]]
-         # warnOpt <- getOption( "warn" )
-         # options( warn=-1 )  # TODO: Write a proper handler to silence warnings
-         disps <- try( 
-            estimateExonDispersionsForModelFrame( mf, 
-               mm=modelmatrices[[genename]], muhat=muhats[[genename]] ),
-            silent=TRUE )
-         # options( warn=warnOpt )
-         if( inherits( disps, "try-error" ) ) {
-            disps <- rep( NA_real_, length( muhats[[genename]] ) )
-            warning( sprintf( "Failed to fit dispersion for gene %s", genename ) )
-         }   
+         for( genename in testableGenes ){
    
-         if( !is.null(file) ) {
-            countsums <- tapply( mf$count, mf$exon, sum )
-            stopifnot( identical( names(disps), names(countsums) ) )   # What is this for?
-            write.table( 
-               data.frame( gene=genename, exon=names(disps), disp=disps, countsum=countsums ), 
-               quote=FALSE, row.names=FALSE, col.names=FALSE, sep="\t", file=file )
-            flush( file ) }
-
-         rows <- as.character(geneIDs(cds)) %in% genename
-#        stopifnot( identical( names(disps), unname(exonIDs(cds)[rows])) ) for the momment
-         fData(cds)$dispersion_CR_est[rows] <- disps 
+            mf <- modelFrames[[genename]]
+            # warnOpt <- getOption( "warn" )
+            # options( warn=-1 )  # TODO: Write a proper handler to silence warnings
+            disps <- try( 
+               estimateExonDispersionsForModelFrame( mf, 
+                  mm=modelmatrices[[genename]], muhat=muhats[[genename]] ),
+               silent=TRUE )
+            # options( warn=warnOpt )
+            if( inherits( disps, "try-error" ) ) {
+               disps <- rep( NA_real_, length( muhats[[genename]] ) )
+               warning( sprintf( "Failed to fit dispersion for gene %s", genename ) )
+            }   
       
-         if( !quiet ) {
-            i <- i + 1
-            if( i %% 100 == 0 )
-               cat( "." ) }      
-      }
-
-      if( !quiet & fitDispersions )
-         cat( "\n  Fitting mean-dispersion relation" )
-
-      if( fitDispersions )
-         cds <- fitDispersions( cds )  
+            if( !is.null(file) ) {
+               countsums <- tapply( mf$count, mf$exon, sum )
+               stopifnot( identical( names(disps), names(countsums) ) )   # What is this for?
+               write.table( 
+                  data.frame( gene=genename, exon=names(disps), disp=disps, countsum=countsums ), 
+                  quote=FALSE, row.names=FALSE, col.names=FALSE, sep="\t", file=file )
+               flush( file ) }
    
-      if( !quiet )
-         cat( "\nFinished with dispersion estimation.\n" )
-      cds
+            rows <- as.character(geneIDs(cds)) %in% genename
+#        stopifnot( identical( names(disps), unname(exonIDs(cds)[rows])) ) for the momment
+            fData(cds)$dispersion_CR_est[rows] <- disps 
+      
+            if( !quiet ) {
+               i <- i + 1
+               if( i %% 100 == 0 )
+                  cat( "." ) }      
+         }
+   
+#         if( !quiet & fitDispersions ){
+#            cat( "\n  Fitting mean-dispersion relation" )}
+   
+         if( fitDispersions ){
+            cds <- fitDispersions( cds )  }
+   
+#         if( !quiet ){
+#            cat( "Finished with dispersion estimation." )}
+
+
+         cds
+      }
    }
 )
 
@@ -304,20 +318,18 @@ testGeneForDEU <- function (ecs, gene, formula0=NULL, formula1=NULL,
       
    # Remove all the zero exons from the model frame
    mf <- mf[ nonzero[mf$exon], ]
-   
+
    if(is.null(formula0)){
-      formula0 <- count ~ sample + exon + condition
-   }
-   
+      formula0 <- count ~ sample + exon + condition}
    if(is.null(formula1)){
-      formula1 <- count ~ sample + exon + condition * I(exon == exonID)
-   }
+      formula1 <- count ~ sample + exon + condition * I(exon == exonID)}
    
+
    # This makes sure that the formula see the 'exonID' variable used
    # below even if it the formula was supplied as parameter
    environment(formula0) <- environment()
    environment(formula1) <- environment()
-
+   
    fam <- negative.binomial( 1 / mf$dispersion )
    fam$family = "Negative Binomial(varying)"
    
@@ -344,27 +356,118 @@ testGeneForDEU <- function (ecs, gene, formula0=NULL, formula1=NULL,
   ans
 }
 
-testForDEU <- function( ecs, formula0=NULL, formula1=NULL, padjust=TRUE, quiet=FALSE )
+testForDEU <- function( ecs, formula0=NULL, formula1=NULL, padjust=TRUE, n.cores=1, quiet=FALSE )
 {
    stopifnot(is(ecs, "ExonCountSet"))
-   i <- 0
-   if( !quiet )
-      cat( "Testing for differential exon usage " )
+   if(sum(is.na(featureData(ecs)$dispersion))==nrow(counts(ecs))){
+      stop("No dispersion parameters found, first call function estimateDispersions...\n")}
+
    testablegenes <- names( which( tapply( fData(ecs)$testable, geneIDs(ecs), any ) ) )
-   for( genename in testablegenes ) {
-      i <- i + 1
-      if( !quiet & i %% 100 == 0 )
-         cat( "." )
-      rows <- as.character(geneIDs(ecs)) %in% genename
-      res <- testGeneForDEU( ecs, genename, formula0, formula1 )
-#      stopifnot( identical( rownames(res), unname(exonIDs(ecs)[rows])) )  ### temporal for HTSEq order of the exons
-#      fData(ecs)$deviance[rows] <- res$deviance  ##not used at all
- #     fData(ecs)$df[rows] <- res$df  # not use at all
-      fData(ecs)$pvalue[rows] <- res$pvalue }
-   if(padjust){
+   if(n.cores > 1){
+      if(!is.loaded("mc_fork", PACKAGE="multicore")){
+	stop("Please load first multicore package or set parameter n.cores to 1...")}
+      cat(sprintf("Testing for differential exon usage using mclapply in %d cores\n", n.cores)) 
+      forsubset <- sort(rep(1:n.cores, length.out=length(testablegenes)))
+      subgenes <- split(testablegenes, forsubset)
+      allecs <- sapply(subgenes, function(x){
+	subsetByGenes(ecs, x)})
+      mc.lapply <- get("mclapply", envir=getNamespace("multicore"))
+      allecs <- mc.lapply(allecs,
+         testForDEU,
+         formula0=formula0,
+         formula1=formula1,
+         padjust=FALSE,
+         n.cores=1,
+         quiet=quiet)
+      fData(ecs)$pvalue[as.character(geneIDs(ecs)) %in% testablegenes] <- do.call(c, sapply(allecs, function(x){fData(x)$pvalue}))
       fData(ecs)$padjust <- p.adjust(fData(ecs)$pvalue, method="BH")
+    }else{
+      if( !quiet )
+         cat( "Testing for differential exon usage\n" )
+      i <- 0
+      for( genename in testablegenes ) {
+         i <- i + 1
+         if( !quiet & i %% 100 == 0 )
+            cat( "." )
+         rows <- as.character(geneIDs(ecs)) %in% genename
+         res <- testGeneForDEU( ecs, genename, formula0, formula1 )
+         fData(ecs)$pvalue[rows] <- res$pvalue }
+      if(padjust){
+         fData(ecs)$padjust <- p.adjust(fData(ecs)$pvalue, method="BH")
+      }
    }
-   if( !quiet )
-      cat( "\n" )
-   ecs   
+   
+   ######### STORE FORMULAS IN THE OBJECTs
+   if(is.null(formula0)){
+      formula0 <- count~sample+exon+condition
+   }
+   if(is.null(formula1)){
+      formula1 <- count~sample+exon+condition*I(exon==exonID)
+   }
+   ecs@formulas[["formula0"]] <- deparse(formula0)
+   ecs@formulas[["formula1"]] <- deparse(formula1)
+   ecs
+}
+
+estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", n.cores=1)
+{
+   stopifnot(is(ecs, "ExonCountSet"))
+   if(any(is.na(sizeFactors(ecs)))){
+      stop("Please estimate sizeFactors first\n")}
+   if(!fitExpToVar %in% ecs@designColumns){
+      stop("fitExpToVar parameter is not in the design columns, double check ecs@designColumns")}
+   if(sum(is.na(featureData(ecs)$dispersion))==nrow(counts(ecs))){
+      stop("No dispersion parameters found, first call function estimateDispersions...\n")}
+
+   nms <- sort(levels(design(ecs, drop=FALSE)[[fitExpToVar]]))
+   colfoldnames <- sapply(2:length(nms), function(x){
+      paste("log2fold(", nms[x], "/", nms[1], ")", sep="")
+   })
+   
+   if(all(colfoldnames %in% colnames(fData(ecs)))){
+      stop("fData(ecs) already contains this fold changes")}
+
+   testablegenes <- names( which( tapply( fData(ecs)$testable, geneIDs(ecs), any ) ) )
+   if(n.cores==1){
+      logfold <- data.frame(matrix(ncol=length(colfoldnames), nrow=nrow(fData(ecs))))
+      colnames(logfold) <- colfoldnames
+      rownames(logfold) <- rownames(fData(ecs))
+      frm <- as.formula(paste("count ~", fitExpToVar,  "* exon"))
+      colstosteal <- paste(fitExpToVar, ":exon", sep="")
+      colstopass <- c(2:length(nms))
+      for(gene in testablegenes){
+         vals <- log2(exp(t(fitAndArrangeCoefs( ecs, gene, frm=frm)[[colstosteal]])))[,colstopass]
+         logfold[as.character(geneIDs(ecs)) %in% gene, colfoldnames] <- vals
+      }
+      fData(ecs) <- cbind(fData(ecs), logfold)
+      ecs
+   }else{
+      if(!is.loaded("mc_fork", PACKAGE="multicore")){
+	stop("Please load first multicore package or set parameter n.cores to 1...")}
+      cat(sprintf("Testing for differential exon usage using mclapply in %d cores\n", n.cores)) 
+      forsubset <- sort(rep(1:n.cores, length.out=length(testablegenes)))
+      subgenes <- split(testablegenes, forsubset)
+      allecs <- sapply(subgenes, function(x){
+	subsetByGenes(ecs, x)})
+      mc.lapply <- get("mclapply", envir=getNamespace("multicore"))
+      allecs <- mc.lapply(allecs,
+         estimatelog2FoldChanges,
+            fitExpToVar,
+            n.cores=1)
+      logfold <- data.frame(matrix(ncol=length(colfoldnames), nrow=nrow(fData(ecs))))
+      colnames(logfold) <- colfoldnames
+      rownames(logfold) <- rownames(fData(ecs))
+      if(length(colfoldnames)==1){
+         f <- c
+      }else{
+         f <- rbind
+      }
+      logfold[geneIDs(ecs) %in% testablegenes,] <- do.call(f, 
+         lapply(allecs, function(x){
+            fData(x)[,colfoldnames]
+         })
+      )
+      fData(ecs) <- cbind(fData(ecs), logfold)
+      ecs
+   }
 }

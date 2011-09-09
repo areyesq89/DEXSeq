@@ -211,6 +211,7 @@ pasillaExons <- testForDEU( pasillaExons )
 @ 
 The function \Rfunction{DEUresultTable} provides a summary table of the results.
 <<testForDEU2,cache=TRUE>>=
+pasillaExons <- estimatelog2FoldChanges( pasillaExons )
 res1 <- DEUresultTable(pasillaExons)
 <<testForDEU3>>=
 table ( res1$padjust < 0.1 )
@@ -325,65 +326,18 @@ DEXSeq analysis can be computationally slow with large datasets due to the numbe
 that are fitted, especially with datasets with a big number of samples, or organisms containing genes with
 a large number of exons.  There are some steps of the analysis that require the whole dataset, but the two 
 parts that are most time consuming can be paralellized (functions \Rfunction{estimateDispersions} and 
-\Rfunction{testForDEU}).  This section of the vignette shows which parts of the analysis can be paralellized, 
-using as an example the library \Rpackage{multicore}.
+\Rfunction{testForDEU}) by changing the parameter n.cores in the functions.  Internally, this functions 
+will subset the \Robject{ExonCountSet} object into smaller objects to distribute them to different cores.  
+Please note that only the Cox-Reid calculation of the dispersion can be parallelized, the mean-variance 
+dependent fit is done with all the dataset.  This parameter depends on the \Rpackage{multicore} package, but
+the user can do the subsetting manually in order to paralellized with other packages, e.g. \Rpackage{Rmpi}.
 %
 <<para1,cache=TRUE,eval=FALSE>>=
 data("pasillaExons", package="pasilla")
-pasillaExons <- estimateSizeFactors( pasillaExons )
-@
-
-We use the function \Rfunction{subsetByGenes} to make a list of smaller ExonCountSet objects and we use the
-function \Rfunction{mcapply} from the library \Rpackage{multicore} to paralellize the process. Note that it is
-important to subet it using the whole exons of the genes because of the way the glms are fitted.  (see function \Rfunction{modelFrameForGene}).
-For this particular case, we will divide our \Robject{ExonCountSet} object into a list containing 5 smaller
-\Robject{ExonCountSet} objects.
-%
-<<subset1, cache=TRUE,eval=FALSE>>=
-forsubset <- rep(1:5, each=length( levels( geneIDs(pasillaExons) ) )/5)
-subgenes <- split(levels(geneIDs(pasillaExons)), forsubset)
-allecs <- sapply(subgenes, 
-   function(x){ 
-      subsetByGenes( pasillaExons, x ) 
-   } )
-@
-
-The most time consuming process of DEXSeq is the Cox-Reid dispersion estimation.  This is computed by the function
-\Rfunction{estimateDispersions}, this function also then makes the mean-variance fit on them by calling the function \Rfunction{fitDispersions} internally.  
-Dividing the object into smaller parts allow us to parallelize the exon dispersion estimation (using just two cores in this case),
-but the fitting might be recommendable using the whole dataset.  We do this by setting the parameter fitDispersions to FALSE when calling \Rfunction{estimateDispersions} and then call
-\Rfunction{fitDispersions} after putting the all the parts together.
-%
-<<par-dispersions, cache=TRUE,eval=FALSE>>=
 library(multicore)
-allecs <- mclapply(allecs, 
-   estimateDispersions, 
-      quiet=TRUE, 
-      fitDispersions=FALSE,
-   mc.cores=2)
-pasillaExons <- allecs[[1]]
-for(i in 2:5){ 
-   pasillaExons <- combine(pasillaExons, allecs[[i]])
-}
-pasillaExons <- fitDispersions( pasillaExons )
-@
-We divide again the \Robject{ExonCountSet} object to divide the testing part in several cores. From this part it is 
-reccomendable to make the multiple testing correction after joining all the parts.
-<<par-testing,cache=TRUE,eval=FALSE>>=
-allecs <- sapply(subgenes, 
-   function(x){ 
-      subsetByGenes( pasillaExons, x ) 
-   } )
-allecs <- mclapply(allecs, 
-   testForDEU, 
-      padjust=FALSE,
-      quiet=TRUE,
-   mc.cores=2)
-pasillaExons <- allecs[[1]]
-for(i in 2:5){ 
-   pasillaExons <- combine(pasillaExons, allecs[[i]])
-}
-fData( pasillaExons )$padjust <- p.adjust( fData( pasillaExons )$pvalue, method="BH")
+pasillaExons <- estimateSizeFactors( pasillaExons )
+pasillaExons <- estimateDispersions( pasillaExons, n.cores=3, quiet=TRUE)
+pasillaExons <- testForDEU( pasillaExons, n.cores=3)
 @
 
 %--------------------------------------------------

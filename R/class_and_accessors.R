@@ -2,10 +2,12 @@ setClass( "ExonCountSet",
    contains = "eSet",
    representation = representation( 
       designColumns = "character",
-      dispFitCoefs = "numeric"
+      dispFitCoefs = "numeric",
+      formulas = "list",
+      annotationFile = "character"
    ),
    prototype = prototype( new( "VersionedBiobase",
-      versions = c( classVersion("eSet"), ExonCountSet = "1.0.1" ) ) )
+      versions = c( classVersion("eSet"), ExonCountSet = "1.0.2" ) ) )
 )
 
 
@@ -293,14 +295,22 @@ geneCountTable <- function( ecs ) {
          colSums( counts(ecs)[rows,,drop=FALSE] ) ) )
 }
 
-DEUresultTable <- function(ecs){
+DEUresultTable <- function(ecs)
+{
+   result <- data.frame(
+      geneID=geneIDs(ecs), 
+      exonID=exonIDs(ecs), 
+      dispersion_CR_est=featureData(ecs)$dispersion_CR_est, 
+      dispersion=featureData(ecs)$dispersion, 
+      pvalue=fData(ecs)$pvalue, 
+      padjust=fData(ecs)$padjust,
+      meanBase=rowMeans(counts(ecs, normalized=TRUE)))
 
-	result <- data.frame(geneID=geneIDs(ecs), 
-			     exonID=exonIDs(ecs), 
-			     dispersion_CR_est=featureData(ecs)$dispersion_CR_est, 
-			     dispersion=featureData(ecs)$dispersion, 
-			     pvalue=fData(ecs)$pvalue, 
-			     padjust=fData(ecs)$padjust)
-
-	result
+   extracol <- regexpr("log2fold", colnames(fData(ecs)))==1
+   if(any(extracol)){
+      w <- which(extracol)
+      result <- data.frame(result, fData(ecs)[,w])
+      colnames(result)[8:(7+length(w))] <- colnames(fData(ecs))[w]
+   }
+   result
 }

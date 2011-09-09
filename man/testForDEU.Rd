@@ -5,7 +5,7 @@
       This function makes a call to \code{testGeneForDEU} for each of the geneIDs, stores in the fields of \code{fData(ecs)$pvalue}, \code{fData(ecs)$pll} and \code{fData(ecs)$df}
 }
 \usage{
-testForDEU(ecs, formula0=NULL, formula1=NULL, padjust=TRUE, quiet=FALSE)
+testForDEU(ecs, formula0=NULL, formula1=NULL, padjust=TRUE, n.cores=1, quiet=FALSE)
 }
 \arguments{
   \item{ecs}{
@@ -19,6 +19,9 @@ testForDEU(ecs, formula0=NULL, formula1=NULL, padjust=TRUE, quiet=FALSE)
   }
   \item{padjust}{
      Logical argument indicating whether to include the multiple testing correction in the field featureData(ecs)$padjust.
+  }
+  \item{n.cores}{
+	Number of cores to be used to estimate the dispersions.  multicore package must be loaded in order to split the job in several cores.
   }
   \item{quiet}{
     If TRUE, no progress report is shown. 

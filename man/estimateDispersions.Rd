@@ -7,7 +7,7 @@
       Makes for every gene a call to the internal functions estimateExonDispersionsForModelFrame, fits a mean dependent regression on them.
 }
 \usage{
-\S4method{estimateDispersions}{ExonCountSet}(cds, formula=NULL, file=NULL, initialGuess=.01, quiet=FALSE, fitDispersions=TRUE)
+\S4method{estimateDispersions}{ExonCountSet}(cds, formula=count ~ sample + condition * exon, file=NULL, initialGuess=.01, n.cores=1, quiet=FALSE, fitDispersions=TRUE)
 }
 \arguments{
   \item{cds}{
@@ -21,6 +21,9 @@
    }
   \item{initialGuess}{
 	An arbitrary initial guess to start with the iterations.
+   }
+  \item{n.cores}{
+	Number of cores to be used to estimate the dispersions.  multicore package must be loaded in order to split the job in several cores.
    }
   \item{quiet}{
 	If TRUE, no progress report is shown.
