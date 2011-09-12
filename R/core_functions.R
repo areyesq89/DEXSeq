@@ -186,24 +186,10 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
       }
       i <- 0
       if(n.cores > 1){
-         if(!is.loaded("mc_fork", PACKAGE="multicore")){
-            stop("Please load first multicore package or set parameter n.cores to 1...")
-	 }
-         mc.lapply <- get("mclapply", envir=getNamespace("multicore"))
-         cat(sprintf("Estimating Cox-Reid dispersion using mclapply in %d cores\n", n.cores)) 
-         forsubset <- sort(rep(1:n.cores, length.out=length(testableGenes)))
-         subgenes <- split(testableGenes, forsubset)
-         allecs <- sapply(subgenes, function(x){
-	    subsetByGenes(cds, x)})
-         allecs <- mc.lapply(allecs,
-            estimateDispersions,
-            formula=formula,
-            file=file,
-            initialGuess=initialGuess,
-            quiet=quiet,
-            fitDispersions=FALSE,
-            n.cores=1)
-         fData(cds)$dispersion_CR_est[as.character(geneIDs(cds)) %in% testableGenes] <- do.call(c, sapply(allecs, function(x){fData(x)$dispersion_CR_est}))
+         if(!quiet){
+            cat(sprintf("Testing for differential exon usage using %d cores\n", n.cores)) }
+         toapply <- function(x){estimateDispersions(x, formula=formula, file=file, initialGuess=initialGuess, n.cores=1, quiet=quiet, fitDispersions=FALSE)}
+         cds <- divideWork(cds, funtoapply=toapply, fattr="dispersion_CR_est", mc.cores=n.cores, testableGenes)
          cds <- fitDispersions(cds)
          cds
       }else{
@@ -289,7 +275,6 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
 #         if( !quiet ){
 #            cat( "Finished with dispersion estimation." )}
 
-
          cds
       }
    }
@@ -364,22 +349,10 @@ testForDEU <- function( ecs, formula0=NULL, formula1=NULL, padjust=TRUE, n.cores
 
    testablegenes <- names( which( tapply( fData(ecs)$testable, geneIDs(ecs), any ) ) )
    if(n.cores > 1){
-      if(!is.loaded("mc_fork", PACKAGE="multicore")){
-	stop("Please load first multicore package or set parameter n.cores to 1...")}
-      cat(sprintf("Testing for differential exon usage using mclapply in %d cores\n", n.cores)) 
-      forsubset <- sort(rep(1:n.cores, length.out=length(testablegenes)))
-      subgenes <- split(testablegenes, forsubset)
-      allecs <- sapply(subgenes, function(x){
-	subsetByGenes(ecs, x)})
-      mc.lapply <- get("mclapply", envir=getNamespace("multicore"))
-      allecs <- mc.lapply(allecs,
-         testForDEU,
-         formula0=formula0,
-         formula1=formula1,
-         padjust=FALSE,
-         n.cores=1,
-         quiet=quiet)
-      fData(ecs)$pvalue[as.character(geneIDs(ecs)) %in% testablegenes] <- do.call(c, sapply(allecs, function(x){fData(x)$pvalue}))
+      if(!quiet){
+         cat(sprintf("Testing for differential exon usage using %d cores\n", n.cores)) }
+      toapply <- function(x){testForDEU(x, formula0=formula0, formula1=formula1, quiet=quiet, padjust=FALSE, n.cores=1)}
+      ecs <- divideWork(ecs, funtoapply=toapply, fattr="pvalue", mc.cores=n.cores, testablegenes)
       fData(ecs)$padjust <- p.adjust(fData(ecs)$pvalue, method="BH")
     }else{
       if( !quiet )
@@ -406,10 +379,11 @@ testForDEU <- function( ecs, formula0=NULL, formula1=NULL, padjust=TRUE, n.cores
    }
    ecs@formulas[["formula0"]] <- deparse(formula0)
    ecs@formulas[["formula1"]] <- deparse(formula1)
+#   cat( "\n" )
    ecs
 }
 
-estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", n.cores=1)
+estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", n.cores=1, quiet=FALSE)
 {
    stopifnot(is(ecs, "ExonCountSet"))
    if(any(is.na(sizeFactors(ecs)))){
@@ -424,50 +398,59 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", n.cores=1)
       paste("log2fold(", nms[x], "/", nms[1], ")", sep="")
    })
    
-   if(all(colfoldnames %in% colnames(fData(ecs)))){
-      stop("fData(ecs) already contains this fold changes")}
+#   if(all(colfoldnames %in% colnames(fData(ecs)))){
+#      stop("fData(ecs) already contains this fold changes")}
 
    testablegenes <- names( which( tapply( fData(ecs)$testable, geneIDs(ecs), any ) ) )
+   logfold <- data.frame(matrix(ncol=length(colfoldnames), nrow=nrow(fData(ecs))))
+   colnames(logfold) <- colfoldnames
+   rownames(logfold) <- rownames(fData(ecs))
+
+   if(!any(colfoldnames %in% colnames(fData(ecs)))){
+      fData(ecs) <- cbind(fData(ecs), logfold)
+   }
+
    if(n.cores==1){
-      logfold <- data.frame(matrix(ncol=length(colfoldnames), nrow=nrow(fData(ecs))))
-      colnames(logfold) <- colfoldnames
-      rownames(logfold) <- rownames(fData(ecs))
+      if( !quiet )
+         cat( "Calculating fold changes\n" )
+
       frm <- as.formula(paste("count ~", fitExpToVar,  "* exon"))
       colstosteal <- paste(fitExpToVar, ":exon", sep="")
       colstopass <- c(2:length(nms))
+      i <- 0
       for(gene in testablegenes){
+         i <- i + 1
+         if( !quiet & i %% 100 == 0 ){
+            cat( "." )}
          vals <- log2(exp(t(fitAndArrangeCoefs( ecs, gene, frm=frm)[[colstosteal]])))[,colstopass]
          logfold[as.character(geneIDs(ecs)) %in% gene, colfoldnames] <- vals
       }
-      fData(ecs) <- cbind(fData(ecs), logfold)
+      fData(ecs)[,colfoldnames] <- logfold
       ecs
    }else{
-      if(!is.loaded("mc_fork", PACKAGE="multicore")){
-	stop("Please load first multicore package or set parameter n.cores to 1...")}
-      cat(sprintf("Testing for differential exon usage using mclapply in %d cores\n", n.cores)) 
-      forsubset <- sort(rep(1:n.cores, length.out=length(testablegenes)))
-      subgenes <- split(testablegenes, forsubset)
-      allecs <- sapply(subgenes, function(x){
-	subsetByGenes(ecs, x)})
-      mc.lapply <- get("mclapply", envir=getNamespace("multicore"))
-      allecs <- mc.lapply(allecs,
-         estimatelog2FoldChanges,
-            fitExpToVar,
-            n.cores=1)
-      logfold <- data.frame(matrix(ncol=length(colfoldnames), nrow=nrow(fData(ecs))))
-      colnames(logfold) <- colfoldnames
-      rownames(logfold) <- rownames(fData(ecs))
-      if(length(colfoldnames)==1){
-         f <- c
-      }else{
-         f <- rbind
-      }
-      logfold[geneIDs(ecs) %in% testablegenes,] <- do.call(f, 
-         lapply(allecs, function(x){
-            fData(x)[,colfoldnames]
-         })
-      )
-      fData(ecs) <- cbind(fData(ecs), logfold)
+      if(!quiet){
+         cat(sprintf("Calculating fold changes using %d cores\n", n.cores)) }
+      toapply <- function(x){estimatelog2FoldChanges(x, fitExpToVar=fitExpToVar, n.cores=1, quiet=quiet)}
+      ecs <- divideWork(ecs, toapply, fattr=colfoldnames, mc.cores=n.cores, testablegenes)
       ecs
    }
+}
+
+
+divideWork <- function(ecs, funtoapply, fattr, mc.cores, testablegenes)
+{
+   if(!is.loaded("mc_fork", PACKAGE="multicore")){
+      stop("Please load first multicore package or set parameter n.cores to 1...")}
+   forsubset <- sort(rep(1:mc.cores, length.out=length(testablegenes)))
+   subgenes <- split(testablegenes, forsubset)
+   allecs <- sapply(subgenes, function(x){
+      subsetByGenes(ecs, x)})
+   mc.lapply <- get("mclapply", envir=getNamespace("multicore"))
+   allecs <- mc.lapply(allecs, FUN=funtoapply, mc.cores=mc.cores)
+   if(length(fattr) > 1){
+      fData(ecs)[as.character(geneIDs(ecs)) %in% testablegenes,][,fattr] <- do.call(rbind, lapply(allecs, function(x){fData(x)[,fattr]}))
+   }else{
+      fData(ecs)[,fattr][as.character(geneIDs(ecs)) %in% testablegenes] <- do.call(c, sapply(allecs, function(x){fData(x)[,fattr]}))
+   }
+   ecs
 }
