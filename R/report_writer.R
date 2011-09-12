@@ -84,9 +84,9 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
 
 		
       ### MAKE THE PLOT HTML PAGES FOR expression, counts and splicing
-      makePlotPage(ecs=ecs, ptowrite=ptowrite, gene=gene, whichtag="expression", links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=700)
-      makePlotPage(ecs=ecs, ptowrite=ptowrite, gene=gene, whichtag="counts", links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=700)
-      makePlotPage(ecs=ecs, ptowrite=ptowrite, gene=gene, whichtag="splicing", links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=700)
+      makePlotPage(ecs=ecs, ptowrite=ptowrite, gene=gene, whichtag="expression", links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=700, h=7)
+      makePlotPage(ecs=ecs, ptowrite=ptowrite, gene=gene, whichtag="counts", links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=700, h=7)
+      makePlotPage(ecs=ecs, ptowrite=ptowrite, gene=gene, whichtag="splicing", links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=700, h=7)
 
       if(!is.null(featureData(ecs)$transcripts)){
          transcripts <- sapply(featureData(ecs)$transcripts[featureData(ecs)$geneID %in% gene], function(x){strsplit(x, ";")})
@@ -95,7 +95,7 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
       if(sum(loc) > 35){   ############# if there are more than 35 exons, increase the size of the plotting region
          h <- h + (sum(loc)*0.05)
       }
-      makePlotPage(ecs=ecs, ptowrite=ptowrite, gene=gene, whichtag=c("expression", "transcripts"), links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=h*100)
+      makePlotPage(ecs=ecs, ptowrite=ptowrite, gene=gene, whichtag=c("expression", "transcripts"), links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=h*100, h=h)
       }
    }
 	
@@ -119,14 +119,14 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
 	close(p, splash=TRUE)
 }
 
-makePlotPage <- function(ecs, ptowrite, gene, whichtag, links, color, color.samples, FDR, fitExpToVar, width, height)
+makePlotPage <- function(ecs, ptowrite, gene, whichtag, links, color, color.samples, FDR, fitExpToVar, width, height, h)
 {
    allopts <- c("expression", "splicing", "counts", "transcripts")
    opts <- allopts %in% whichtag
    onlytag <- allopts[max(which(opts))]
    genpage <- openPage(paste(ptowrite, gene, onlytag, ".html", sep=""))
    hwrite(links, table=TRUE, border=0, genpage)
-   svg(paste(ptowrite, gene, onlytag, ".svg", sep=""), height=7, width=12, pointsize=14)
+   svg(paste(ptowrite, gene, onlytag, ".svg", sep=""), height=h, width=12, pointsize=14)
    plotDEXSeq(ecs, geneID=gene, FDR=FDR, lwd=2, expression=opts[1], splicing=opts[2], norCounts=opts[3], displayTranscripts=opts[4], legend=TRUE, color=color, color.saples=color.samples, cex.axis=1.5)
    dev.off()
    hwrite(hmakeTag("iframe", src=paste(gene, onlytag, ".svg", sep=""), width=width, height=height, border=0), p=genpage)
