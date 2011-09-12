@@ -127,7 +127,7 @@ makePlotPage <- function(ecs, ptowrite, gene, whichtag, links, color, color.samp
    genpage <- openPage(paste(ptowrite, gene, onlytag, ".html", sep=""))
    hwrite(links, table=TRUE, border=0, genpage)
    svg(paste(ptowrite, gene, onlytag, ".svg", sep=""), height=h, width=12, pointsize=14)
-   plotDEXSeq(ecs, geneID=gene, FDR=FDR, lwd=2, expression=opts[1], splicing=opts[2], norCounts=opts[3], displayTranscripts=opts[4], legend=TRUE, color=color, color.saples=color.samples, cex.axis=1.5)
+   plotDEXSeq(ecs, geneID=gene, FDR=FDR, lwd=2, expression=opts[1], splicing=opts[2], norCounts=opts[3], displayTranscripts=opts[4], fitExpToVar=fitExpToVar, legend=TRUE, color=color, color.saples=color.samples, cex.axis=1.5)
    dev.off()
    hwrite(hmakeTag("iframe", src=paste(gene, onlytag, ".svg", sep=""), width=width, height=height, border=0), p=genpage)
    close(genpage, splash=TRUE)
