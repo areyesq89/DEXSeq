@@ -124,6 +124,7 @@ estimateExonDispersionsForModelFrame <- function( modelFrame, formula=NULL, mm=N
                   disp[exon] <- exp( logalpha )
                   profileLogLikelihood( disp[as.character(modelFrame$exon)], mm, y, muhat ) },
                log( c( 1e-11, 1e5 ) ),
+   	       tol = 0.1,
                maximum=TRUE 
             )$maximum )
    disp[ countsums == 0 ] <- NA
@@ -187,7 +188,7 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
       i <- 0
       if(n.cores > 1){
          if(!quiet){
-            cat(sprintf("Testing for differential exon usage using %d cores\n", n.cores)) }
+            cat(sprintf("Estimating Cox-Reid exon dispersion estimates using %d cores\n", n.cores)) }
          toapply <- function(x){estimateDispersions(x, formula=formula, file=file, initialGuess=initialGuess, n.cores=1, quiet=quiet, fitDispersions=FALSE)}
          cds <- divideWork(cds, funtoapply=toapply, fattr="dispersion_CR_est", mc.cores=n.cores, testableGenes)
          cds <- fitDispersions(cds)

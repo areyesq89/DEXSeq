@@ -216,6 +216,17 @@ res1 <- DEUresultTable(pasillaExons)
 <<testForDEU3>>=
 table ( res1$padjust < 0.1 )
 @
+<<MvsA, fig=TRUE>>=
+plot(res1$meanBase, res1[,"log2fold(untreated/treated)"], log="x", col=ifelse(res1$padjust < 0.1, "red", "black"), ylim=c(-4,4), main="pasilla MvsA")
+@
+
+\begin{figure}
+\centering
+\includegraphics[width=.5\textwidth]{DEXSeq-MvsA}
+\caption{Mean expression vs log2 fold change plot, significant hits are colored in red.}
+\label{MvsA}
+\end{figure}
+
 %$
 %------------------------------------------------------------
 \section{Batch effects}\label{sec:glm}
@@ -301,7 +312,7 @@ Another useful option is to look at the count values from the individual samples
 model effect estimates. For this display, it is useful to normalize the counts by the size factors (Figure~\ref{figplot3}).
 %
 <<plot3, fig=TRUE, height=8, width=12>>=
-plotDEXSeq(pasillaExons, "FBgn0010909", coefficients=FALSE, norCounts=TRUE, cex.axis=1.2, cex=1.3, lwd=2, legend=TRUE)
+plotDEXSeq(pasillaExons, "FBgn0010909", expression=FALSE, norCounts=TRUE, cex.axis=1.2, cex=1.3, lwd=2, legend=TRUE)
 @
 \begin{figure}
 \centering

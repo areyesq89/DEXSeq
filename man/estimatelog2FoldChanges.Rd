@@ -9,7 +9,7 @@
      }
      \arguments{
        \item{ecs}{An ExonCountSet object.}
-       \item{fitExpToVar}{A variable contained in the design of the ecs, the expression values will be fitted to this variable}
+       \item{fitExpToVar}{A variable contained in the design of the ecs, the expression values will be fitted to this variable using the the formula "count~sample + fitExpToVar * exon"}
        \item{n.cores}{Number of cores to be used to estimate the dispersions.  multicore package must be loaded in order to split the job in several cores.}
        \item{quiet}{If TRUE, no progress report is shown.}
      }

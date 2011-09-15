@@ -116,7 +116,7 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
    genetable$geneID <- sapply(as.character(genetable$geneID), function(m){hwrite(m, link=paste("files/", m, "expression.html", sep=""))})
    rownames(genetable) <- NULL
    hwrite(genetable, page=p, table=TRUE, table.class="sortable", style='margin:16px; border:0px solid black; border-width:0px; width:200px') 
-	close(p, splash=TRUE)
+   close(p, splash=TRUE)
 }
 
 makePlotPage <- function(ecs, ptowrite, gene, whichtag, links, color, color.samples, FDR, fitExpToVar, width, height, h)
