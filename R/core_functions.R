@@ -416,7 +416,12 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", nCores=1)
          i <- i + 1
          if(i %% 100 == 0 ){
             cat( "." )}
-         vals <- log2(exp(t(fitAndArrangeCoefs( ecs, gene, frm=frm)[[colstosteal]])))[,colstopass]
+         tr <- try(fitAndArrangeCoefs( ecs, gene, frm=frm)[[colstosteal]])
+         if(inherits(tr, "try-error")){
+              warning(sprintf("logFold change calculation failed for gene %s", gene))
+              next
+         }
+         vals <- log2(exp(t(tr)))[,colstopass]
          logfold[as.character(geneIDs(ecs)) %in% gene, colfoldnames] <- vals
       }
       fData(ecs)[,colfoldnames] <- logfold
