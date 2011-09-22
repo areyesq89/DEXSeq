@@ -63,7 +63,12 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
 
    
    if(expression){
-      coeff <- as.matrix( t( getEffectsForPlotting( fitAndArrangeCoefs( ecs, geneID, frm=as.formula(paste("count ~", fitExpToVar,  "* exon")) ), averageOutExpression=FALSE, groupingVar=fitExpToVar) ) )
+      es <- fitAndArrangeCoefs( ecs, geneID, frm=as.formula(paste("count ~", fitExpToVar,  "* exon")) )
+      if(is.null(es)){
+          warning(sprintf("glm fit failed for gene %s", geneID))
+          return()
+      }
+      coeff <- as.matrix( t( getEffectsForPlotting(es, averageOutExpression=FALSE, groupingVar=fitExpToVar) ) )
       coeff <- exp(coeff)
       ylimn <- c(min(coeff, na.rm=TRUE), max(coeff, na.rm=TRUE))
       coeff <- vst( coeff, ecs )
