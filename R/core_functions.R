@@ -216,9 +216,6 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
          ##### nCores=-1 dummy variable, avoid printing report many times
          toapply <- function(x){estimateDispersions(x, formula=formula, initialGuess=initialGuess, nCores=-1, minCount=minCount, maxExon=maxExon, fitDispersions=FALSE)}
          cds <- divideWork(cds, funtoapply=toapply, fattr="dispersion_CR_est", mc.cores=nCores, testablegenes)
-         if(fitDispersions){
-            cds <- fitDispersions(cds)}
-         cds
       }else{
          modelFrames <- sapply( testablegenes, function(gs) {
             mf <- modelFrameForGene(cds, gs, onlyTestable=TRUE)
@@ -270,11 +267,16 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
          fData(cds)$dispersion_CR_est <- dispersion_CR_est
    
 
-         if( fitDispersions ){
-            cds <- fitDispersions( cds )  }
-   
-         cds
       }
+      if(fitDispersions){
+         cdsaux <- try(fitDispersions(cds))
+         if(inherits(cdsaux, "try-error")){
+            warning("Mean-variance fit failed. Please send an email to reyes@embl.de with the error message and ecs attached if possible")
+            return(cds)
+         }
+         cds <- cdsaux
+      }
+      cds
    }
 )
 
