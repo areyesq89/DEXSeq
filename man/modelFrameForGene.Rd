@@ -7,7 +7,7 @@
    Creates a data.frame containing the model frame for a gene with the columns, sample, exon, condition, sizeFactors and its respective count.
 }
 \usage{
-modelFrameForGene(ecs, geneID)
+modelFrameForGene(ecs, geneID, onlyTestable=FALSE)
 }
 \arguments{
   \item{ecs}{
@@ -15,6 +15,9 @@ modelFrameForGene(ecs, geneID)
   }
   \item{geneID}{
      A gene identificator contained in the ExonCountSet object.
+  }
+  \item{onlyTestable}{
+     If TRUE, only the testable exons will be included in the model frame.  Check \code{fData$testable} for more information.
   }
 }
 \value{
