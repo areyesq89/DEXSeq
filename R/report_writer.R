@@ -6,7 +6,7 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
    if(!fitExpToVar %in% ecs@designColumns){
       stop("fitExpToVar parameter is not in the design columns, double check ecs@designColumns")}
    if(sum(is.na(featureData(ecs)$dispersion))==nrow(counts(ecs))){
-      stop("No dispersion parameters found, first call function estimateDispersions...\n")}
+      stop("No dispersion parameters found, first call function fitDispersions...\n")}
 
    ######## GET THE RESULT TABLE READY ##########
    results<-DEUresultTable(ecs)

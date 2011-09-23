@@ -6,7 +6,7 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
    if(!fitExpToVar %in% ecs@designColumns){
       stop("fitExpToVar parameter is not in the design columns, double check ecs@designColumns")}
    if(sum(is.na(featureData(ecs)$dispersion))==nrow(counts(ecs))){
-      stop("No dispersion parameters found, first call function estimateDispersions...\n")}
+      stop("No dispersion parameters found, first call function fitDispersions...\n")}
    op <- sum(c(expression, splicing, norCounts))
    if(op == 0){
       stop("Please indicate what would you like to plot\n")}

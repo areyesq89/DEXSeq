@@ -133,10 +133,38 @@ pasillaExons <- estimateDispersions(pasillaExons)
 @
 
 The result from the Cox-Reid estimation is stored in the column \Robject{dispersion\_CR\_est}
-of the feature data. Then, the dispersion-mean relation $\alpha = \alpha_0 + \alpha_1/\mu$ is
-fit to these values (and the coefficients stored in slot \Robject{dispFitCoefs}).
-Finally, for each exon, the maximum of the CR estiomate and the fitted value
+of the feature data. Then we call the function \Rfunction{fitDispersions}, in which a dispersion-mean 
+relation $\alpha = \alpha_0 + \alpha_1/\mu$ is fit to the CR dispersion values (and the coefficients 
+stored in slot \Robject{dispFitCoefs}) and finally, for each exon, the maximum of the CR estimate and the fitted value
 is taken as the exon's final dispersion value and stored in the \Robject{dispersion} slot.
+Please take into consideration that fit could be difficult to do in cases where the dispersion estimates
+are too big, this sometimes tends to break this function.  In this special cases please do not hesitate to 
+contact the developers.
+
+<<fitDisp, cache=TRUE>>=
+pasillaExons <- fitDispersions(pasillaExons)
+@
+
+To make a fit diagnostic, for each exon we plot its mean expression value vs its CR
+dispersion estimate and we draw the line that we just fitted.
+
+<<fitdiagnostics, fig=TRUE>>=
+meanvalues <- rowMeans(counts(pasillaExons))
+plot(meanvalues, fData(pasillaExons)$dispersion_CR_est, log="xy", main="mean vs CR dispersion")
+x <- 0.01:max(meanvalues)
+y <- pasillaExons@dispFitCoefs[1] + pasillaExons@dispFitCoefs[2] / x
+lines(x, y, col="red")
+@
+
+\begin{figure}
+\centering
+\includegraphics[width=.5\textwidth]{DEXSeq-fitdiagnostics}
+\caption{Fit diagnostics plot.}
+\label{fitdiagnostics}
+\end{figure}
+
+We can see that the CR dispersion estimates depends on its mean value. The line seems to pass through 
+the data points, which gives us a good diagnostic of the fit.\fixme{Comment something about the lower cloud of points}
 
 <<estDisp2>>=
 head(fData(pasillaExons)$dispersion_CR_est)
@@ -243,6 +271,7 @@ it aware of the additional factor (besides \Robject{condition}, which it conside
 <<formuladispersion,cache=TRUE>>=
 formuladispersion <- count ~ sample + ( exon + type ) * condition
 pasillaExons <- estimateDispersions( pasillaExons, formula = formuladispersion )
+pasillaExons <- fitDispersions(pasillaExons)
 @
 %
 Second, for the testing, we will also change the two formulas to take into account the library type. 

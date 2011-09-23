@@ -5,7 +5,7 @@
       This function will test for differential exon usage for each of the genes in the object, it will store the results in the fields of \code{fData(ecs)$pvalue} and \code{fData(ecs)$padjust}.
 }
 \usage{
-testForDEU(ecs, formula0=NULL, formula1=NULL, padjust=TRUE, nCores=1)
+testForDEU(ecs, formula0=NULL, formula1=NULL, nCores=1)
 }
 \arguments{
   \item{ecs}{
@@ -16,9 +16,6 @@ testForDEU(ecs, formula0=NULL, formula1=NULL, padjust=TRUE, nCores=1)
   }
   \item{formula1}{
      Same as formula0, but for the test model.  If it is left in NULL, the default formula will be "count~sample+exon+condition*I(exon==exonID)".  A factor "exonID" will iterate over each of the exons of the geneID, e.g. If a geneID contains exons E01, E02, E03,...,EN and formula=NULL, the function will fit N glms, the last part of the formula will change in the iterations as follows: I(exon==E01), I(exon==E02), I(exon==E03),...,I(exon==EN).
-  }
-  \item{padjust}{
-     If TRUE, multiple testing correction will be included in the field featureData(ecs)$padjust.
   }
   \item{nCores}{
 	Number of cores to be used to estimate the dispersions.  multicore package must be loaded in order to split the job in several cores.

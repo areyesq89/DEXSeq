@@ -284,7 +284,7 @@ exonIDs <- function( ecs ) {
 subsetByGenes <- function( ecs, genes ) {
    stopifnot( is( ecs, "ExonCountSet" ) )
    stopifnot( all( genes %in% levels(geneIDs(ecs)) ) )
-   ecs2 <- ecs[ geneIDs(ecs) %in% genes, ]
+   ecs2 <- ecs[ as.character(geneIDs(ecs)) %in% genes, ]
    ecs2
 }
    

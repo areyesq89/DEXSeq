@@ -4,15 +4,11 @@
 \alias{estimateDispersions}
 \title{Estimate exon dispersions}
 \description{
-      This function estimates the Cox-Reid dispersion values for each exon of each gene 
-      and stores the results it in fData.  Then it calls fitDispersions function to fit all 
-      the dispersion values on a mean-variance dependent function to estimate 
-      alpha1 and alpha0 in alpha(mu) = (alpha1/mu + alpha0), where mu is equal to the mean.  After this, the maximum
-      between the Cox-Reid and the mean fitted value will be stored in fData$dispersion. This
-      last value will be used for further testing.
+      This function estimates the Cox-Reid dispersion values using information
+      across genes and exons. It stored this estimates in \code{fData(ecs)$dispersion_CR_est}.
 }
 \usage{
-\S4method{estimateDispersions}{ExonCountSet}( cds, formula=count ~ sample + condition*exon, initialGuess=.01, nCores=1, minCount=10, maxExon=70, fitDispersions=TRUE)
+\S4method{estimateDispersions}{ExonCountSet}( cds, formula=count ~ sample + condition*exon, initialGuess=.01, nCores=1, minCount=10, maxExon=70)
 }
 \arguments{
   \item{cds}{
@@ -33,12 +29,9 @@
   \item{maxExon}{
         Genes with more exons than this parameter will be discarded from the analysis. This is a speed issue. Currently, time of dispersion estimations and testing for differential exon usage significantly increases with number of exons.
    }
-  \item{fitDispersions}{
-	If TRUE, fitDispersions will be called inside this function. This will estimate the parameters alpha0 and alpha1 in alpha(mu)=(alpha1/mu + alpha0), then calculate and store in fData(ecs)$dispersion the maximum value between the fitted value and the Cox-Reid estimate. 
-   }
 }
 \value{
-	An ExonCountSet object with dispersion (\code{featureData(cds)$dispersion} and \code{featureData(cds)$dispersion_CR_est}) parameters filled).
+	An ExonCountSet object with dispersion \code{featureData(cds)$dispersion_CR_est}) parameters filled).
 }
 \examples{
 	\dontrun{data("pasillaExons", package="pasilla")}
