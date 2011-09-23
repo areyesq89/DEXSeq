@@ -137,8 +137,8 @@ of the feature data. Then we call the function \Rfunction{fitDispersions}, in wh
 relation $\alpha = \alpha_0 + \alpha_1/\mu$ is fit to the CR dispersion values (and the coefficients 
 stored in slot \Robject{dispFitCoefs}) and finally, for each exon, the maximum of the CR estimate and the fitted value
 is taken as the exon's final dispersion value and stored in the \Robject{dispersion} slot.
-Please take into consideration that fit could be difficult to do in cases where the dispersion estimates
-are too big, this sometimes tends to break this function.  In this special cases please do not hesitate to 
+Please take into consideration that this fit could be difficult to do in cases where the dispersion estimates
+are to big, this sometimes tends to break this function.  In this special cases please do not hesitate to 
 contact the developers.
 
 <<fitDisp, cache=TRUE>>=
