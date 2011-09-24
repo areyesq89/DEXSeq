@@ -2,9 +2,16 @@
 \alias{fitDispersions}
 \title{Fit the mean-variance function.}
 \description{
-      This function fit all the Cox-Reid dispersion values on a mean-variance dependent function to estimate 
-      alpha1 and alpha0 in alpha(mu) = (alpha1/mu + alpha0), where mu is equal to the mean.  After this, the maximum
-      value of each exon between the Cox-Reid and the mean fitted value will be stored in fData$dispersion.
+      This function fits a parametric model of the mean-dispersion
+      relationship to the per-gene estimates of mean \eqn{\hat{\mu}} and
+      dispersion \eqn{\hat{\alpha}}. The parametric
+      model is \deqn{\alpha(\mu) = \frac{\alpha_1}{mu} + \alpha_0,}
+      where \eqn{mu} is the mean, \eqn{\alpha} the dispersion and 
+      \eqn{\alpha_1} and \eqn{\alpha_0} are two parameters.
+      After this, for each exon, the maximum
+      between the per-gene estimate \eqn{\hat{\alpha}} and the modelled
+      value \eqn{\hat{\alpha}_1/\hat{\mu} + \hat{\alpha}_0} is
+	stored in \code{fData$dispersion}.
 }
 \usage{
 fitDispersions(ecs)
@@ -15,7 +22,7 @@ fitDispersions(ecs)
   }
 }
 \value{
-	An ExonCountSet object with information of the fit included, as well as the fData(ecs)$dispersion filled.
+	An ExonCountSet object with information of the fit included, as well as \code{fData(ecs)$dispersion} filled.
 }
 \examples{
 	data("pasillaExons", package="pasilla")
