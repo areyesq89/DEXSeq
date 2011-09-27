@@ -51,15 +51,6 @@ modelFrameForGene <- function( ecs, geneID, onlyTestable=FALSE) {
    modelFrame
 }
 
-assertOneWay <- function( ecs ) {
-   stopifnot( is( ecs, "ExonCountSet") )
-   if( ncol( design(ecs,drop=FALSE) ) != 1 )
-      stop( "This function only works for simple one-way designs, but your have specified a design with multiple predictors" )
-   if( colnames( design(ecs,drop=FALSE) ) != "condition" )
-      stop( "This function requires the design column to have its default name, 'condition'." )
-}
-
-
 profileLogLikelihood <- function( disp, mm, y, muhat )
 {
    # calculate the log likelihood:
@@ -137,14 +128,14 @@ estimateExonDispersionsForModelFrame <- function( modelFrame, formula=NULL, mm=N
    disp
 }
 
-fitDispersions <- function( ecs )
+fitDispersionFunction <- function( ecs )
 {
    stopifnot(is(ecs, "ExonCountSet"))
-   if(all(is.na(fData(ecs)$dispersion_CR_est))){
+   if(all(is.na(fData(ecs)$dispBeforeSharing))){
       stop("no CR dispersion estimations found, please first call estimateDispersions function")
    }
    means <- colMeans( t(counts(ecs))/sizeFactors(ecs) )
-   disps <- fData(ecs)$dispersion_CR_est
+   disps <- fData(ecs)$dispBeforeSharing
    coefs <- c( .1, 1 )
    iter <- 0   
    while(TRUE) {
@@ -162,10 +153,11 @@ fitDispersions <- function( ecs )
          break }
     }
     ecs@dispFitCoefs <- coefs
+    fData(ecs)$dispFitted <- ecs@dispFitCoefs[1] + ecs@dispFitCoefs[2] / colMeans( t(counts(ecs))/sizeFactors(ecs) )
     fData(ecs)$dispersion <- pmin(
        pmax( 
-          fData(ecs)$dispersion_CR_est, 
-          ecs@dispFitCoefs[1] + ecs@dispFitCoefs[2] / colMeans( t(counts(ecs))/sizeFactors(ecs) ),
+          fData(ecs)$dispBeforeSharing, 
+          fData(ecs)$dispFitted,
           na.rm = TRUE ),
           1e8 )   # 1e8 as an arbitrary way-too-large value to capture infinities
     return(ecs)
@@ -173,7 +165,7 @@ fitDispersions <- function( ecs )
 
 
 setMethod("estimateDispersions", signature(cds="ExonCountSet"),
-   function( cds, formula=count ~ sample + condition*exon, initialGuess=.01, nCores=1, minCount=10, maxExon=70)
+   function( cds, formula=count ~ sample + condition*exon, initialGuess=.01, nCores=1, minCount=10, maxExon=70, quiet=FALSE, file="")
    {
       stopifnot(is(cds, "ExonCountSet"))
       if( all( is.na(sizeFactors(cds)) ) ){
@@ -181,6 +173,10 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
       }
       cds@formulas[["formulaDispersion"]] <- deparse(formula)
 
+
+      if(!interactive() & !quiet & file == ""){  ## if the session is not interactive, quiet is FALSE and there is no file, then quiet does not make any sense
+         quiet=TRUE
+      }
       ########## DEFINE TESTABLE GENES #############
       # Which exons are actually testable? 
        # take away those exons with counts lower than minCounts
@@ -210,16 +206,16 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
 #      testable <- fData(cds)$testable
       testablegenes <- as.character(unique(fData(cds)[which(fData(cds)$testable),]$geneID))
 
-      if( nCores==1 ) {
-         cat( "Dispersion estimation. (Progress report: one dot per 100 genes)\n" )
+      if(!quiet & nCores==1 ) {
+         cat( "Dispersion estimation. (Progress report: one dot per 100 genes)\n", file=file)
       }
          
       i <- 0
       if(nCores > 1){
-         cat(sprintf("Estimating Cox-Reid exon dispersion estimates using %d cores. (Progress report: one dot per 100 genes)\n", nCores))
-         ##### nCores=-1 dummy variable, avoid printing report many times
-         toapply <- function(x){estimateDispersions(x, formula=formula, initialGuess=initialGuess, nCores=-1, minCount=minCount, maxExon=maxExon)}
-         cds <- divideWork(cds, funtoapply=toapply, fattr="dispersion_CR_est", mc.cores=nCores, testablegenes)
+         if(!quiet){
+         cat(sprintf("Estimating Cox-Reid exon dispersion estimates using %d cores. (Progress report: one dot per 100 genes)\n", nCores), file=file)}
+         toapply <- function(x){estimateDispersions(x, formula=formula, initialGuess=initialGuess, nCores=-1, minCount=minCount, maxExon=maxExon, file=file, quiet=quiet)}
+         cds <- divideWork(cds, funtoapply=toapply, fattr="dispBeforeSharing", mc.cores=nCores, testablegenes)
       }else{
          modelFrames <- sapply( testablegenes, function(gs) {
             mf <- modelFrameForGene(cds, gs, onlyTestable=TRUE)
@@ -246,8 +242,8 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
          }
 
          ###### WORKS WAY FASTER THIS WAY THAN IN EVERY CYCLE ACCESSING fData
-         fData(cds)$dispersion_CR_est <- NA_real_
-         dispersion_CR_est <- fData(cds)$dispersion_CR_est
+         fData(cds)$dispBeforeSharing <- NA_real_
+         dispBeforeSharing <- fData(cds)$dispBeforeSharing
          testable <- fData(cds)$testable
 
          for( genename in testablegenes ){
@@ -262,13 +258,13 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
             }   
       
             rows <- as.character(geneIDs(cds)) %in% genename & testable
-            dispersion_CR_est[rows] <- disps 
+            dispBeforeSharing[rows] <- disps 
       
             i <- i + 1
-            if(i %% 100 == 0 ){
-               cat( "." )}    
+            if(!quiet & i %% 100 == 0 ){
+               cat( ".", file=file)}    
          }
-         fData(cds)$dispersion_CR_est <- dispersion_CR_est
+         fData(cds)$dispBeforeSharing <- dispBeforeSharing
       }
       cds
    }
@@ -278,7 +274,7 @@ testGeneForDEU <- function (ecs, gene, formula0=NULL, formula1=NULL,
       glm.control = list( maxit=100, epsilon=3e-4 ) ){
    stopifnot(is(ecs, "ExonCountSet"))
    if( all( is.na(featureData(ecs)$dispersion ) ) ) {
-      stop("No dispersion values found, call function fitDispersions first.")		
+      stop("No dispersion values found, call function fitDispersionFunction first.")		
    }
 
    mf <- modelFrameForGene(ecs, gene, onlyTestable=TRUE)
@@ -323,20 +319,26 @@ testGeneForDEU <- function (ecs, gene, formula0=NULL, formula1=NULL,
   ans
 }
 
-testForDEU <- function( ecs, formula0=NULL, formula1=NULL, nCores=1)
+testForDEU <- function( ecs, formula0=NULL, formula1=NULL, nCores=1, quiet=FALSE, file="")
 {
    stopifnot(is(ecs, "ExonCountSet"))
    if( all( is.na(featureData(ecs)$dispersion ) ) ) {
-      stop("No dispersion values found, call function fitDispersions first.")		
+      stop("No dispersion values found, call function fitDispersionFunction first.")		
    }
-   if(nCores==1){
-      cat( "Testing for differential exon usage. (Progress report: one dot per 100 genes)\n" )}
+   
+   if(!interactive() & !quiet & file == ""){  ## if the session is not interactive, quiet is FALSE and there is no file, then quiet does not make any sense
+      quiet=TRUE
+   }
+
+   if(!quiet & nCores==1){
+      cat( "Testing for differential exon usage. (Progress report: one dot per 100 genes)\n", file=file)}
 
    testablegenes <- as.character(unique(fData(ecs)[which(fData(ecs)$testable),]$geneID))
 
    if(nCores > 1){
-      cat(sprintf("Testing for differential exon usage using %d cores. (Progress report: one dot per 100 genes)\n", nCores))
-      toapply <- function(x){testForDEU(x, formula0=formula0, formula1=formula1, nCores=-1)}
+      if(!quiet){
+      cat(sprintf("Testing for differential exon usage using %d cores. (Progress report: one dot per 100 genes)\n", nCores), file=file)}
+      toapply <- function(x){testForDEU(x, formula0=formula0, formula1=formula1, nCores=-1, file=file, quiet=quiet)}
       ecs <- divideWork(ecs, funtoapply=toapply, fattr="pvalue", mc.cores=nCores, testablegenes)
    }else{
       i <- 0
@@ -344,8 +346,8 @@ testForDEU <- function( ecs, formula0=NULL, formula1=NULL, nCores=1)
       pvalue <- fData(ecs)$pvalue
       for( genename in testablegenes ) {
          i <- i + 1
-         if(i %% 100 == 0 ){
-            cat( "." )}
+         if(!quiet & i %% 100 == 0 ){
+            cat( ".", file=file)}
          rows <- as.character(geneIDs(ecs)) %in% genename & testable
          res <- testGeneForDEU( ecs, genename, formula0, formula1 )
          pvalue[rows] <- res$pvalue 
@@ -365,7 +367,7 @@ testForDEU <- function( ecs, formula0=NULL, formula1=NULL, nCores=1)
    ecs
 }
 
-estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", nCores=1)
+estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", nCores=1, quiet=FALSE, file="")
 {
    stopifnot(is(ecs, "ExonCountSet"))
    if(any(is.na(sizeFactors(ecs)))){
@@ -379,6 +381,10 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", nCores=1)
    colfoldnames <- sapply(2:length(nms), function(x){
       paste("log2fold(", nms[x], "/", nms[1], ")", sep="")
    })
+
+   if(!interactive() & !quiet & file == ""){  ## if the session is not interactive, quiet is FALSE and there is no file, then quiet does not make any sense
+      quiet=TRUE
+   }
  
    testablegenes <- as.character(unique(fData(ecs)[which(fData(ecs)$testable),]$geneID))
   
@@ -390,12 +396,13 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", nCores=1)
       fData(ecs) <- cbind(fData(ecs), logfold)
    }
 
-   if(nCores==1){
-      cat("Calculating fold changes. (Progress report: one dot per 100 genes)\n")}
+   if(!quiet & nCores==1){
+      cat("Calculating fold changes. (Progress report: one dot per 100 genes)\n", file=file)}
  
    if (nCores > 1){
-      cat(sprintf("Calculating fold changes using %d cores. (Progress report: one dot per 100 genes)\n", nCores))
-      toapply <- function(x){estimatelog2FoldChanges(x, fitExpToVar=fitExpToVar, nCores=-1)}
+      if(!quiet){
+      cat(sprintf("Calculating fold changes using %d cores. (Progress report: one dot per 100 genes)\n", nCores), file=file)}
+      toapply <- function(x){estimatelog2FoldChanges(x, fitExpToVar=fitExpToVar, nCores=-1, file=file, quiet=quiet)}
       ecs <- divideWork(ecs, toapply, fattr=colfoldnames, mc.cores=nCores, testablegenes)
    }else{
       frm <- as.formula(paste("count ~", fitExpToVar,  "* exon"))
@@ -404,8 +411,8 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", nCores=1)
       i <- 0
       for(gene in testablegenes){
          i <- i + 1
-         if(i %% 100 == 0 ){
-            cat( "." )}
+         if(!quiet & i %% 100 == 0 ){
+            cat( ".", file=file)}
          tr <- fitAndArrangeCoefs( ecs, gene, frm=frm)
          if(is.null(tr)){
               warning(sprintf("log fold change calculation failed for gene %s", gene))
@@ -423,18 +430,18 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", nCores=1)
 
 divideWork <- function(ecs, funtoapply, fattr, mc.cores, testablegenes)
 {
-   if(!suppressMessages(suppressWarnings(require("multicore")))){
-      stop("multicore package not found...")}
-#   if(!is.loaded("mc_fork", PACKAGE="multicore")){
-#     stop("Please load first multicore package or set parameter nCores to 1...")}
+#   if(!suppressMessages(suppressWarnings(require("multicore")))){
+ #     stop("multicore package not found...")}
+   if(!is.loaded("mc_fork", PACKAGE="multicore")){
+     stop("Please load first multicore package or set parameter nCores to 1...")}
    forsubset <- sort(rep(1:mc.cores, length.out=length(testablegenes)))
    subgenes <- split(testablegenes, forsubset)
    allecs <- sapply(subgenes, function(x){
       subsetByGenes(ecs, x)})
    rowlist <- sapply(1:mc.cores, function(i){which(fData(ecs)$geneID %in% subgenes[[i]])})
    rows <- do.call(c, rowlist)
-#   mc.lapply <- get("mclapply", envir=getNamespace("multicore"))
-   allecs <- mclapply(allecs, FUN=funtoapply, mc.cores=mc.cores)
+   mcLapply <- get("mclapply", envir=getNamespace("multicore"))
+   allecs <- mcLapply(allecs, FUN=funtoapply, mc.cores=mc.cores)
    stopifnot(all(as.character(fData(ecs)$geneID)[rows] == do.call(c, sapply(allecs, function(x){as.character(fData(x)$geneID)}))))   #### makes sure the values are
    if(length(fattr) > 1){
       fData(ecs)[rows,][,fattr] <- do.call(rbind, lapply(allecs, function(x){fData(x)[,fattr]}))

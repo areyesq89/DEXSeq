@@ -4,12 +4,12 @@
 \alias{design<-,ExonCountSet-method}
 \alias{design}
 \title{
-    Accessor function for the design information in a ExonCountSet object
+    Accessor function for the design annotation from a ExonCountSet object.
 }
 \description{
-    The design vector is a factor that assigns to each column of the count data
+    The design vector is a factor or data frame that assigns to each column of the count data
     a condition (or treatment, or phenotype, or the like). This information is stored
-    in the ExonCountSet's "phenoData" slot as a row named "design".
+    in the ExonCountSet's "phenoData" slot as a row.
 }
 \usage{
 \S4method{design}{ExonCountSet}(cds, drop=TRUE, asAnnotatedDataFrame=FALSE)

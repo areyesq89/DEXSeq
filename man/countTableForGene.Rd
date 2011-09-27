@@ -4,24 +4,28 @@
     Count table for a given geneID.
 }
 \description{
-	This function returns a matrix of non negative integers containing a count table for a specified geneID from an ecs object.  The count table contains one row for every exon of the gene and a column for every sample.
+   This function returns a matrix of non negative integers containing 
+   a count table for a specified geneID from an ExonCountSet object.  
+   The count table contains one row for every exon of the gene and 
+   a column for every sample.
 }
 \usage{
 countTableForGene(ecs, geneID, normalized=FALSE, withDispersion=FALSE)
 }
 \arguments{
-  \item{ecs}{
-      An ExonCountSet.
-   }
-  \item{geneID}{
-      A geneID to get the count table.
-   }
-  \item{normalized}{
-      Logic argument indicating whether to get the raw counts or the normalized counts by the size factor.
-  }
-  \item{withDispersion}{
-      Logic argument indicating if an extra column with the dispersion should be added to the count table.
-  }
+\item{ecs}{
+   An ExonCountSet.
+}
+\item{geneID}{
+   A geneID to get the count table.
+}
+\item{normalized}{
+   If TRUE, the raw counts will be normalized by the size factors.
+}
+\item{withDispersion}{
+   If TRUE, an extra column with the dispersion estimate used in the 
+   test will added to the count table.
+}
 }
 
 \seealso{

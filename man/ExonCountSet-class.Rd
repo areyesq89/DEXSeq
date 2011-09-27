@@ -33,7 +33,7 @@ an ExonCountSet object, this information of the phenoData is populated directly.
 
 The slots of size factors (in phenoData), dispersion estimates, pvalue and padjust are filled in the featureData
 latter on the analysis after the user calls \code{\link{estimateSizeFactors}}, \code{\link{estimateDispersions}}
-and \code{\link{testForDEU}}.
+\code{\link{fitDispersionFunction}}, and \code{\link{testForDEU}}.
 
 }
 \examples{

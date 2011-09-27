@@ -7,7 +7,7 @@ setClass( "ExonCountSet",
       annotationFile = "character"
    ),
    prototype = prototype( new( "VersionedBiobase",
-      versions = c( classVersion("eSet"), ExonCountSet = "1.0.2" ) ) )
+      versions = c( classVersion("eSet"), ExonCountSet = "1.0.3" ) ) )
 )
 
 
@@ -56,11 +56,17 @@ newExonCountSet <- function( countData, design, geneIDs, exonIDs, exonIntervals=
          end    = rep( NA_integer_,   nrow( countData ) ), 
          strand = rep( NA_character_, nrow( countData ) ) ) }
 
-   featureData$dispersion_CR_est <- rep( NA_real_, nrow( countData ) )
-   varMetadata( featureData )[ "dispersion_CR_est", "labelDescription" ] <- "exon dispersion (Cox-Reid estimate)"
+   featureData$testable <- rep( NA_real_, nrow( countData ) )
+   varMetadata( featureData )[ "testable", "labelDescription" ] <- "slot indicating if an exon should be considered in the test"
+
+   featureData$dispBeforeSharing <- rep( NA_real_, nrow( countData ) )
+   varMetadata( featureData )[ "dispBeforeSharing", "labelDescription" ] <- "exon dispersion (Cox-Reid estimate)"
+
+   featureData$dispFitted <- rep( NA_real_, nrow( countData ) )
+   varMetadata( featureData )[ "dispFitted", "labelDescription" ] <- "Fitted mean-variance estimate alpha(mu)=alpha1/mu + alpha0"
 
    featureData$dispersion <- rep( NA_real_, nrow( countData ) )
-   varMetadata( featureData )[ "dispersion", "labelDescription" ] <- "exon dispersion (value used in test)"
+   varMetadata( featureData )[ "dispersion", "labelDescription" ] <- "maximum value between the exon dispersion before sharing and the fitted dispersion estimate"
 
    featureData$pvalue <- rep( NA_real_, nrow( countData ) )
    varMetadata( featureData )[ "pvalue", "labelDescription" ] <- "p-value from testForDEU"
@@ -162,10 +168,14 @@ setValidity( "ExonCountSet", function( object ) {
 #      return( "The 'strand' column in fData does not have the levels '+' and '-'." )   ### strange reason, make pasilla check crash only in the check, not sourcing exactly the same code
    if( !is(fData(object)$dispersion, "numeric")){
       return( "The 'dispersion' is not numeric")}
-   if( !is(fData(object)$dispersion_CR_est, "numeric")){
-      return( "The 'dispersion_CR_est' column is not numeric")}
-  if( !is(fData(object)$pval, "numeric")){
-      return( "The 'pval' values are not numeric")}
+   if( !is(fData(object)$dispFitted, "numeric")){
+      return( "The 'dispFitted' is not numeric")}
+   if( !is(fData(object)$dispBeforeSharing, "numeric")){
+      return( "The 'dispBeforeSharing' column is not numeric")}
+   if( !is(fData(object)$pvalue, "numeric")){
+      return( "The 'pvalue' values are not numeric")}
+   if( !is(fData(object)$padjust, "numeric")){
+      return( "The 'padjust' values are not numeric")}
    if( !is.integer( assayData(object)[["counts"]] ) )
       return( "The count data is not in integer mode." )
 
@@ -300,7 +310,6 @@ DEUresultTable <- function(ecs)
    result <- data.frame(
       geneID=geneIDs(ecs), 
       exonID=exonIDs(ecs), 
-      dispersion_CR_est=featureData(ecs)$dispersion_CR_est, 
       dispersion=featureData(ecs)$dispersion, 
       pvalue=fData(ecs)$pvalue, 
       padjust=fData(ecs)$padjust,
@@ -310,7 +319,7 @@ DEUresultTable <- function(ecs)
    if(any(extracol)){
       w <- which(extracol)
       result <- data.frame(result, fData(ecs)[,w])
-      colnames(result)[8:(7+length(w))] <- colnames(fData(ecs))[w]
+      colnames(result)[7:(6+length(w))] <- colnames(fData(ecs))[w]
    }
    result
 }

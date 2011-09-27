@@ -1,26 +1,64 @@
 \name{plotDEXSeq}
      \alias{plotDEXSeq}
-     \title{Visualization of the coefficients of the glm or the normalized counts.}
+     \title{Visualization of the fitted expression, fitted splicing or the normalized counts.}
      \description{
-	The function provides a tool to visualize the gene annotation information, read count data and the results of the test in \code{testForDEU}. It is made on graphics.
+	The function provides a plot to visualize read count data, the fitted 
+        expression, fitted splicing and the results of the test in 
+        \code{\link{testForDEU}}.  The fitted values are obtained from fitting
+        the counts values to a certain condition from the design annotation of
+        the glm. See fitExpToVar parameter.
      }
      \usage{
      plotDEXSeq(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=FALSE, expression=TRUE, splicing=FALSE, displayTranscripts=FALSE, names=FALSE, legend=FALSE, color=NULL, color.samples=NULL, ...)
      }
      \arguments{
-       \item{ecs}{An ExonCountSet object.}
-       \item{geneID}{geneID to visualize.}
-       \item{FDR}{A false discovery rate threshold used to indicate the significant exons.}
-       \item{fitExpToVar}{A variable contained in the design of the ecs, the expression values will be fitted to this variable}
-       \item{norCounts}{If TRUE, provides a plot of the normalized counts by the size factors.}
-       \item{expression}{If TRUE, the function plots of the fitted EXPRESSION estimates from the glm regression.}
-       \item{splicing}{If TRUE, the function plots of the fitted SPLICING estimates from the glm regression.}
-       \item{displayTranscripts}{Logic argument which indicates if the annotated transcripts want to be plotted or not, the upper limit is 42 transcripts due to graphics limits.}
-       \item{names}{Logical indicating if the names of the transcriptIDs should to be written.}
-       \item{legend}{Logical indicating if the legend of colors and conditions should be added.}
-       \item{color}{A vector of colors for each of the conditions indicated by fitExpToVar.}
-       \item{color.samples}{A vector of colors for each of the samples. If NULL, the colors of each sample will be asigned according to its corresponding condition. Useful to visualize complex experimental designs.}
-       \item{...}{Further graphical parameters (from par)}
+       \item{ecs}{
+          An ExonCountSet object.
+       }
+       \item{geneID}{
+          geneID in the \code{ExonCountSet} object to visualize.
+       }
+       \item{FDR}{
+          A false discovery rate used to indicate the significant exons.
+       }
+       \item{fitExpToVar}{
+          A variable contained in the design annotation of the \code{ExonCountSet}, 
+          the expression values will be fitted to this variable using the formula
+          count~fitExpToVar*exon using a model frame obtained from the function
+          \code{\link{modelFrameForGene}}.  
+       }
+       \item{norCounts}{
+          If TRUE, provides a plot of the normalized counts by the size factors.
+       }
+       \item{expression}{
+          If TRUE, the function plots of the fitted EXPRESSION estimates from the glm 
+          regression.
+       }
+       \item{splicing}{
+          If TRUE, the function plots of the fitted SPLICING estimates from the glm 
+          regression.
+       }
+       \item{displayTranscripts}{
+          If TRUE, the transcripts are displayed in the plot.
+       }
+       \item{names}{
+          If TRUE, the names of the transcripts are shown.
+       }
+       \item{legend}{
+          If TRUE, legend is displayed.
+       }
+       \item{color}{
+          A vector of colors for each of the levels from the factor in the design of 
+          the ExonCountSet object indicated by "fitExpToVar".
+       }
+       \item{color.samples}{
+          A vector of colors for each of the samples. If NULL, the colors of each 
+          sample will be asigned according to its corresponding level from "fitExpToVar". 
+          This option is useful to visualize complex experimental designs.
+       }
+       \item{...}{
+          Further graphical parameters (from par).
+       }
      }
      \seealso{
        graphics, \code{segments}

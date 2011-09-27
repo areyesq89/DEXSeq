@@ -16,10 +16,9 @@
 \S4method{counts}{ExonCountSet,matrix}(cds) <- value
 }
 \arguments{
-  \item{cds}{an \code{ExonCountSet} object.}
-  \item{normalized}{logical indicating whether or not to divide the
-    counts by the size factors before returning.}
-  \item{value}{an integer matrix of counts, each row corresponding to an exon and each column corresponding to a sample.}
+  \item{cds}{An ExonCountSet object.}
+  \item{normalized}{If TRUE, the counts will be normalized by the size factors.}
+  \item{value}{An integer matrix of counts, each row corresponding to an exon and each column corresponding to a sample.}
 }
 \examples{
    data("pasillaExons", package="pasilla")

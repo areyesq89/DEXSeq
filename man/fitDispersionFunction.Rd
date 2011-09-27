@@ -1,5 +1,5 @@
-\name{fitDispersions}
-\alias{fitDispersions}
+\name{fitDispersionFunction}
+\alias{fitDispersionFunction}
 \title{Fit the mean-variance function.}
 \description{
       This function fits a parametric model of the mean-dispersion
@@ -14,7 +14,7 @@
 	stored in \code{fData$dispersion}.
 }
 \usage{
-fitDispersions(ecs)
+fitDispersionFunction(ecs)
 }
 \arguments{
   \item{ecs}{
@@ -27,6 +27,6 @@ fitDispersions(ecs)
 \examples{
 	data("pasillaExons", package="pasilla")
 	pasillaExons <- estimateSizeFactors( pasillaExons )
-	\dontrun{pasillaExons <- estimateDispersion( pasillaExons, fitDispersions=FALSE )}
+	\dontrun{pasillaExons <- estimateDispersions( pasillaExons )}
 	\dontrun{pasillaExons <- fitDispersions( pasillaExons )}
 }

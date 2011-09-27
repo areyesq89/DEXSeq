@@ -5,7 +5,8 @@
    Accesor for the exonIDs in an ExonCountSet object.
 }
 \description{
-   This function is an accesor for the exon identificators for each of the rows in the count table. Please make sure that the exon identificators within a gene are ordered alphanumerically.
+   This function is an accesor for the exon identificators for each of the rows in the count table.
+   Please make sure that the exon IDs are ordered alphanumerically.
 }
 \usage{
 exonIDs(ecs)

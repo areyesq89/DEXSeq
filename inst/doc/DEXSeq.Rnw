@@ -42,11 +42,10 @@
   experimental and biological variability is important, and such
   capabilities are offered, for instance, by the packages
   \Rpackage{edgeR}~\cite{edgeR} and
-  \Rpackage{DESeq}~\cite{Anders:2010:GB}. However, there is currently no
-  software that specifically addresses exon level expression and
-  differential exon usage.  In this package, we provide a method to
-  systematically detect differential exon usage using RNA-seq.  We use
-  as input the number of reads mapping to each of the exons of a
+  \Rpackage{DESeq}~\cite{Anders:2010:GB}. In this package, we provide a method to
+  systematically detect differential exon usage using RNA-seq
+  that takes into account this variability.  We use as input the 
+  number of reads mapping to each of the exons of a
   genome. The method is demonstrated on the data from the package
   \Rpackage{pasilla}. 
 \end{abstract}
@@ -79,19 +78,19 @@ data("pasillaExons", package="pasilla")
 @ 
 
 If you have not yet installed the \Rpackage{pasilla} package, you can do so with
-<<installpasilla,eval=FALSE>>
+<<installpasilla,eval=FALSE>>=
 source("http://www.bioconductor.org/biocLite.R")
 biocLite("pasilla")
 @
 
-The \Rfunction{pData} accessor function shows the available sample annotations.
+The \Rfunction{design} accessor function shows the available sample annotations.
 <<pData>>=
-pData(pasillaExons)
+design(pasillaExons)
 @ 
 We also print the first \Sexpr{formals(utils:::head.data.frame)$n} lines of selected
 columns of the feature data annotation:
 <<fData>>=
-head(fData(pasillaExons)[,c(1,2,7:10)])
+head(fData(pasillaExons)[,c(1,2,9:12)])
 @   
 <<tabtab1,echo=FALSE>>=
 tg = table(geneIDs(pasillaExons)) 
@@ -132,17 +131,22 @@ function \Rfunction{estimateDispersions}.
 pasillaExons <- estimateDispersions(pasillaExons)
 @
 
-The result from the Cox-Reid estimation is stored in the column \Robject{dispersion\_CR\_est}
-of the feature data. Then we call the function \Rfunction{fitDispersions}, in which a dispersion-mean 
-relation $\alpha = \alpha_0 + \alpha_1/\mu$ is fit to the CR dispersion values (and the coefficients 
-stored in slot \Robject{dispFitCoefs}) and finally, for each exon, the maximum of the CR estimate and the fitted value
+The result from the Cox-Reid estimation is stored in the column \Robject{dispBeforeSharing}
+of the feature data. Then we call the function \Rfunction{fitDispersionFunction}, in which a dispersion-mean 
+relation $\alpha(\mu) = \alpha_0 + \alpha_1/\mu$ is fitted to the individual CR dispersion values 
+(dispersions before sharing), the coefficients are stored in the slot \Robject{dispFitCoefs}) and finally, 
+for each exon, the maximum betweem the dispersion before sharing and the fitted dispersion value
 is taken as the exon's final dispersion value and stored in the \Robject{dispersion} slot.
 Please take into consideration that this fit could be difficult to do in cases where the dispersion estimates
 are to big, this sometimes tends to break this function.  In this special cases please do not hesitate to 
 contact the developers.
 
 <<fitDisp, cache=TRUE>>=
-pasillaExons <- fitDispersions(pasillaExons)
+pasillaExons <- fitDispersionFunction(pasillaExons)
+head(fData(pasillaExons)$dispBeforeSharing)
+pasillaExons@dispFitCoefs
+head(fData(pasillaExons)$dispFitted)
+head(fData(pasillaExons)$dispersion)
 @
 
 To make a fit diagnostic, for each exon we plot its mean expression value vs its CR
@@ -150,7 +154,7 @@ dispersion estimate and we draw the line that we just fitted.
 
 <<fitdiagnostics, fig=TRUE>>=
 meanvalues <- rowMeans(counts(pasillaExons))
-plot(meanvalues, fData(pasillaExons)$dispersion_CR_est, log="xy", main="mean vs CR dispersion")
+plot(meanvalues, fData(pasillaExons)$dispBeforeSharing, log="xy", main="mean vs CR dispersion")
 x <- 0.01:max(meanvalues)
 y <- pasillaExons@dispFitCoefs[1] + pasillaExons@dispFitCoefs[2] / x
 lines(x, y, col="red")
@@ -164,13 +168,9 @@ lines(x, y, col="red")
 \end{figure}
 
 We can see that the CR dispersion estimates depends on its mean value. The line seems to pass through 
-the data points, which gives us a good diagnostic of the fit.\fixme{Comment something about the lower cloud of points}
+the data points, which gives us a good diagnostic of the fit.
+\fixme{Comment something about the lower cloud of points}
 
-<<estDisp2>>=
-head(fData(pasillaExons)$dispersion_CR_est)
-pasillaExons@dispFitCoefs
-head(fData(pasillaExons)$dispersion)
-@
 %
 
 In Section~\ref{sec:glm}, we will see how to incorporate further experimental or technical variables
@@ -271,7 +271,7 @@ it aware of the additional factor (besides \Robject{condition}, which it conside
 <<formuladispersion,cache=TRUE>>=
 formuladispersion <- count ~ sample + ( exon + type ) * condition
 pasillaExons <- estimateDispersions( pasillaExons, formula = formuladispersion )
-pasillaExons <- fitDispersions(pasillaExons)
+pasillaExons <- fitDispersionFunction(pasillaExons)
 @
 %
 Second, for the testing, we will also change the two formulas to take into account the library type. 
@@ -365,18 +365,19 @@ DEXSeqHTML( pasillaExons, FDR=0.1, color=c("#FF000080", "#0000FF80") )
 DEXSeq analysis can be computationally slow with large datasets due to the number of iterations and glms
 that are fitted, especially with datasets with a big number of samples, or organisms containing genes with
 a large number of exons.  There are some steps of the analysis that require the whole dataset, but the two 
-parts that are most time consuming can be paralellized (functions \Rfunction{estimateDispersions} and 
+parts that are most time consuming can be parallelized (functions \Rfunction{estimateDispersions} and 
 \Rfunction{testForDEU}) by changing the parameter n.cores in the functions.  Internally, this functions 
 will subset the \Robject{ExonCountSet} object into smaller objects to distribute them to different cores.  
 Please note that only the Cox-Reid calculation of the dispersion can be parallelized, the mean-variance 
 dependent fit is done with all the dataset.  This parameter depends on the \Rpackage{multicore} package, but
-the user can do the subsetting manually in order to paralellized with other packages, e.g. \Rpackage{Rmpi}.
+the user can do the subsetting manually in order to parallelized with other packages, e.g. \Rpackage{Rmpi}.
 %
 <<para1,cache=TRUE,eval=FALSE>>=
 data("pasillaExons", package="pasilla")
 library(multicore)
 pasillaExons <- estimateSizeFactors( pasillaExons )
 pasillaExons <- estimateDispersions( pasillaExons, n.cores=3, quiet=TRUE)
+pasillaExons <- fitDispersionFunction( pasillaExons )
 pasillaExons <- testForDEU( pasillaExons, n.cores=3)
 @
 
@@ -412,7 +413,7 @@ in SAM format and counts the number of reads falling in each of the defined exon
 The \Rpackage{DEXSeq} function \Rfunction{read.HTSeqCounts} is then able to read the output from these scripts 
 and returns an \Rclass{ExonCountSet} object with the relevant information for 
 differential exon usage analysis and visualization. Of course,
-users can postprocess or replace the annotation in the object using their own means in R. 
+users can post process or replace the annotation in the object using their own means in R. 
 
 The files that were used in this way to create the \Robject{pasillaGenes} object
 are provided within the \Rpackage{pasilla} package:
