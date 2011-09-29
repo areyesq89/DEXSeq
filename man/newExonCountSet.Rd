@@ -5,7 +5,8 @@
        This function creates an ExonCountSet object from a matrix or data.frame of read counts.
      }
      \usage{
-     newExonCountSet(countData, design, geneIDs, exonIDs, exonIntervals=NULL, transcripts=NULL)
+newExonCountSet(countData, design, geneIDs, exonIDs, exonIntervals=NULL, 
+                           transcripts=NULL)
      }
      \arguments{
        \item{countData}{
@@ -50,11 +51,11 @@
        \code{\link{read.HTSeqCounts}}
      }
      \examples{
-	data("pasillaExons", package="pasilla")
-	ecs <- newExonCountSet(
-               countData=counts(pasillaExons), 
-	       design=design(pasillaExons), 
-               geneIDs=geneIDs(pasillaExons), 
-               exonIDs=exonIDs(pasillaExons))
-     }
+data("pasillaExons", package="pasilla")
+ecs <- newExonCountSet(
+   countData=counts(pasillaExons), 
+   design=design(pasillaExons), 
+   geneIDs=geneIDs(pasillaExons), 
+   exonIDs=exonIDs(pasillaExons))
+}
 \keyword{ExonCountSet}

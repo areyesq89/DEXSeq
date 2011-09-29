@@ -22,7 +22,7 @@ those with the exon annotation data. The other slots will be filled with the ana
 
 The ExonCountSet object contains a matrix of non-negative integers which represents, for each column
 a sample and for each row an exon.  In the phenoData, the object contains information about the samples,
-e.g. size factors and contritions are stored there. The user can also add more information about the
+e.g. size factors and design annotations are stored there. The user can also add more information about the
 other properties of the samples.
 
 An ExonCountSet object can be created just by providing a count matrix, and two vectors of gene and exon

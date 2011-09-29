@@ -9,7 +9,9 @@
         the glm. See fitExpToVar parameter.
      }
      \usage{
-     plotDEXSeq(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=FALSE, expression=TRUE, splicing=FALSE, displayTranscripts=FALSE, names=FALSE, legend=FALSE, color=NULL, color.samples=NULL, ...)
+plotDEXSeq(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=FALSE, expression=TRUE, 
+           splicing=FALSE, displayTranscripts=FALSE, names=FALSE, legend=FALSE, 
+           color=NULL, color.samples=NULL, ...)
      }
      \arguments{
        \item{ecs}{

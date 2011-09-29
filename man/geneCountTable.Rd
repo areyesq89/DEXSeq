@@ -18,7 +18,7 @@ geneCountTable(ecs)
    \code{DESeq}
 }   
 \examples{
-   	data("pasillaExons", package="pasilla")
-	head(geneCountTable(pasillaExons))
+data("pasillaExons", package="pasilla")
+head(geneCountTable(pasillaExons))
 }   
 

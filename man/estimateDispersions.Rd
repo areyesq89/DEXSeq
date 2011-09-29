@@ -22,7 +22,7 @@
      columns of the ExonCountSet object.
    }
   \item{initialGuess}{
-     An arbitrary initial guess for the dispersion values.
+     An arbitrary initial guess for the dispersion values to initiate the optimization.
    }
   \item{nCores}{
      Number of cores to be used to estimate the dispersions.  
@@ -33,7 +33,7 @@
      Minimum number of counts on an exon for it to be considered in the tests. 
      This significantly increases the speed of the dispersion 
      estimations and testing for differential exon usage. 
-     This is supported by the fact that small count exons less likely
+     This is supported by the fact that small count exons are less likely
      of being called significant, so it should not affect the results.
    }
   \item{maxExon}{
@@ -44,8 +44,8 @@
    }
    \item{quiet}{
      If TRUE, no progress report is shown.  In case the session is 
-     not an interactive session and progress report is wanted.
-     Change the name of the file.
+     not an interactive session and progress report is wanted, include
+     a file name in the parameter "file".
    }
    \item{file}{
      A file name to write the progress reports. If file="", output

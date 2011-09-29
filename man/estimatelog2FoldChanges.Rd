@@ -5,10 +5,10 @@
       This function calculates the fold changes (log2) between the different
       conditions. It calculates them from the coefficients of a glm 
       that fits the read counts to a variable of the experimental design specified 
-      by the user.
+      by the user (see below, parameter "fitExpToVar".
    }
    \usage{
-      estimatelog2FoldChanges(ecs, fitExpToVar="condition", nCores=1, quiet=FALSE, file="")
+estimatelog2FoldChanges(ecs, fitExpToVar="condition", nCores=1, quiet=FALSE, file="")
    }
    \arguments{
       \item{ecs}{
@@ -26,8 +26,7 @@
       }
       \item{quiet}{
          If TRUE, no progress report is shown.  In case the session is 
-         not an interactive and progress report is wanted.
-         Change the name of the file.
+         not an interactive and progress report is wanted, add a file name below.
       }
       \item{file}{
          A file name to write the progress reports. If file="", output
@@ -39,6 +38,6 @@
   \dontrun{pasillaExons <- estimateSizeFactors(pasillaExons)}
   \dontrun{pasillaExons <- estimateDispersions(pasillaExons)}
   \dontrun{plotDEXSeq(pasillaExons, "FBgn0085442")}
-  \dontrun{pasillaExons <- estimatelog2FoldChanges(pasillaExons, fitExpToVar="condition", nCores=1)}
+  \dontrun{pasillaExons <- estimatelog2FoldChanges(pasillaExons)}
   }
 \keyword{ExonCountSet}

@@ -5,7 +5,7 @@
 }
 \description{
    Creates a data frame containing the model frame for a gene with the columns 
-   sample, exon, sizeFactors, their respective counts and the design annotation.
+   sample, exon, size factors, their respective counts and the design annotation.
 }
 \usage{
 modelFrameForGene(ecs, geneID, onlyTestable=FALSE)
@@ -26,7 +26,7 @@ modelFrameForGene(ecs, geneID, onlyTestable=FALSE)
      A data frame containing the model frame for a gene.
 }
 \examples{
-   data("pasillaExons", package="pasilla")
-   modelFrameForGene(pasillaExons, "FBgn0085442")
+data("pasillaExons", package="pasilla")
+modelFrameForGene(pasillaExons, "FBgn0085442")
 }
 

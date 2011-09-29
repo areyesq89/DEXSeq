@@ -1,15 +1,15 @@
 \name{DEXSeqHTML}
-     \alias{DEXSeqHTML}
-     \title{HTML report writer}
-     \description{
-      This function generates an HTML report from the results from 
-      \code{\link{testForDEU}} saved in an ExonCountSet object.
-      It uses the information from the function 
-      \code{\link{DEUresultTable}} and plotting from \code{\link{plotDEXSeq}}.
-      It allows an easy way of exploring the results of the tests.
-     }
+\alias{DEXSeqHTML}
+\title{HTML report writer}
+\description{
+This function generates an HTML report from the results from 
+\code{\link{testForDEU}} saved in an ExonCountSet object.
+It uses the information from the function 
+\code{\link{DEUresultTable}} and plotting from \code{\link{plotDEXSeq}}.
+It allows an easy way of exploring the results of the tests.
+}
      \usage{
-     DEXSeqHTML(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", fitExpToVar="condition", FDR=0.1, color=NULL, color.samples=NULL)
+DEXSeqHTML(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", fitExpToVar="condition", FDR=0.1, color=NULL, color.samples=NULL)
      }
      \arguments{
        \item{ecs}{An ExonCountSet object}
@@ -25,10 +25,10 @@
        }
        \item{fitExpToVar}{
            A variable contained in the design of the ecs, the counts 
-           will be fitted to this variable for the visualization.
+           will be fitted to this variable to get the plotting values.
        }
        \item{FDR}{A false discovery rate for the result.}
-       \item{color}{A vector of colors for each of the levels of the value from fitExpToVar.}
+       \item{color}{A vector of colors, one for each of the levels of the values of "fitExpToVar".}
        \item{color.samples}{
            A vector of colors for each of the samples. If NULL, the colors 
            of each sample will be asigned according to its corresponding 

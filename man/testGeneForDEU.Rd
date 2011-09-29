@@ -14,7 +14,8 @@
       gene.
 }
 \usage{
-testGeneForDEU(ecs, gene, formula0=NULL, formula1=NULL, glm.control=list(maxit = 100, epsilon = 3e-04))
+testGeneForDEU(ecs, gene, formula0=NULL, formula1=NULL, 
+               glm.control=list(maxit = 100, epsilon = 3e-04))
 }
 \arguments{
   \item{ecs}{

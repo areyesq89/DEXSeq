@@ -6,7 +6,7 @@
 }
 \description{
    This function is an accesor for the exon identificators for each of the rows in the count table.
-   Please make sure that the exon IDs are ordered alphanumerically.
+   Please make sure that the exon IDs are ordered alphanumerically in the gene.
 }
 \usage{
 exonIDs(ecs)

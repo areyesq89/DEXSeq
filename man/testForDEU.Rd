@@ -42,7 +42,7 @@ testForDEU(ecs, formula0=NULL, formula1=NULL, nCores=1, quiet=FALSE, file="")
   }
   \item{file}{
       A file name to write the progress reports. If file="", output
-      will be written in the standart output connection.
+      will be written in the standard output connection.
   }
 
 }

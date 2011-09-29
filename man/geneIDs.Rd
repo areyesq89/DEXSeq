@@ -20,7 +20,7 @@ geneIDs(ecs) <- value
    }
 }
 \examples{
-	library(DEXSeq)
-   	data("pasillaExons", package="pasilla")
-	head( geneIDs( pasillaExons ) )
+library(DEXSeq)
+data("pasillaExons", package="pasilla")
+head( geneIDs( pasillaExons ) )
 }   

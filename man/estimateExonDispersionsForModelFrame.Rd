@@ -7,7 +7,8 @@
        model frame generate from the function \code{\link{modelFrameForGene}}.
 	}
 \usage{
-      estimateExonDispersionsForModelFrame(modelFrame, formula=NULL, mm=NULL, muhat=NULL, initialGuess=0.01)
+estimateExonDispersionsForModelFrame(modelFrame, formula=NULL, mm=NULL, 
+                                                 muhat=NULL, initialGuess=0.01)
 }
 \arguments{
      \item{modelFrame}{
@@ -24,10 +25,11 @@
      }
      \item{muhat}{
         Initial values for the coefficients in the optimization.  
-        If NULL, initial values will be calculated using the "initialGuess".
+        If NULL, initial values will be calculated using with a dispersion
+        value given by the parameter "initialGuess".
      }
      \item{initialGuess}{
-        An arbitrary initial guess to initiate the optimization.
+        An arbitrary initial guess of the dispersions to initiate the optimization.
      }
 }
 \value{
