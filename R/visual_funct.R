@@ -24,6 +24,10 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
    numcond<-length(unique(design(ecs, drop=FALSE)[[fitExpToVar]]))
    numexons<-nrow(count)
    each <- featureData(ecs)$padjust[rt]
+   exoncol<-ifelse(each<=FDR, "#8B0000", "dark green")
+   exoncol[is.na(exoncol)]<-"black"
+   colorlines <- ifelse(each<=FDR, "#FF000060", "lightgrey")
+
 
    ################## DETERMINE THE LAYOUT OF THE PLOT DEPENDING OF THE OPTIONS THE USER PROVIDES ###########
    if(!any(is.na(featureData(ecs)$start))){
@@ -72,7 +76,7 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
       coeff <- exp(coeff)
       ylimn <- c(min(coeff, na.rm=TRUE), max(coeff, na.rm=TRUE))
       coeff <- vst( coeff, ecs )
-      drawPlot(matr=coeff, ylimn, ecs, intervals, rango, textAxis="Fitted expression", rt=rt, color=rep(color[sort(levels(design(ecs, drop=FALSE)[[fitExpToVar]]))], each=numexons), ...)
+      drawPlot(matr=coeff, ylimn, ecs, intervals, rango, textAxis="Fitted expression", rt=rt, color=rep(color[sort(levels(design(ecs, drop=FALSE)[[fitExpToVar]]))], each=numexons), colorlines=colorlines, ...)
    }
 
    if(splicing){
@@ -80,7 +84,7 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
       coeff <- exp(coeff)
       ylimn <- c(min(coeff, na.rm=TRUE), max(coeff, na.rm=TRUE))
       coeff <- vst( coeff, ecs )
-      drawPlot(matr=coeff, ylimn, ecs, intervals, rango, textAxis="Fitted splicing", rt=rt, color=rep(color[sort(levels(design(ecs, drop=FALSE)[[fitExpToVar]]))], each=numexons), ...)
+      drawPlot(matr=coeff, ylimn, ecs, intervals, rango, textAxis="Fitted splicing", rt=rt, color=rep(color[sort(levels(design(ecs, drop=FALSE)[[fitExpToVar]]))], each=numexons), colorlines=colorlines, ...)
    }
 
    if(norCounts){
@@ -91,15 +95,13 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
       }else{
          colorcounts <- rep(color.samples, each=numexons)
       }
-         drawPlot(matr=count, ylimn, ecs, intervals, rango, textAxis="Normalized counts", rt=rt, color=colorcounts, ...)
+         drawPlot(matr=count, ylimn, ecs, intervals, rango, textAxis="Normalized counts", rt=rt, color=colorcounts, colorlines=colorlines, ...)
    }
 
 	########### plot the gene model ########## just if transcript information available
    if( !any(is.na(featureData(ecs)$start)) ){
       par(mar=c(0, 4, 0, 2))
       plot.new()
-      exoncol<-ifelse(each<=FDR, "#8B0000", "dark green")
-      exoncol[is.na(exoncol)]<-"black"
       segments(apply((rbind(rel[rango,2], rel[rango, 1])), 2, median), 0, apply(rbind(intervals[rango], intervals[rango+1]-((intervals[rango+1]-intervals[rango])*0.2)), 2, median), 1, col=exoncol)
       par(mar=c(1.5, 4, 0, 2))
       drawGene(min(sub$start), max(sub$end), tr=sub, rango, exoncol=exoncol, names, trName="Gene model", cex=0.8)
@@ -171,7 +173,7 @@ makevstaxis <- function(min, ylimn, ecs, ...)
 #######################
 #FUNCTION TO WRITE THE PLOTS:
 #######################
-drawPlot <- function(matr, ylimn, ecs, intervals, rango, fitExpToVar, numexons, textAxis, rt, color, ...)
+drawPlot <- function(matr, ylimn, ecs, intervals, rango, fitExpToVar, numexons, textAxis, rt, color, colorlines, ...)
 {
    plot.new()
    plot.window(xlim=c(0, 1), ylim=c(min(matr), max(matr)))
@@ -182,7 +184,7 @@ drawPlot <- function(matr, ylimn, ecs, intervals, rango, fitExpToVar, numexons, 
    j <- 1:ncol(matr)
    segments(intervals[rango], matr[rango,j], intervals[rango+1]-((intervals[rango+1]-intervals[rango])*0.2), matr[rango,j], col=color, ...)  #### line with the y level
    segments(intervals[rango+1]-((intervals[rango+1]-intervals[rango])*0.2), matr[rango,j], intervals[rango+1], matr[rango+1,j], col=color, lty="dotted", ...)  #### line joining the y levels
-   abline(v=middle[rango], lty="dotted", col="lightgrey")
+   abline(v=middle[rango], lty="dotted", col=colorlines)
    mtext(textAxis, side=2, adj=0.5, line=1.5, outer=FALSE, ...)
    axis(1, at=middle[1:length(rt)], labels=featureData(ecs)$exonID[rt], ...)
 }

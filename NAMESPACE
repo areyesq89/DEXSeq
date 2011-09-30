@@ -1,4 +1,4 @@
-import(Biobase, MASS, hwriter, methods)
+import(Biobase, MASS, hwriter, methods, statmod, stringr)
 
 exportClasses( "ExonCountSet" )
 
@@ -26,7 +26,8 @@ export(
   DEXSeqHTML,
   DEUresultTable,
   plotDEXSeq,
-  estimatelog2FoldChanges
+  estimatelog2FoldChanges,
+  makeCompleteDEUAnalysis
 )
 
 

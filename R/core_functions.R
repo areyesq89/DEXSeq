@@ -108,7 +108,11 @@ estimateExonDispersionsForModelFrame <- function( modelFrame, formula=NULL, mm=N
    y <- modelFrame$count
 
    if(is.null(muhat)){
-      muhat <- fitted.values( glm.fit( mm, y, family=negative.binomial(1/initialGuess), offset=log(modelFrame$sizeFactor) ) )
+      y1 <- pmax(y, 1/6)
+      fit <- lm.fit(mm, log(y1) - log(modelFrame$sizeFactor))
+      mm <- mm[,!is.na(fit$coefficients)]
+      start <- fit$coefficients[!is.na(fit$coefficients)]
+      muhat <- fitted.values(glmnb.fit(mm, y, initialGuess, log(modelFrame$sizeFactor), start=start))
    }
 
    disp <- rep( initialGuess, length(exonNames) )
@@ -118,7 +122,7 @@ estimateExonDispersionsForModelFrame <- function( modelFrame, formula=NULL, mm=N
             optimize( 
                function(logalpha) {
                   disp[exon] <- exp( logalpha )
-                  profileLogLikelihood( disp[as.character(modelFrame$exon)], mm, y, muhat ) },
+                  profileLogLikelihood( disp[as.character(modelFrame$exon)], mm, y, muhat ) }, ########erase DEXSeq:::
                log( c( 1e-11, 1e5 ) ),
    	       tol = 0.1,
                maximum=TRUE 
@@ -140,9 +144,13 @@ fitDispersionFunction <- function( ecs )
    iter <- 0   
    while(TRUE) {
       residuals <- disps / ( coefs[1] + coefs[2] / means )
-      good <- (residuals > 1e-4) & (residuals < 15)
-      fit <- glm( disps[good] ~ I(1/means[good]), 
-         family=Gamma(link="identity"), start=coefs )
+      good <- which((residuals > 1e-4) & (residuals < 15))
+      mm <- model.matrix(disps[good] ~ I(1/means[good]))
+      fit <- try(glmgam.fit(mm, disps[good], start=coefs))
+      if(inherits(fit, "try-error")){
+         stop("Failed to fit the dispersion function\n")
+      }
+#      fit <- glm( disps[good] ~ I(1/means[good]), family=Gamma(link="identity"), start=coefs )
       oldcoefs <- coefs   
       coefs <- coefficients(fit)
       if( sum( log( coefs / oldcoefs )^2 ) < .005 )
@@ -207,13 +215,13 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
       testablegenes <- as.character(unique(fData(cds)[which(fData(cds)$testable),]$geneID))
 
       if(!quiet & nCores==1 ) {
-         cat( "Dispersion estimation. (Progress report: one dot per 100 genes)\n", file=file)
+         cat( "Dispersion estimation. (Progress report: one dot per 100 genes)\n", file=file, append=TRUE)
       }
          
       i <- 0
       if(nCores > 1){
          if(!quiet){
-         cat(sprintf("Estimating Cox-Reid exon dispersion estimates using %d cores. (Progress report: one dot per 100 genes)\n", nCores), file=file)}
+         cat(sprintf("Estimating Cox-Reid exon dispersion estimates using %d cores. (Progress report: one dot per 100 genes)\n", nCores), file=file, append=TRUE)}
          toapply <- function(x){estimateDispersions(x, formula=formula, initialGuess=initialGuess, nCores=-1, minCount=minCount, maxExon=maxExon, file=file, quiet=quiet)}
          cds <- divideWork(cds, funtoapply=toapply, fattr="dispBeforeSharing", mc.cores=nCores, testablegenes)
       }else{
@@ -226,14 +234,17 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
             model.matrix( formula, data = mf )}, simplify=FALSE )
 
          muhats <- sapply( testablegenes, function( gn ) { 
-            try( 
-              fitted.values(glm.fit( 
-                  modelmatrices[[gn]], modelFrames[[gn]]$count, 
-                  family = negative.binomial(1/initialGuess), 
-                  offset = modelFrames[[gn]]$offset )),
-               silent=TRUE ) },
-            simplify=FALSE )
-   
+            y <- modelFrames[[gn]]$count
+            y1 <- pmax(y, 1/6)
+            mf <- modelFrames[[gn]]
+            mm <- modelmatrices[[gn]]
+            fit <- lm.fit(mm, log(y1) - mf$offset)
+            mm <- mm[,!is.na(fit$coefficients)]
+            start <- fit$coefficients[!is.na(fit$coefficients)]
+            muhat <- try(fitted.values(glmnb.fit(mm, y, initialGuess, mf$offset, start=start)))
+            muhat
+         })
+  
          badones <- which( sapply( muhats, inherits, "try-error") )
          if( length(badones) > 0 ) {
             testablegenes <- testablegenes[ ! testablegenes %in% names(badones) ]
@@ -241,10 +252,11 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
    	         paste( names(badones), collapse=", " ) ) )
          }
 
-         ###### WORKS WAY FASTER THIS WAY THAN IN EVERY CYCLE ACCESSING fData
+         ###### WORKS FASTER THIS WAY THAN IN EVERY CYCLE ACCESSING fData
          fData(cds)$dispBeforeSharing <- NA_real_
          dispBeforeSharing <- fData(cds)$dispBeforeSharing
          testable <- fData(cds)$testable
+         exonids <- fData(cds)$exonID
 
          for( genename in testablegenes ){
             mf <- modelFrames[[genename]]
@@ -258,20 +270,24 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
             }   
       
             rows <- as.character(geneIDs(cds)) %in% genename & testable
+            stopifnot(all(names(disps)==exonids[rows]))
             dispBeforeSharing[rows] <- disps 
       
             i <- i + 1
             if(!quiet & i %% 100 == 0 ){
-               cat( ".", file=file)}    
+               cat( ".", file=file, append=TRUE)}    
          }
          fData(cds)$dispBeforeSharing <- dispBeforeSharing
+      }
+      if(nCores==1 & !quiet){
+         cat("\n", file=file, append=TRUE)
       }
       cds
    }
 )
 
-testGeneForDEU <- function (ecs, gene, formula0=NULL, formula1=NULL, 
-      glm.control = list( maxit=100, epsilon=3e-4 ) ){
+testGeneForDEU <- function (ecs, gene, formula0=NULL, formula1=NULL)
+{
    stopifnot(is(ecs, "ExonCountSet"))
    if( all( is.na(featureData(ecs)$dispersion ) ) ) {
       stop("No dispersion values found, call function fitDispersionFunction first.")		
@@ -295,29 +311,42 @@ testGeneForDEU <- function (ecs, gene, formula0=NULL, formula1=NULL,
    environment(formula0) <- environment()
    environment(formula1) <- environment()
    
-   fam <- negative.binomial( 1 / mf$dispersion )
-   fam$family = "Negative Binomial(varying)"
+   mm <- model.matrix(formula0, mf)
+   y1 <- pmax(mf$count, 1/6)
+   fit <- lm.fit(mm, log(y1) - log(mf$sizeFactor))
+   mm <- mm[,!is.na(fit$coefficients)]
+   start <- fit$coefficients[!is.na(fit$coefficients)]
    
-   fit0 <- try( 
-         glm( formula0, data=mf, family = fam, offset = log(mf$sizeFactor), control=glm.control ),
-         silent=TRUE )
+   fit0 <- try(
+      glmnb.fit(mm, mf$count, mf$dispersion, log(mf$sizeFactor), start=start)
+   )
+   
+   
    if( inherits( fit0, "try-error" ) ) {
       warning( sprintf( "Error in fit0 for gene %s: %s", gene, fit0 ) )
       return(ans) }
 
    for( exonID in unique(as.character(mf$exon)) ) {
-      fit1 <- try( 
-         glm( formula1, data=mf, family = fam, offset = log(mf$sizeFactor), control=glm.control ),
-         silent=TRUE )
+      mm <- model.matrix(formula1, mf)
+      y1 <- pmax(mf$count, 1/6)
+      fit <- lm.fit(mm, log(y1) - log(mf$sizeFactor))
+      mm <- mm[,!is.na(fit$coefficients)]
+      start <- fit$coefficients[!is.na(fit$coefficients)]
+
+      fit1 <- try(
+         glmnb.fit(mm, mf$count, mf$dispersion, log(mf$sizeFactor), start=start)
+      )
+
       if( inherits( fit1, "try-error" ) ) {
          warning( sprintf( "Error in fit1 for gene %s, exon %s: %s", gene, exonID, fit1 ) )
          next }
       ans[ exonID, "deviance" ] <- deviance( fit0 ) - deviance( fit1 )
-      ans[ exonID, "df" ]       <- fit0$df.residual - fit1$df.residual
+      ans[ exonID, "df" ] <- length(fit1$coefficients) - length(fit0$coefficients)
       ans[ exonID, "pvalue"   ] <- 1 - pchisq( ans[exonID,"deviance"], ans[exonID,"df"] )
   }
   ans
 }
+
 
 testForDEU <- function( ecs, formula0=NULL, formula1=NULL, nCores=1, quiet=FALSE, file="")
 {
@@ -331,28 +360,33 @@ testForDEU <- function( ecs, formula0=NULL, formula1=NULL, nCores=1, quiet=FALSE
    }
 
    if(!quiet & nCores==1){
-      cat( "Testing for differential exon usage. (Progress report: one dot per 100 genes)\n", file=file)}
+      cat( "Testing for differential exon usage. (Progress report: one dot per 100 genes)\n", file=file, append=TRUE)}
 
    testablegenes <- as.character(unique(fData(ecs)[which(fData(ecs)$testable),]$geneID))
 
    if(nCores > 1){
       if(!quiet){
-      cat(sprintf("Testing for differential exon usage using %d cores. (Progress report: one dot per 100 genes)\n", nCores), file=file)}
+      cat(sprintf("Testing for differential exon usage using %d cores. (Progress report: one dot per 100 genes)\n", nCores), file=file, append=TRUE)}
       toapply <- function(x){testForDEU(x, formula0=formula0, formula1=formula1, nCores=-1, file=file, quiet=quiet)}
       ecs <- divideWork(ecs, funtoapply=toapply, fattr="pvalue", mc.cores=nCores, testablegenes)
    }else{
       i <- 0
       testable <- fData(ecs)$testable
       pvalue <- fData(ecs)$pvalue
+      exonids <- fData(ecs)$exonID
       for( genename in testablegenes ) {
          i <- i + 1
          if(!quiet & i %% 100 == 0 ){
-            cat( ".", file=file)}
+            cat( ".", file=file, append=TRUE)}
          rows <- as.character(geneIDs(ecs)) %in% genename & testable
          res <- testGeneForDEU( ecs, genename, formula0, formula1 )
+         stopifnot(all(rownames(res) == exonids[rows]))    ### makes sure to do the assignment correctly
          pvalue[rows] <- res$pvalue 
       }
       fData(ecs)$pvalue <- pvalue
+   }
+   if(nCores==1 & !quiet){
+      cat("\n", file=file, append=TRUE)
    }
    fData(ecs)$padjust <- p.adjust(fData(ecs)$pvalue, method="BH")
    ######### STORE FORMULAS IN THE OBJECTs
@@ -397,11 +431,11 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", nCores=1, quie
    }
 
    if(!quiet & nCores==1){
-      cat("Calculating fold changes. (Progress report: one dot per 100 genes)\n", file=file)}
+      cat("Calculating fold changes. (Progress report: one dot per 100 genes)\n", file=file,append=TRUE)}
  
    if (nCores > 1){
       if(!quiet){
-      cat(sprintf("Calculating fold changes using %d cores. (Progress report: one dot per 100 genes)\n", nCores), file=file)}
+      cat(sprintf("Calculating fold changes using %d cores. (Progress report: one dot per 100 genes)\n", nCores), file=file, append=TRUE)}
       toapply <- function(x){estimatelog2FoldChanges(x, fitExpToVar=fitExpToVar, nCores=-1, file=file, quiet=quiet)}
       ecs <- divideWork(ecs, toapply, fattr=colfoldnames, mc.cores=nCores, testablegenes)
    }else{
@@ -412,17 +446,22 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", nCores=1, quie
       for(gene in testablegenes){
          i <- i + 1
          if(!quiet & i %% 100 == 0 ){
-            cat( ".", file=file)}
+            cat( ".", file=file, append=TRUE)}
          tr <- fitAndArrangeCoefs( ecs, gene, frm=frm)
          if(is.null(tr)){
               warning(sprintf("log fold change calculation failed for gene %s", gene))
               next
          }
+         rows <- as.character(geneIDs(ecs)) %in% gene
          tr <- tr[[colstosteal]]
+         stopifnot(all(fData(ecs)$exonID[rows] == colnames(tr))) ##### makes sure to do good the assignation
          vals <- log2(exp(t(tr)))[,colstopass]
-         logfold[as.character(geneIDs(ecs)) %in% gene, colfoldnames] <- vals
+         logfold[rows, colfoldnames] <- vals
       }
       fData(ecs)[,colfoldnames] <- logfold
+   }
+   if(nCores==1 & !quiet){
+      cat("\n", file=file, append=TRUE)
    }
    ecs
 }
@@ -447,6 +486,20 @@ divideWork <- function(ecs, funtoapply, fattr, mc.cores, testablegenes)
       fData(ecs)[rows,][,fattr] <- do.call(rbind, lapply(allecs, function(x){fData(x)[,fattr]}))
    }else{
       fData(ecs)[,fattr][rows] <- do.call(c, sapply(allecs, function(x){fData(x)[,fattr]}))
+   }
+   ecs
+}
+
+makeCompleteDEUAnalysis <- function(ecs, formulaDispersion=count ~ sample + condition*exon, minCount=10, maxExon=50, formula0=NULL, formula1=NULL, FDR=0.1, fitExpToVar="condition", nCores=1, path=NULL, color=NULL, color.samples=NULL, quiet=FALSE, file="")
+{
+   stopifnot(is(ecs, "ExonCountSet"))
+   ecs <- estimateSizeFactors( ecs )
+   ecs <- estimateDispersions( ecs, formulaDispersion, nCores=nCores, quiet=quiet, file=file)
+   ecs <- fitDispersionFunction( ecs )
+   ecs <- testForDEU( ecs, formula1=formula1, formula0=formula0, nCores=nCores, quiet=quiet, file=file)
+   ecs <- estimatelog2FoldChanges(ecs, fitExpToVar=fitExpToVar, nCores=nCores, quiet=quiet, file=file)
+   if(!is.null(path)){
+      DEXSeqHTML(ecs, path=path, FDR=0.1, fitExpToVar=fitExpToVar, color=color, color.samples=color.samples)
    }
    ecs
 }

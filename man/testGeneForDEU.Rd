@@ -14,8 +14,7 @@
       gene.
 }
 \usage{
-testGeneForDEU(ecs, gene, formula0=NULL, formula1=NULL, 
-               glm.control=list(maxit = 100, epsilon = 3e-04))
+testGeneForDEU(ecs, gene, formula0=NULL, formula1=NULL)
 }
 \arguments{
   \item{ecs}{
@@ -41,9 +40,6 @@ testGeneForDEU(ecs, gene, formula0=NULL, formula1=NULL,
      last part of the formula will change in the iterations as follows: 
      I(exon==E01), I(exon==E02), I(exon==E03),...,I(exon==EN).
   }
-  \item{glm.control}{
-     A list of arguments to be passed to the function glm.control.
-   }
 }
 \value{
 	A data frame with columns "deviance", "df" (degrees of freedom) and pvalues from the test.
