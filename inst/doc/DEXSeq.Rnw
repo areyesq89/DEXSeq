@@ -385,10 +385,9 @@ pasillaExons <- testForDEU( pasillaExons, n.cores=3)
 \section{Making a routinary differential exon usage analysis}
 %--------------------------------------------------
 In the previous sections, we pass through each of the steps to make an analysis for differential exon usage using \Rpackage{DEXSeq}.
-However, in case that the user wants to perform a routinary analysis (e.g. same analysis on different \Rfunction{ExonCountSet}
+However, this is a very fragmented work flow, in case that the user wants to perform a routinary analysis (e.g. same analysis on different \Rfunction{ExonCountSet}
 objects) in which all the parameters are already known, the function \Rfunction{makeCompleteDEUAnalysis} could be useful.
-For example, all the analysis we did before could be done by a single function call.
-\Rpackage{DESeq} or \Rpackage{edgeR}.
+All the analysis we did before could be done by a single function call.
 <<alldeu>>=
 data("pasillaExons", package="pasilla")
 pasillaExons <- makeCompleteDEUAnalysis(pasillaExons, formulaDispersion=formuladispersion, formula0=formula0, formula1=formula1, nCores=1)
