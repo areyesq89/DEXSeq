@@ -37,7 +37,7 @@ modelFrameForGene <- function( ecs, geneID, onlyTestable=FALSE) {
    }
    
    numExons <- sum(rows)
-   exonCol <- rep( factor( exonIDs(ecs)[rows] ), ncol( counts(ecs) ) )
+   exonCol <- rep( factor( exonIDs(ecs)[rows], levels=exonIDs(ecs)[rows] ), ncol( counts(ecs) ) )
    modelFrame <- data.frame(
       sample = rep( factor( colnames( counts(ecs) ) ), each = numExons ),
       exon = exonCol,

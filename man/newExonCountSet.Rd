@@ -29,7 +29,6 @@ newExonCountSet(countData, design, geneIDs, exonIDs, exonIntervals=NULL,
 	\item{exonIDs}{
            A  character vector of exon identificators ordered according to its respective row in 
            countData.  The identificator names can be repeated between genes but not within genes. 
-           Please make sure that the exon identificators within a gene are ordered alphanumerically.
         }
 	\item{exonIntervals}{
            Receives a data frame with exon annotation information. The number of rows in the data 

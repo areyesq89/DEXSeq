@@ -1,3 +1,7 @@
+2011-10-03: version 0.1.25
+
+- Changes to the documentation and to the vignette.  New functions added and more support for gene names and strange exonids.
+
 2011-07-12: version 0.1.11
 
 - Parallelization possibility added to the code, with its description in the vignette and single exon genes ignored properly.
