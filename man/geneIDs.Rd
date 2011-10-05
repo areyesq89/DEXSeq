@@ -2,10 +2,10 @@
 \alias{geneIDs}
 \alias{geneIDs<-}
 \title{
-   Accesor for the geneIDs in an ExonCountSet object.
+   Accessor for the geneIDs in an ExonCountSet object.
 }
 \description{
-   This function is an access for the gene identificators for each of the rows in the count table.
+   This function is an accessor for the gene identifiers for each of the rows in the count table.
 }
 \usage{
 geneIDs(ecs)
@@ -16,7 +16,7 @@ geneIDs(ecs) <- value
      An ExonCountSet object.
   }
   \item{value}{
-     An vector of exon identificators, one for each of the rows of the count data.
+     An factor of gene identifiers, one for each of the rows of the count data.
    }
 }
 \examples{

@@ -6,7 +6,7 @@
 \description{
    This function returns a matrix of non negative integers containing 
    a count table for a specified geneID from an ExonCountSet object.  
-   The count table contains one row for every exon of the gene and 
+   The count table contains one row for every counting bin of the gene and 
    a column for every sample.
 }
 \usage{

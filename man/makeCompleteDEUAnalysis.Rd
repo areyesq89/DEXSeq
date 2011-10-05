@@ -16,7 +16,7 @@ makeCompleteDEUAnalysis(ecs, formulaDispersion=count ~ sample + condition*exon,
           An ExonCountSet object.
       }
       \item{formulaDispersion}{
-         Formula used in the glm to calculate the Cox-Reid dispersion values.  
+         Formula used in the glm to calculate the dispersion values.  
          The factors on the formula must be present in the design 
          columns of the ExonCountSet object.
       }

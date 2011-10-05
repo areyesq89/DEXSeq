@@ -20,19 +20,20 @@ It is the principal object of the DEXSeq package. Some of the slots can be added
 by using the HTSeq preprocessing steps and further calling \code{\link{read.HTSeqCounts}}, especially
 those with the exon annotation data. The other slots will be filled with the analysis.
 
-The ExonCountSet object contains a matrix of non-negative integers which represents, for each column
-a sample and for each row an exon.  In the phenoData, the object contains information about the samples,
-e.g. size factors and design annotations are stored there. The user can also add more information about the
+The ExonCountSet object contains a matrix of non-negative integers which represents sequence counts, 
+with each column representing a sample and and each row a counting bin (i.e., an exon or part of an exon).  
+In the phenoData, the object contains information about the samples,
+e.g., size factors and design annotations are stored there. The user can also add more information about the
 other properties of the samples.
 
 An ExonCountSet object can be created just by providing a count matrix, and two vectors of gene and exon
-identificators of each of the rows in the matrix.  Nevertheless, the visualization plots included in DEXSeq
-requires additional information of the exons (chromosome, strand, start, end).  This information can be added
+identifiers of each of the rows in the matrix.  Nevertheless, the visualization plots included in DEXSeq
+requires additional information about the exons (chromosome, strand, start, end).  This information can be added
 directly after the creation of the ExonCountSet object.  If \code{\link{read.HTSeqCounts}} is called to create 
-an ExonCountSet object, this information of the phenoData is populated directly.
+an ExonCountSet object, this information of the phenoData is inserted directly.
 
-The slots of size factors (in phenoData), dispersion estimates, pvalue and padjust are filled in the featureData
-latter on the analysis after the user calls \code{\link{estimateSizeFactors}}, \code{\link{estimateDispersions}}
+The columns for size factors (in phenoData), dispersion estimates, pvalue and padjust in the featureData
+are filled later throughout the analysis, when the user calls \code{\link{estimateSizeFactors}}, \code{\link{estimateDispersions}}
 \code{\link{fitDispersionFunction}}, and \code{\link{testForDEU}}.
 
 }

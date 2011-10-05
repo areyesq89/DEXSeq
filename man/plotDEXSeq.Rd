@@ -18,7 +18,7 @@ plotDEXSeq(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=FALSE, expre
           An ExonCountSet object.
        }
        \item{geneID}{
-          geneID in the \code{ExonCountSet} object to visualize.
+          ID of the gene to visualize.
        }
        \item{FDR}{
           A false discovery rate used to indicate the significant exons.
@@ -26,18 +26,18 @@ plotDEXSeq(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=FALSE, expre
        \item{fitExpToVar}{
           A variable contained in the design annotation of the \code{ExonCountSet}, 
           the expression values will be fitted to this variable using the formula
-          count~fitExpToVar*exon using a model frame obtained from the function
+          \code{count ~ fitExpToVar * exon} using a model frame obtained from the function
           \code{\link{modelFrameForGene}}.  
        }
        \item{norCounts}{
-          If TRUE, provides a plot of the normalized counts by the size factors.
+          If TRUE, provides a plot of the counts normalized by the size factors.
        }
        \item{expression}{
-          If TRUE, the function plots of the fitted EXPRESSION estimates from the glm 
+          If TRUE, the function plots the fitted EXPRESSION estimates from the glm 
           regression.
        }
        \item{splicing}{
-          If TRUE, the function plots of the fitted SPLICING estimates from the glm 
+          If TRUE, the function plots the fitted SPLICING estimates from the glm 
           regression.
        }
        \item{displayTranscripts}{
@@ -47,19 +47,19 @@ plotDEXSeq(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=FALSE, expre
           If TRUE, the names of the transcripts are shown.
        }
        \item{legend}{
-          If TRUE, legend is displayed.
+          If TRUE, a legend is displayed.
        }
        \item{color}{
-          A vector of colors for each of the levels from the factor in the design of 
+          A vector of colors for each of the levels of the factor in the design of 
           the ExonCountSet object indicated by "fitExpToVar".
        }
        \item{color.samples}{
           A vector of colors for each of the samples. If NULL, the colors of each 
-          sample will be asigned according to its corresponding level from "fitExpToVar". 
+          sample will be assigned according to its corresponding level from "fitExpToVar". 
           This option is useful to visualize complex experimental designs.
        }
        \item{...}{
-          Further graphical parameters (from par).
+          Further graphical parameters (see \code{par}).
        }
      }
      \seealso{

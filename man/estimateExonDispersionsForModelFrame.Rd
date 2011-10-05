@@ -2,9 +2,9 @@
    \alias{estimateExonDispersionsForModelFrame}
    \title{Estimates exon dispersions}
    \description{
-       This function calculates the individual profile log likelihood
-       Cox-Reid exon dispersions for a single gene. It inputs the a 
-       model frame generate from the function \code{\link{modelFrameForGene}}.
+       This function calculates the individual dispersions for each
+       counting bins for a single gene. It takes as input  a 
+       model frame generated from the function \code{\link{modelFrameForGene}}.
 	}
 \usage{
 estimateExonDispersionsForModelFrame(modelFrame, formula=NULL, mm=NULL, 
@@ -15,21 +15,21 @@ estimateExonDispersionsForModelFrame(modelFrame, formula=NULL, mm=NULL,
         Model frame provided by the function \code{\link{modelFrameForGene}}.
      }
      \item{formula}{
-        Formula for the glm used to calculate the Cox-Reid dispersions. The factors in the formula
-        must be present in the column names of the model frame. If it is left in NULL, the default 
-       formula will be "count~sample+condition*exon".
+        Formula for the glm used to estimate the dispersions. The factors in the formula
+        must be present in the column names of the model frame. If it is left NULL, the default 
+        formula used is "count ~ sample + condition * exon".
      }
      \item{mm}{
-        A model matrix for the model frame, if NULL a model matrix will 
+        A model matrix for the model frame. If NULL, a model matrix will 
         be created from the parameters "formula" and "modelFrame".
      }
      \item{muhat}{
         Initial values for the coefficients in the optimization.  
-        If NULL, initial values will be calculated using with a dispersion
+        If NULL, initial values will be calculated using with the dispersion
         value given by the parameter "initialGuess".
      }
      \item{initialGuess}{
-        An arbitrary initial guess of the dispersions to initiate the optimization.
+        An initial guess of the dispersions to initiate the optimization.
      }
 }
 \value{

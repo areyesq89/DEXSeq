@@ -8,7 +8,7 @@
 }
 \description{
    The counts slot holds the count data as a matrix of non-negative integer
-   count values, one row for each observational unit (an exon of a gene), and
+   count values, one row for each observational unit (a counting bin, i.e., an exon or part of an exon), and
    one column for each sample.
 }
 \usage{

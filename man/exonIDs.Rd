@@ -2,11 +2,13 @@
 \alias{exonIDs}
 \alias{exonIDs<-}
 \title{
-   Accesor for the exonIDs in an ExonCountSet object.
+   Accessor for the exonIDs in an ExonCountSet object.
 }
 \description{
-   This function is an accesor for the exon identificators for each of the rows in the count table.
-   Please make sure that the exon IDs are ordered alphanumerically in the gene.
+   This function is an accessor for the exon identifiers for each of the rows in the count table.
+   Note that each exon ID identifies, strictly speaking, not an exon but a counting bin,
+   which may well be just part of an exon.
+   Make sure that the exon IDs are ordered alphanumerically in the gene.
 }
 \usage{
 exonIDs(ecs)
@@ -17,11 +19,11 @@ exonIDs(ecs) <- value
      An ExonCountSet object.
    }
   \item{value}{
-     An vector of gene identificators, one for each of the rows of the count data.
+     A vector of exon counting bin identifiers, one for each of the rows of the count data.
    }
 }
 \examples{
 	library(DEXSeq)
    	data("pasillaExons", package="pasilla")
-	geneIDs(pasillaExons)
+	exonIDs(pasillaExons)
 }

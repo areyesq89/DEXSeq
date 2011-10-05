@@ -4,43 +4,42 @@
 \alias{estimateDispersions}
 \title{Estimate exon dispersions}
 \description{
-      This function estimates the Cox-Reid profile log likelihood 
-      dispersion estimates for each exon of each of the genes of 
-      the ExonCountSet object. It stores this values in 
-      \code{fData(ecs)$dispersionBeforeSharing}.  
+      This function estimates the for each counting bin
+      of the ExonCountSet object a dispersion value. It stores 
+      these values in \code{fData(ecs)$dispersionBeforeSharing}.  
 }
 \usage{
-\S4method{estimateDispersions}{ExonCountSet}( cds, formula=count ~ sample + condition*exon, initialGuess=.01, nCores=1, minCount=10, maxExon=70, quiet=FALSE, file="")
+\S4method{estimateDispersions}{ExonCountSet}( cds, formula=count ~ sample + condition * exon, initialGuess=.01, nCores=1, minCount=10, maxExon=70, quiet=FALSE, file="")
 }
 \arguments{
   \item{cds}{
      An ExonCountSet object.
    }
   \item{formula}{
-     Formula used in the glm to calculate the Cox-Reid dispersion values.  
-     The factors on the formula must be present in the design 
-     columns of the ExonCountSet object.
+     Formula used in the GLM to estimate the dispersion values.  
+     The terms in the formula must be design 
+     columns of the ExonCountSet object, the l.h.s. must be \code{count}.
    }
   \item{initialGuess}{
-     An arbitrary initial guess for the dispersion values to initiate the optimization.
+     An initial guess for the dispersion values to initiate the optimization.
    }
   \item{nCores}{
      Number of cores to be used to estimate the dispersions.  
-     Multicore package must be loaded in order to split the 
-     job in several cores.
+     The \code{multicore} package must be loaded in order to spread the 
+     job onto several cores.
    }
   \item{minCount}{
-     Minimum number of counts on an exon for it to be considered in the tests. 
-     This significantly increases the speed of the dispersion 
-     estimations and testing for differential exon usage. 
-     This is supported by the fact that small count exons are less likely
-     of being called significant, so it should not affect the results.
+     Counting bins with less than 'minCount' counts (summed over all
+     samples) are skipped in the tests. This reduced computation
+     time, as counting bins with very few countsare unlikely to give 
+     a significant signal anyway. For skipped counting bins, the
+     'testable' column in fData is set to FALSE.
    }
   \item{maxExon}{
-     Genes with more exons than this value will be discarded from 
-     the analysis. This is a speed issue. Currently, time of dispersion 
-     estimations and testing for differential exon usage
-     increases with number of exons.
+     Genes with more than 'maxExon' counting bins will be skipped in the
+     test. This may be necessary because genes with very many counting bins
+     may take extremely long in dispersion estimation and testing for 
+     differential exon usage.
    }
    \item{quiet}{
      If TRUE, no progress report is shown.  In case the session is 
@@ -56,6 +55,12 @@
      An ExonCountSet object with dispersion \code{featureData(cds)$dispersion_CR_est}) 
      parameters filled).
 }
+\details{For the dispersion estimation, we use the Cox-Reid conditional maximum
+likelihood method of Gordon Smyth et al., which they devised for the \code{edgeR}
+package. For the actual fitting, we use the function \code{glmnb.fit} from the \code{statmod}
+package, written by Gordon Smyth and Yunshun Chen.
+}
+
 \examples{
      \dontrun{data("pasillaExons", package="pasilla")}
      \dontrun{pasillaExons <- estimateSizeFactors( pasillaExons )}

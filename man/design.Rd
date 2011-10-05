@@ -20,8 +20,8 @@
       An ExonCountSet
    }
   \item{drop}{
-      This option gives the option that if it is a single factor design, the value can 
-      be presented as a data frame instead of a single factor value.
+      Indicates whether to return a single factor instead of a data frame in case of
+      a one-way design
    }
   \item{asAnnotatedDataFrame}{
       Indicates whether the result should be presented as an AnnotatedDataFrame.
