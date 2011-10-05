@@ -74,7 +74,7 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
       }
       coeff <- as.matrix( t( getEffectsForPlotting(es, averageOutExpression=FALSE, groupingVar=fitExpToVar) ) )
       coeff <- exp(coeff)
-      ylimn <- c(min(coeff, na.rm=TRUE), max(coeff, na.rm=TRUE))
+      ylimn <- c(0, max(coeff, na.rm=TRUE))
       coeff <- vst( coeff, ecs )
       drawPlot(matr=coeff, ylimn, ecs, intervals, rango, textAxis="Fitted expression", rt=rt, color=rep(color[sort(levels(design(ecs, drop=FALSE)[[fitExpToVar]]))], each=numexons), colorlines=colorlines, ...)
    }
@@ -82,13 +82,13 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
    if(splicing){
       coeff <- as.matrix( t( getEffectsForPlotting( fitAndArrangeCoefs( ecs, geneID, frm=as.formula(paste("count ~", fitExpToVar,  "* exon")) ), averageOutExpression=TRUE, groupingVar=fitExpToVar) ) )
       coeff <- exp(coeff)
-      ylimn <- c(min(coeff, na.rm=TRUE), max(coeff, na.rm=TRUE))
+      ylimn <- c(0, max(coeff, na.rm=TRUE))
       coeff <- vst( coeff, ecs )
       drawPlot(matr=coeff, ylimn, ecs, intervals, rango, textAxis="Fitted splicing", rt=rt, color=rep(color[sort(levels(design(ecs, drop=FALSE)[[fitExpToVar]]))], each=numexons), colorlines=colorlines, ...)
    }
 
    if(norCounts){
-      ylimn <- c(min(count, na.rm=TRUE), max(count, na.rm=TRUE))
+      ylimn <- c(0, max(count, na.rm=TRUE))
       count <- vst( count, ecs )
       if(is.null(color.samples)){
          colorcounts <- rep(color[as.character(design(ecs, drop=FALSE)[[fitExpToVar]])], each=numexons)
@@ -115,7 +115,7 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
             }
          }
       }
-      axis(1, at=round(seq(min(sub$start), max(sub$end), length.out=10)), labels=round(seq(min(sub$start), max(sub$end), length.out=10)), pos=0, ...)   ########## genome axis
+      axis(1, at=round(seq(min(sub$start), max(sub$end), length.out=10)), labels=round(seq(min(sub$start), max(sub$end), length.out=10)), pos=0, lwd.ticks=0.2, padj=-0.7, ...)   ########## genome axis
    }
    if(legend){
       mtext(paste(geneID, unique(featureData(ecs)$strand[rt])), side=3, adj=0.25, padj=1.5, line=0, outer=TRUE, cex=1.5)
@@ -151,21 +151,22 @@ makevstaxis <- function(min, ylimn, ecs, ...)
    ticks <- 10^seq( minlog10, maxlog10 )
    decade_lengths <- ( vst(ticks, ecs)[ 2 : length(ticks) ] - vst(ticks, ecs)[ 1 : (length(ticks)-1) ] ) /
       ( vst( ylimn[2], ecs) - vst( ylimn[1], ecs) )
-   ticks <- c( 0, ticks[ min( which( decade_lengths > .1 ) ) : length(ticks) ] )
-   axis( 2, at=vst(ticks, ecs), labels=ticks, las=2, pos=0, ...)
+#   ticks <- c( 0, ticks[ min( which( decade_lengths > .1 ) ) : length(ticks) ] )
+   ticks <- ticks[ min( which( decade_lengths > .1 ) ) : length(ticks) ]
+   axis( 2, at=vst(c(0, ticks), ecs), labels=c("",ticks), las=2, pos=0, ...)
 
    for( i in minlog10 : (maxlog10-1) ) {
       decade_length <- ( vst( 10^(i+1), ecs) - vst( 10^i, ecs) ) / ( vst( ylimn[2], ecs) - vst( ylimn[1], ecs) )
       if( decade_length > .1 ) {
          axis( 2, at = vst( 1:9 * 10^i, ecs), labels = FALSE, las=2, tcl=-.25, pos=0, ...)
       }
-      if( decade_length > .3 & decade_length <= .6) {
+      if( decade_length > .4 & decade_length <= .6) {
          axis( 2, at = vst( c(2,3,5) * 10^i, ecs ), labels = ( c(2,3,5) * 10^i ), las=2, tcl=-.25, pos=0, ...)
       } else if( decade_length > .6 ) {
          axis( 2, at = vst( c(1.5,2:9) * 10^i, ecs ), labels = ( c(1.5,2:9) * 10^i ), las=2, tcl=-.25, pos=0, ...)
       }
    }
-   axis( 2, at=vst(0, ecs), labels=0, las=2, pos=0, ...)
+#   axis( 2, at=vst(0, ecs), labels=FALSE, las=2, pos=0, ...)
 }
 
 
@@ -176,7 +177,7 @@ makevstaxis <- function(min, ylimn, ecs, ...)
 drawPlot <- function(matr, ylimn, ecs, intervals, rango, fitExpToVar, numexons, textAxis, rt, color, colorlines, ...)
 {
    plot.new()
-   plot.window(xlim=c(0, 1), ylim=c(min(matr), max(matr)))
+   plot.window(xlim=c(0, 1), ylim=c(0, max(matr)))
    makevstaxis(1/ncol(matr), ylimn, ecs, ...)
    intervals<-(0:nrow(matr))/nrow(matr)
    middle <- apply(cbind(intervals[rango], (intervals[rango+1]-((intervals[rango+1])-intervals[rango])*0.2)), 1, median)
