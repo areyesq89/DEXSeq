@@ -1,9 +1,9 @@
 Package: DEXSeq
-Version: 0.1.26
+Version: 0.1.27
 Title: Inference of differential expression and splicing in RNA-Seq
 Author: Simon Anders <sanders@fs.tum.de> and Alejandro Reyes <areyes@lcg.unam.mx>, both at EMBL Heidelberg
 Maintainer: Alejandro Reyes <reyes@embl.de>
-Imports: MASS, hwriter, methods, stringr, statmod
+Imports: MASS, hwriter, methods, stringr
 Depends: Biobase (>= 2.13.5)
 Suggests: pasilla (>= 0.2.6)
 Enhances: multicore

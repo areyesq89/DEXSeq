@@ -106,10 +106,9 @@ fitAndArrangeCoefs <- function( ecs, geneID, frm = count ~ condition * exon, bal
    if( length(levels(mf$exon)) <= 1 )
       return( NULL )
    mm <- model.matrix( frm, mf )
-#   fam <- MASS::negative.binomial( mf$dispersion )
-#   fam$family <- "NBvar"
-#   fit <- try( glm.fit( mm, mf$count, offset = log( mf$sizeFactor ), family = fam ), silent=TRUE)
-   fit <- try( glmnb.fit(mm, mf$count, dispersion=mf$dispersion, offset=log(mf$sizeFactor)), silent=TRUE)
+   fam <- MASS::negative.binomial( mf$dispersion )
+   fam$family <- "NBvar"
+   fit <- try( glm.fit( mm, mf$count, offset = log( mf$sizeFactor ), family = fam ), silent=TRUE)
    if( is( fit, "try-error" ) )
       return( NULL )
    coefs <- arrangeCoefs( frm, mf, mm, fit )

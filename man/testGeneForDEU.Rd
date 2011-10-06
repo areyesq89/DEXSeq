@@ -9,7 +9,8 @@
     a chi-squared test from the deviance differences between the models.
 }
 \usage{
-testGeneForDEU(ecs, gene, formula0=NULL, formula1=NULL)
+testGeneForDEU(ecs, gene, formula0=NULL, formula1=NULL, 
+               glm.control=list(maxit = 100, epsilon = 3e-04))
 }
 \arguments{
   \item{ecs}{
@@ -26,6 +27,9 @@ testGeneForDEU(ecs, gene, formula0=NULL, formula1=NULL)
      Formula for the full model. If NULL, the default 
      "\code{count ~ sample + exon + condition * I(exon==exonID)} is used.
   }
+  \item{glm.control}{
+     A list of arguments to be passed to the function glm.control.
+   }
 }
 \value{
 	A data frame with columns "deviance", "df" (degrees of freedom) and pvalues from the test.
