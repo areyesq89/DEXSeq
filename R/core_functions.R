@@ -186,7 +186,7 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
       }
       # If a gene contains less than two high count exons, all its exons non-testable
       for( r in split( 1:nrow(cds), geneIDs(cds) ) ) {
-         if( sum( testable[r] ) <= 1 )
+         if( sum( testable[r] ) <= 1 | sum( testable[r] ) > maxExon )
             testable[r] <- FALSE
       }
       fData(cds)$testable <- testable
@@ -195,7 +195,7 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
       generle <- rle( as.character( geneIDs(cds) ) )
       fData(cds)$testable[which(geneIDs(cds) %in% generle$values[which( generle$lengths ==1 )])] <- FALSE
       # take away those exons bigger than maxExon (default 70)
-      fData(cds)$testable[which(geneIDs(cds) %in% generle$values[which( generle$lengths > maxExon )])] <- FALSE
+#      fData(cds)$testable[which(geneIDs(cds) %in% generle$values[which( generle$lengths > maxExon )])] <- FALSE
       ###
       
       if(max(generle$lengths) > maxExon & nCores<=1){
