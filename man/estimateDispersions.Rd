@@ -57,8 +57,7 @@
 }
 \details{For the dispersion estimation, we use the Cox-Reid conditional maximum
 likelihood method of Gordon Smyth et al., which they devised for the \code{edgeR}
-package. For the actual fitting, we use the function \code{glmnb.fit} from the \code{statmod}
-package, written by Gordon Smyth and Yunshun Chen.
+package. 
 }
 
 \examples{

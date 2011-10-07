@@ -45,8 +45,6 @@ testForDEU(ecs, formula0=NULL, formula1=NULL, nCores=1, quiet=FALSE, file="")
    
    See \code{\link{testGeneForDEU}}, which is called for each gene, for further details.
    
-   For the actual fitting, the function \code{glmnb.fit} from the \code{statmod}
-   package, written by Gordon Smyth and Yunshun Chen, is used.
 }
 \value{
      An ExonCountSet object with \code{fData(ecs)$pvalue} and 

@@ -42,8 +42,6 @@ testGeneForDEU(ecs, gene, formula0=NULL, formula1=NULL,
    The GLMs are of the negative binomial family, using the dispersions from the \code{dispersion}
    column in \code{fData(ecs)}.
    
-   For the actual fitting, the function \code{glmnb.fit} from the \code{statmod}
-   package, written by Gordon Smyth and Yunshun Chen, is used.   
 }
 \examples{
 	data("pasillaExons", package="pasilla")

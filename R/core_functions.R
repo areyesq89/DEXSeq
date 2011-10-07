@@ -182,7 +182,7 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
        # take away those exons with counts lower than minCounts
       testable <- rowSums(counts(cds)) > minCount
       if(!all(testable) & nCores<=1){
-         warning(sprintf("Exons with more less than %d counts will be discarded. For more details read the documentation, parameter minCount", minCount))
+         warning(sprintf("Exons with less than %d counts will be discarded. For more details read the documentation, parameter minCount", minCount + 1))
       }
       # If a gene contains less than two high count exons, all its exons non-testable
       for( r in split( 1:nrow(cds), geneIDs(cds) ) ) {
@@ -199,7 +199,7 @@ setMethod("estimateDispersions", signature(cds="ExonCountSet"),
       ###
       
       if(max(generle$lengths) > maxExon & nCores<=1){
-         warning(sprintf("Genes with more than %d exons will be kicked out of the analysis. For more details read the documentation, parameter maxExon", maxExon))
+         warning(sprintf("Genes with more than %d testable exons will be kicked out of the analysis. For more details read the documentation, parameter maxExon", maxExon))
       }
 
       ##### DOES THE SAME AS A TAPPLY, but without considering the order of the levels ##
