@@ -51,7 +51,7 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
    if(!is.null(color.samples)){
       condcolor[,1] <- color.samples}
    hwrite(cond, bgcolor=condcolor, p)
-   hwrite(paste("\n\nformulaDispersion = ", ecs@formulas[["formula.dispersion"]], sep=""), p, heading=3)
+   hwrite(paste("\n\nformulaDispersion = ", ecs@formulas[["formulaDispersion"]], sep=""), p, heading=3)
    hwrite(paste("\nformula0 = ", ecs@formulas[["formula0"]], sep=""), p, heading=3)
    hwrite(paste("\nformula1 = ", ecs@formulas[["formula1"]], sep=""), p, heading=3)
    hwrite('testForDEU result table', p, heading=2)

@@ -1,5 +1,5 @@
 Package: DEXSeq
-Version: 0.1.28
+Version: 0.1.29
 Title: Inference of differential exon usage in RNA-Seq
 Author: Simon Anders <sanders@fs.tum.de> and Alejandro Reyes <areyes@lcg.unam.mx>, both at EMBL Heidelberg
 Maintainer: Alejandro Reyes <reyes@embl.de>
