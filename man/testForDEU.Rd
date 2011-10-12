@@ -36,7 +36,6 @@ testForDEU(ecs, formula0=NULL, formula1=NULL, nCores=1, quiet=FALSE, file="")
       A file name to write the progress reports. If file="", output
       will be written in the standard output connection.
   }
-
 }
 \details{
    The terms in the formulas must be columns of \code{design(ecs)}. In addition,
@@ -51,11 +50,14 @@ testForDEU(ecs, formula0=NULL, formula1=NULL, nCores=1, quiet=FALSE, file="")
      \code{fData(ecs)$padjust} data slots filled.
 }
 \examples{
-     data("pasillaExons", package="pasilla")
-     pasillaExons <- estimateSizeFactors( pasillaExons )
-     \dontrun{pasillaExons <- estimateDispersion( pasillaExons )}
-     \dontrun{pasillaExons <- testForDEU( pasillaExons )}
+     \dontrun{
+        data("pasillaExons", package="pasilla")
+        pasillaExons <- estimateSizeFactors( pasillaExons )
+        pasillaExons <- estimateDispersions( pasillaExons )
+        pasillaExons <- fitDispersionFunction( pasillaExons )
+        pasillaExons <- testForDEU( pasillaExons )
+     }
 }
 \seealso{
-   \code{profileLogLikelihood}, \code{estimateExonDispersionsForModelFrame}
+   \code{estimateExonDispersionsForModelFrame}
 }

@@ -44,10 +44,11 @@ testGeneForDEU(ecs, gene, formula0=NULL, formula1=NULL,
    
 }
 \examples{
-	data("pasillaExons", package="pasilla")
-	\dontrun{pasillaExons <- estimateSizeFactors( pasillaExons ) }
-	\dontrun{pasillaExons <- estimateDispersions( pasillaExons )}
-	\dontrun{testGeneForDEU(pasillaExons, "FBgn0085442")}
+   data("pasillaExons", package="pasilla")
+   pasillaExons <- estimateSizeFactors( pasillaExons )
+   pasillaExons <- estimateDispersions( pasillaExons )
+   pasillaExons <- fitDispersionFunction( pasillaExons )
+   testGeneForDEU(pasillaExons, "FBgn0085442")
 }
 \seealso{
    \code{testForDEU}

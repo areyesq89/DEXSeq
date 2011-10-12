@@ -388,7 +388,7 @@ that are fitted, especially with datasets with a big number of samples, or organ
 a large number of exons.  There are some steps of the analysis that require the whole dataset, but the two 
 parts that are most time consuming can be parallelized (functions \Rfunction{estimateDispersions} and 
 \Rfunction{testForDEU}) by changing the parameter nCores in the functions.  Internally, this functions 
-will subset the \Robject{ExonCountSet} object into smaller objects to distribute them to different cores.  
+will subset the \Rclass{ExonCountSet} object into smaller objects to distribute them to different cores.  
 Please note that only the Cox-Reid calculation of the dispersion can be parallelized, the mean-variance 
 dependent fit is done with all the dataset.  This parameter depends on the \Rpackage{multicore} package, but
 the user can do the subsetting manually in order to parallelized with other packages, e.g. \Rpackage{Rmpi}.
@@ -415,17 +415,6 @@ pasillaExons <- makeCompleteDEUAnalysis(pasillaExons, formulaDispersion=formulad
 @
 
 %--------------------------------------------------
-\section{Gene count table}
-%--------------------------------------------------
-The function \Rfunction{geneCountTable} computes a table of \emph{gene counts}, which are obtained by summing
-the counts from all exons with the same geneID.  This might be useful for the detection of differential expression
-of genes, where the table can be used as input e.\,g.\ for the packages
-\Rpackage{DESeq} or \Rpackage{edgeR}.
-<<gct>>=
-head(geneCountTable(pasillaExons))
-@ 
-
-%--------------------------------------------------
 \section{Creating \Rclass{ExonCountSet} objects}\label{sec:creating}
 %--------------------------------------------------
 \subsection{From files produced by \texttt{HTSeq}}
@@ -443,11 +432,6 @@ The script produces as output a new file in GTF format.  The second script,
 \texttt{dexseq\_count.py}, reads the GTF file produced by \texttt{dexseq\_prepare\_annotation.py} and an alignment 
 in SAM format and counts the number of reads falling in each of the defined exonic parts. 
 
-The \Rpackage{DEXSeq} function \Rfunction{read.HTSeqCounts} is then able to read the output from these scripts 
-and returns an \Rclass{ExonCountSet} object with the relevant information for 
-differential exon usage analysis and visualization. Of course,
-users can post process or replace the annotation in the object using their own means in R. 
-
 The files that were used in this way to create the \Robject{pasillaGenes} object
 are provided within the \Rpackage{pasilla} package:
 <<dirpasilla>>=
@@ -456,10 +440,17 @@ dir(system.file("extdata",package="pasilla"))
 The vignette\footnote{Data preprocessing and creation of the data objects pasillaGenes and pasillaExons} 
 of the package \Rpackage{pasilla} provides a complete transcript of these steps.
 
+The \Rpackage{DEXSeq} function \Rfunction{read.HTSeqCounts} is then able to read the output from these scripts 
+and returns an \Rclass{ExonCountSet} object with the relevant information for 
+differential exon usage analysis and visualization. 
+
 \subsection{From elementary R data structures}
 
 Users can also provide their own data, contained in elementary R objects, directly to the function 
-\Rfunction{newExonCountSet} in order to create an \Rclass{ExonCountSet} object.
+\Rfunction{newExonCountSet} in order to create an \Rclass{ExonCountSet} object. 
+The package \Rpackage{GenomicRanges} in junction with the annotation packages available in \Rpackage{Bioconductor}
+give alternative options that allow users to create the objects necessary to make an \Rclass{ExonCountSet}
+object using only R. 
 The minimum requirements are 
 \begin{enumerate}
 \item a per-exon count matrix, with one row for every exon and one column for every sample,
@@ -480,6 +471,17 @@ bare <- newExonCountSet(
    exonIDs=exonIDs(pasillaExons))
 @
 %$
+
+%--------------------------------------------------
+\section{Gene count table}
+%--------------------------------------------------
+The function \Rfunction{geneCountTable} computes a table of \emph{gene counts}, which are obtained by summing
+the counts from all exons with the same geneID.  This might be useful for the detection of differential expression
+of genes, where the table can be used as input e.\,g.\ for the packages \Rpackage{DESeq} or \Rpackage{edgeR}.
+This kind of tables can also be done with the package \Rpackage{GenomicRanges}, e.g. function \Rfunction{summarizeOverlaps}.
+<<gct>>=
+head(geneCountTable(pasillaExons))
+@ 
 
 \bibliography{DEXSeq}
 \bibliographystyle{plain}

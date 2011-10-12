@@ -33,17 +33,18 @@ annotationfile = file.path(inDir, "Dmel.BDGP5.25.62.DEXSeq.chr.gff")
 samples = data.frame(
    condition = c(rep("treated", 3), rep("untreated", 4)),
    replicate = c(1:3, 1:4),
-   type = c("single-read", "paired-end", "paired-end", "single-read", "single-read", "paired-end", "paired-end"),
-   row.names = dir(system.file("extdata", package="pasilla", mustWork=TRUE), pattern="fb.txt"),
+   row.names = dir(system.file("extdata", package="pasilla", mustWork=TRUE), 
+       pattern="fb.txt"),
    stringsAsFactors = TRUE,
    check.names = FALSE
 )
 
 annotationfile = file.path(inDir, "Dmel.BDGP5.25.62.DEXSeq.chr.gff")
 
-\dontrun{ecs = read.HTSeqCounts(countfiles = file.path(inDir, rownames(samples)), 
-            design = samples, 
-            flattenedfile = annotationfile)
+\dontrun{
+   ecs = read.HTSeqCounts(countfiles = file.path(inDir, rownames(samples)), 
+      design = samples, 
+      flattenedfile = annotationfile)
        }
    }
 \keyword{ExonCountSet}

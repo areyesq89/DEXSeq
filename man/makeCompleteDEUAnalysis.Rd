@@ -7,9 +7,11 @@
        with p values and p adjusted values.
      }
      \usage{
-makeCompleteDEUAnalysis(ecs, formulaDispersion=count ~ sample + condition*exon, 
-        minCount=10, maxExon=50, formula0=NULL, formula1=NULL, FDR=0.1, fitExpToVar="condition", 
-        nCores=1, path=NULL, color=NULL, color.samples=NULL, quiet=FALSE, file="")
+makeCompleteDEUAnalysis(ecs, 
+        formulaDispersion=count ~ sample + condition*exon, 
+        minCount=10, maxExon=50, formula0=NULL, formula1=NULL, 
+        FDR=0.1, fitExpToVar="condition", nCores=1, path=NULL, 
+        color=NULL, color.samples=NULL, quiet=FALSE, file="")
      }
      \arguments{
       \item{ecs}{

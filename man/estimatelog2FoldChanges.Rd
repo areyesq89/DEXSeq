@@ -8,7 +8,8 @@
       by the user (see below, parameter "fitExpToVar").
    }
    \usage{
-estimatelog2FoldChanges(ecs, fitExpToVar="condition", nCores=1, quiet=FALSE, file="")
+estimatelog2FoldChanges(ecs, fitExpToVar="condition", 
+          nCores=1, quiet=FALSE, file="")
    }
    \arguments{
       \item{ecs}{
@@ -34,10 +35,12 @@ estimatelog2FoldChanges(ecs, fitExpToVar="condition", nCores=1, quiet=FALSE, fil
       }
   }
   \examples{
-  \dontrun{data("pasillaExons", package="pasilla")}
-  \dontrun{pasillaExons <- estimateSizeFactors(pasillaExons)}
-  \dontrun{pasillaExons <- estimateDispersions(pasillaExons)}
-  \dontrun{plotDEXSeq(pasillaExons, "FBgn0085442")}
-  \dontrun{pasillaExons <- estimatelog2FoldChanges(pasillaExons)}
+     \dontrun{
+         data("pasillaExons", package="pasilla")
+         pasillaExons <- estimateSizeFactors( pasillaExons )
+         pasillaExons <- estimateDispersions( pasillaExons )
+         pasillaExons <- fitDispersionFunction( pasillaExons ) 
+         pasillaExons <- estimatelog2FoldChanges( pasillaExons )
+     }
   }
 \keyword{ExonCountSet}

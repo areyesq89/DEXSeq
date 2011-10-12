@@ -9,7 +9,8 @@ It uses the information from the function
 This gives an easy way of exploring the results of the tests.
 }
      \usage{
-DEXSeqHTML(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", fitExpToVar="condition", FDR=0.1, color=NULL, color.samples=NULL)
+DEXSeqHTML(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", 
+     fitExpToVar="condition", FDR=0.1, color=NULL, color.samples=NULL)
      }
      \arguments{
        \item{ecs}{An ExonCountSet object}
@@ -47,10 +48,13 @@ DEXSeqHTML(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", fitEx
        \code{hwrite}
      }
      \examples{
-	\dontrun{data("pasillaExons", package="pasilla")}
-	\dontrun{pasillaExons <- estimateSizeFactors( pasillaExons )}
-	\dontrun{pasillaExons <- estimateDispersions( pasillaExons )}
-	\dontrun{pasillaExons <- testForDEU( pasillaExons )}
-	\dontrun{DEXSeqHTML( pasillaExons )}
+	\dontrun{
+           data("pasillaExons", package="pasilla")
+           pasillaExons <- estimateSizeFactors( pasillaExons )
+           pasillaExons <- estimateDispersions( pasillaExons )
+           pasillaExons <- fitDispersionFunction( pasillaExons )
+           pasillaExons <- testForDEU( pasillaExons )
+           DEXSeqHTML( pasillaExons )
+        }
      }
 \keyword{ExonCountSet}

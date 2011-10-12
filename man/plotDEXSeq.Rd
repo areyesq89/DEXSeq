@@ -9,8 +9,9 @@
         the glm. See fitExpToVar parameter.
      }
      \usage{
-plotDEXSeq(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=FALSE, expression=TRUE, 
-           splicing=FALSE, displayTranscripts=FALSE, names=FALSE, legend=FALSE, 
+plotDEXSeq(ecs, geneID, FDR=0.1, fitExpToVar="condition", 
+           norCounts=FALSE, expression=TRUE, splicing=FALSE, 
+           displayTranscripts=FALSE, names=FALSE, legend=FALSE, 
            color=NULL, color.samples=NULL, ...)
      }
      \arguments{
@@ -66,9 +67,12 @@ plotDEXSeq(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=FALSE, expre
        graphics, \code{segments}
      }
      \examples{
-	\dontrun{data("pasillaExons", package="pasilla")}
-	\dontrun{pasillaExons <- estimateSizeFactors(pasillaExons)}
-	\dontrun{pasillaExons <- estimateDispersions(pasillaExons)}
-	\dontrun{plotDEXSeq(pasillaExons, "FBgn0085442")}
+	\dontrun{
+           data("pasillaExons", package="pasilla")
+	   pasillaExons <- estimateSizeFactors(pasillaExons)
+	   pasillaExons <- estimateDispersions(pasillaExons)
+           pasillaExons <- fitDispersionFunction( pasillaExons )
+	   plotDEXSeq(pasillaExons, "FBgn0085442")
+        }
      }
 \keyword{ExonCountSet}

@@ -21,3 +21,13 @@ DEUresultTable(ecs)
 \value{
    A data frame with a summary of the analysis workflow.
 }
+\examples{
+   \dontrun{
+      data("pasillaExons", package="pasilla")
+      pasillaExons <- estimateSizeFactors( pasillaExons )
+      pasillaExons <- estimateDispersions( pasillaExons )
+      pasillaExons <- fitDispersionFunction( pasillaExons )
+      pasillaExons <- testForDEU( pasillaExons )
+      res <- DEUresultTable( pasillaExons )
+    }
+}

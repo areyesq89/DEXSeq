@@ -9,7 +9,10 @@
       these values in \code{fData(ecs)$dispersionBeforeSharing}.  
 }
 \usage{
-\S4method{estimateDispersions}{ExonCountSet}( cds, formula=count ~ sample + condition * exon, initialGuess=.01, nCores=1, minCount=10, maxExon=70, quiet=FALSE, file="")
+\S4method{estimateDispersions}{ExonCountSet}( cds, 
+         formula=count ~ sample + condition * exon, 
+         initialGuess=.01, nCores=1, minCount=10, 
+         maxExon=70, quiet=FALSE, file="")
 }
 \arguments{
   \item{cds}{
@@ -59,9 +62,10 @@
 likelihood method of Gordon Smyth et al., which they devised for the \code{edgeR}
 package. 
 }
-
 \examples{
-     \dontrun{data("pasillaExons", package="pasilla")}
-     \dontrun{pasillaExons <- estimateSizeFactors( pasillaExons )}
-     \dontrun{pasillaExons <- estimateDispersions( pasillaExons )}
+     \dontrun{
+        data("pasillaExons", package="pasilla")
+        pasillaExons <- estimateSizeFactors( pasillaExons )
+        pasillaExons <- estimateDispersions( pasillaExons )
+     }
 }

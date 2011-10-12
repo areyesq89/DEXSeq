@@ -27,6 +27,6 @@ fitDispersionFunction(ecs)
 \examples{
 	data("pasillaExons", package="pasilla")
 	pasillaExons <- estimateSizeFactors( pasillaExons )
-	\dontrun{pasillaExons <- estimateDispersions( pasillaExons )}
-	\dontrun{pasillaExons <- fitDispersions( pasillaExons )}
+        pasillaExons <- estimateDispersions( pasillaExons )
+        pasillaExons <- fitDispersionFunction( pasillaExons )
 }
