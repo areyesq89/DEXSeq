@@ -12,11 +12,11 @@
     in the ExonCountSet's "phenoData" slot as a row.
 }
 \usage{
-\S4method{design}{ExonCountSet}(cds, drop=TRUE, asAnnotatedDataFrame=FALSE)
-\S4method{design}{ExonCountSet}(cds) <- value
+\S4method{design}{ExonCountSet}(object, drop=TRUE, asAnnotatedDataFrame=FALSE)
+\S4method{design}{ExonCountSet}(object) <- value
 }
 \arguments{
-  \item{cds}{
+  \item{object}{
       An ExonCountSet
    }
   \item{drop}{

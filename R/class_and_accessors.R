@@ -188,8 +188,9 @@ setValidity( "ExonCountSet", function( object ) {
    TRUE
 } )
 
-setMethod("counts", signature(cds="ExonCountSet"),
-  function( cds, normalized=FALSE) {
+setMethod("counts", signature(object="ExonCountSet"),
+  function( object, normalized=FALSE) {
+    cds <- object
     if(!normalized){
       assayData(cds)[["counts"]]
     } else {
@@ -201,30 +202,34 @@ setMethod("counts", signature(cds="ExonCountSet"),
    }
 })
 
-setReplaceMethod("counts", signature(cds="ExonCountSet", value="matrix"),
-  function( cds, value ) {
+setReplaceMethod("counts", signature(object="ExonCountSet", value="matrix"),
+  function( object, value ) {
+   cds <- object
    assayData(cds)[[ "counts" ]] <- value
    validObject(cds)
    cds
 })   
 
-setMethod("sizeFactors",  signature(cds="ExonCountSet"),
-  function(cds) {
+setMethod("sizeFactors",  signature(object="ExonCountSet"),
+  function(object) {
+   cds <- object
    sf <- pData(cds)$sizeFactor
    names( sf ) <- colnames( counts(cds) )
    sf
 })
 
-setReplaceMethod("sizeFactors",  signature(cds="ExonCountSet", value="numeric"),
-  function(cds, value ) {
+setReplaceMethod("sizeFactors",  signature(object="ExonCountSet", value="numeric"),
+  function(object, value ) {
+   cds <- object
    pData(cds)$sizeFactor <- value
    validObject( cds )
    cds
 })
 
 
-setMethod("design", signature(cds="ExonCountSet"),
-   function( cds, drop=TRUE, asAnnotatedDataFrame=FALSE ) {
+setMethod("design", signature(object="ExonCountSet"),
+   function( object, drop=TRUE, asAnnotatedDataFrame=FALSE ) {
+      cds <- object
       if( asAnnotatedDataFrame )
          return( phenoData(cds)[, cds@designColumns ] )
       ans <- pData(cds)[, cds@designColumns, drop=FALSE ]
@@ -236,8 +241,9 @@ setMethod("design", signature(cds="ExonCountSet"),
       ans
 })
 
-setReplaceMethod("design", signature(cds="ExonCountSet"),
-      function( cds, value ) {
+setReplaceMethod("design", signature(object="ExonCountSet"),
+      function( object, value ) {
+      cds <- object
       ## Is it multivariate or just a vector?
       if( ncol(cbind(value)) > 1 )
          value <- as( value, "AnnotatedDataFrame" )

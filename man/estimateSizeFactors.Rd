@@ -6,16 +6,16 @@
    Estimate the size factors for an ExonCountSet
 }
 \description{
-   This function takes the count data from an ExonCountSet object (cds), and estimates the size factors 
+   This function takes the count data from an ExonCountSet object (object), and estimates the size factors 
    as follows: Each column (sample) is divided by the geometric means of the rows. The median
    of these ratios (skipping the genes with a geometric mean of zero) is used as the
    size factor for this column.
 }
 \usage{
-\S4method{estimateSizeFactors}{ExonCountSet}(cds)
+\S4method{estimateSizeFactors}{ExonCountSet}(object)
 }
 \arguments{
-  \item{cds}{
+  \item{object}{
      An ExonCountSet object
   }
 }

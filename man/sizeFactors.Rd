@@ -12,11 +12,11 @@
     a common scale by dividing by the corresponding size factor.
 }
 \usage{
-\S4method{sizeFactors}{ExonCountSet}(cds)
-\S4method{sizeFactors}{ExonCountSet,numeric}(cds) <- value
+\S4method{sizeFactors}{ExonCountSet}(object)
+\S4method{sizeFactors}{ExonCountSet,numeric}(object) <- value
 }
 \arguments{
-  \item{cds}{
+  \item{object}{
       An ExonCountSet
 }
   \item{value}{

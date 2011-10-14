@@ -166,7 +166,7 @@ head(fData(pasillaExons)$dispersion)
 To make a fit diagnostic, each individual exon dispersion is plotted vs its mean expression value.
 The function we just fitted is plotted in the panel and passing through the data points. This gives
 a good diagnostic of the fit. Figure ~\ref{fitdiagnostics}
-\fixme{comment something about the lower cloud of points}
+% fixme\{comment something about the lower cloud of points}
 
 <<fitdiagnostics, fig=TRUE>>=
 meanvalues <- rowMeans(counts(pasillaExons))
@@ -295,7 +295,7 @@ table( res2$padjust < 0.1 )
 @
 %$
 
-\fixme{The results look not very different from those of Section~\ref{sec:deu}:}
+% \fixme{The results look not very different from those of Section~\ref{sec:deu}:}
 <<figcomparep,fig=TRUE>>=
 bottom = function(x) pmax(x, 1e-6)
 plot(bottom(res1$padjust), bottom(res2$padjust), log="xy")

@@ -1,5 +1,6 @@
-setMethod("estimateSizeFactors", signature(cds="ExonCountSet"),
-   function( cds ){
+setMethod("estimateSizeFactors", signature(object="ExonCountSet"),
+   function( object ){
+      cds <- object
       stopifnot( is( cds, "ExonCountSet") )
       geomeans <- exp( rowMeans( log( counts(cds) ) ) )
       sizeFactors(cds) <- 
@@ -164,9 +165,10 @@ fitDispersionFunction <- function( ecs )
 }
 
 
-setMethod("estimateDispersions", signature(cds="ExonCountSet"),
-   function( cds, formula=count ~ sample + condition*exon, initialGuess=.01, nCores=1, minCount=10, maxExon=70, quiet=FALSE, file="")
+setMethod("estimateDispersions", signature(object="ExonCountSet"),
+   function( object, formula=count ~ sample + condition*exon, initialGuess=.01, nCores=1, minCount=10, maxExon=70, quiet=FALSE, file="")
    {
+      cds <- object
       stopifnot(is(cds, "ExonCountSet"))
       if( all( is.na(sizeFactors(cds)) ) ){
          stop( "Estimate size factors first." )	

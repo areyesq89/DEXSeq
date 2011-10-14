@@ -9,13 +9,13 @@
       these values in \code{fData(ecs)$dispersionBeforeSharing}.  
 }
 \usage{
-\S4method{estimateDispersions}{ExonCountSet}( cds, 
+\S4method{estimateDispersions}{ExonCountSet}( object, 
          formula=count ~ sample + condition * exon, 
          initialGuess=.01, nCores=1, minCount=10, 
          maxExon=70, quiet=FALSE, file="")
 }
 \arguments{
-  \item{cds}{
+  \item{object}{
      An ExonCountSet object.
    }
   \item{formula}{
@@ -55,7 +55,7 @@
    }
 }
 \value{
-     An ExonCountSet object with dispersion \code{featureData(cds)$dispersion_CR_est}) 
+     An ExonCountSet object with dispersion \code{featureData(object)$dispersion_CR_est}) 
      parameters filled).
 }
 \details{For the dispersion estimation, we use the Cox-Reid conditional maximum

@@ -12,11 +12,11 @@
    one column for each sample.
 }
 \usage{
-\S4method{counts}{ExonCountSet}(cds, normalized=FALSE)
-\S4method{counts}{ExonCountSet,matrix}(cds) <- value
+\S4method{counts}{ExonCountSet}(object, normalized=FALSE)
+\S4method{counts}{ExonCountSet,matrix}(object) <- value
 }
 \arguments{
-  \item{cds}{An ExonCountSet object.}
+  \item{object}{An ExonCountSet object.}
   \item{normalized}{If TRUE, the counts will be normalized by the size factors.}
   \item{value}{An integer matrix of counts, each row corresponding to an exon and each column corresponding to a sample.}
 }
