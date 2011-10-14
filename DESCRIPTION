@@ -1,10 +1,10 @@
 Package: DEXSeq
-Version: 0.99.1
+Version: 0.99.2
 Title: Inference of differential exon usage in RNA-Seq
 Author: Simon Anders <sanders@fs.tum.de> and Alejandro Reyes <areyes@lcg.unam.mx>, both at EMBL Heidelberg
 Maintainer: Alejandro Reyes <reyes@embl.de>
 Imports: MASS, hwriter, methods, stringr
-Depends: Biobase (>= 2.13.5)
+Depends: Biobase (>= 2.13.11)
 Suggests: pasilla (>= 0.2.6)
 Enhances: multicore
 Description: The package is focused on finding differential 
