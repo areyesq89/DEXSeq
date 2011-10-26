@@ -478,7 +478,7 @@ bare <- newExonCountSet(
 The function \Rfunction{geneCountTable} computes a table of \emph{gene counts}, which are obtained by summing
 the counts from all exons with the same geneID.  This might be useful for the detection of differential expression
 of genes, where the table can be used as input e.\,g.\ for the packages \Rpackage{DESeq} or \Rpackage{edgeR}.
-This kind of tables can also be done with the package \Rpackage{GenomicRanges}, e.g. function \Rfunction{summarizeOverlaps}.
+This kind of table can also be produced with the package \Rpackage{GenomicRanges}, e.\,g.\ function \Rfunction{summarizeOverlaps}.
 <<gct>>=
 head(geneCountTable(pasillaExons))
 @ 
