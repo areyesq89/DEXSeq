@@ -109,7 +109,11 @@ estimateExonDispersionsForModelFrame <- function( modelFrame, formula=NULL, mm=N
    y <- modelFrame$count
 
    if(is.null(muhat)){
-      muhat <- fitted.values( glm.fit( mm, y, family=negative.binomial(1/initialGuess), offset=log(modelFrame$sizeFactor) ) )
+      y1 <- pmax(y, 1/6)
+      fit <- lm.fit(mm, log(y1) - log(modelFrame$sizeFactor))
+      mm <- mm[,!is.na(fit$coefficients)]
+      start <- fit$coefficients[!is.na(fit$coefficients)]
+      muhat <- fitted.values(glmnb.fit(mm, y, initialGuess, log(modelFrame$sizeFactor), start=start))
    }
 
    disp <- rep( initialGuess, length(exonNames) )
@@ -142,8 +146,11 @@ fitDispersionFunction <- function( ecs )
    while(TRUE) {
       residuals <- disps / ( coefs[1] + coefs[2] / means )
       good <- which((residuals > 1e-4) & (residuals < 15))
-      fit <- glm( disps[good] ~ I(1/means[good]), 
-         family=Gamma(link="identity"), start=coefs )
+      mm <- model.matrix(disps[good] ~ I(1/means[good]))
+      fit <- try(glmgam.fit(mm, disps[good], start=coefs))
+      if(inherits(fit, "try-error")){
+         stop("Failed to fit the dispersion function\n")
+      }
       oldcoefs <- coefs   
       coefs <- coefficients(fit)
       if( sum( log( coefs / oldcoefs )^2 ) < .005 )
@@ -228,13 +235,16 @@ setMethod("estimateDispersions", signature(object="ExonCountSet"),
             model.matrix( formula, data = mf )}, simplify=FALSE )
 
          muhats <- sapply( testablegenes, function( gn ) { 
-            try( 
-              fitted.values(glm.fit( 
-                  modelmatrices[[gn]], modelFrames[[gn]]$count, 
-                  family = negative.binomial(1/initialGuess), 
-                  offset = modelFrames[[gn]]$offset )),
-               silent=TRUE ) },
-            simplify=FALSE )
+            y <- modelFrames[[gn]]$count
+            y1 <- pmax(y, 1/6)
+            mf <- modelFrames[[gn]]
+            mm <- modelmatrices[[gn]]
+            fit <- lm.fit(mm, log(y1) - mf$offset)
+            mm <- mm[,!is.na(fit$coefficients)]
+            start <- fit$coefficients[!is.na(fit$coefficients)]
+            muhat <- try(fitted.values(glmnb.fit(mm, y, initialGuess, mf$offset, start=start)))
+            muhat
+         })
    
          badones <- which( sapply( muhats, inherits, "try-error") )
          if( length(badones) > 0 ) {
@@ -277,8 +287,7 @@ setMethod("estimateDispersions", signature(object="ExonCountSet"),
    }
 )
 
-testGeneForDEU <- function (ecs, gene, formula0=NULL, formula1=NULL, 
-      glm.control = list( maxit=100, epsilon=3e-4 ) ){
+testGeneForDEU <- function (ecs, gene, formula0=NULL, formula1=NULL ){
    stopifnot(is(ecs, "ExonCountSet"))
    if( all( is.na(featureData(ecs)$dispersion ) ) ) {
       stop("No dispersion values found, call function fitDispersionFunction first.")		
@@ -302,25 +311,34 @@ testGeneForDEU <- function (ecs, gene, formula0=NULL, formula1=NULL,
    environment(formula0) <- environment()
    environment(formula1) <- environment()
    
-   fam <- negative.binomial( 1 / mf$dispersion )
-   fam$family = "Negative Binomial(varying)"
+   mm <- model.matrix(formula0, mf)
+   y1 <- pmax(mf$count, 1/6)
+   fit <- lm.fit(mm, log(y1) - log(mf$sizeFactor))
+   mm <- mm[,!is.na(fit$coefficients)]
+   start <- fit$coefficients[!is.na(fit$coefficients)]
    
-   fit0 <- try( 
-         glm( formula0, data=mf, family = fam, offset = log(mf$sizeFactor), control=glm.control ),
-         silent=TRUE )
+   fit0 <- try(
+      glmnb.fit(mm, mf$count, mf$dispersion, log(mf$sizeFactor), start=start)
+   )
    if( inherits( fit0, "try-error" ) ) {
       warning( sprintf( "Error in fit0 for gene %s: %s", gene, fit0 ) )
       return(ans) }
 
    for( exonID in unique(as.character(mf$exon)) ) {
-      fit1 <- try( 
-         glm( formula1, data=mf, family = fam, offset = log(mf$sizeFactor), control=glm.control ),
-         silent=TRUE )
+      mm <- model.matrix(formula1, mf)
+      y1 <- pmax(mf$count, 1/6)
+      fit <- lm.fit(mm, log(y1) - log(mf$sizeFactor))
+      mm <- mm[,!is.na(fit$coefficients)]
+      start <- fit$coefficients[!is.na(fit$coefficients)]
+
+      fit1 <- try(
+         glmnb.fit(mm, mf$count, mf$dispersion, log(mf$sizeFactor), start=start)
+      )
       if( inherits( fit1, "try-error" ) ) {
          warning( sprintf( "Error in fit1 for gene %s, exon %s: %s", gene, exonID, fit1 ) )
          next }
       ans[ exonID, "deviance" ] <- deviance( fit0 ) - deviance( fit1 )
-      ans[ exonID, "df" ]       <- fit0$df.residual - fit1$df.residual
+      ans[ exonID, "df" ] <- length(fit1$coefficients) - length(fit0$coefficients)
       ans[ exonID, "pvalue"   ] <- 1 - pchisq( ans[exonID,"deviance"], ans[exonID,"df"] )
   }
   ans

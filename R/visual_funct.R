@@ -24,9 +24,15 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
    numcond<-length(unique(design(ecs, drop=FALSE)[[fitExpToVar]]))
    numexons<-nrow(count)
    each <- featureData(ecs)$padjust[rt]
-   exoncol<-ifelse(each<=FDR, "#8B0000", "dark green")
-   exoncol[is.na(exoncol)]<-"black"
-   colorlines <- ifelse(each<=FDR, "#FF000060", "lightgrey")
+   #exoncol<-ifelse(each<=FDR, "#8B0000", "dark green")
+   #exoncol[is.na(exoncol)]<-"black"
+   #colorlines <- ifelse(each<=FDR, "#FF000060", "lightgrey")
+   exoncol<-ifelse(each<=FDR, "#F219ED", "#CCCCCC")
+   exoncol[is.na(exoncol)]<-"white"
+   colorlines <- ifelse(each<=FDR, "#F219ED60", "#B3B3B360")   # vertical dashed lines
+   colorlines[is.na(colorlines)] <- "#B3B3B360"
+   colorlinesB <- ifelse(each<=FDR, "#9E109B", "#666666")  # slanted solid lines
+   colorlinesB[is.na(colorlinesB)] <- "#666666"
 
 
    ################## DETERMINE THE LAYOUT OF THE PLOT DEPENDING OF THE OPTIONS THE USER PROVIDES ###########
@@ -102,7 +108,7 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
    if( !any(is.na(featureData(ecs)$start)) ){
       par(mar=c(0, 4, 0, 2))
       plot.new()
-      segments(apply((rbind(rel[rango,2], rel[rango, 1])), 2, median), 0, apply(rbind(intervals[rango], intervals[rango+1]-((intervals[rango+1]-intervals[rango])*0.2)), 2, median), 1, col=exoncol)
+      segments(apply((rbind(rel[rango,2], rel[rango, 1])), 2, median), 0, apply(rbind(intervals[rango], intervals[rango+1]-((intervals[rango+1]-intervals[rango])*0.2)), 2, median), 1, col=colorlinesB)
       par(mar=c(1.5, 4, 0, 2))
       drawGene(min(sub$start), max(sub$end), tr=sub, rango, exoncol=exoncol, names, trName="Gene model", cex=0.8)
       if(!is.null(featureData(ecs)$transcripts)){
