@@ -150,7 +150,7 @@ fitDispersionFunction <- function( ecs )
       residuals <- disps / ( coefs[1] + coefs[2] / means )
       good <- which((residuals > 1e-4) & (residuals < 15))
       mm <- model.matrix(disps[good] ~ I(1/means[good]))
-      fit <- try(glmgam.fit(mm, disps[good], start=coefs))
+      fit <- try(glmgam.fit(mm, disps[good], start=coefs), silent=TRUE)
       if(inherits(fit, "try-error")){
          stop("Failed to fit the dispersion function\n")
       }
@@ -247,7 +247,7 @@ setMethod("estimateDispersions", signature(object="ExonCountSet"),
             if( nrow(mm) <= ncol(mm) )
                stop( "Underdetermined model; cannot estimate dispersions. Maybe replicates have not been properly specified." )
             start <- fit$coefficients[!is.na(fit$coefficients)]
-            muhat <- try(fitted.values(glmnb.fit(mm, y, initialGuess, mf$offset, start=start)))
+            muhat <- try(fitted.values(glmnb.fit(mm, y, initialGuess, mf$offset, start=start)), silent=TRUE)
             muhat
          })
    
@@ -323,8 +323,8 @@ testGeneForDEU <- function (ecs, gene, formula0=NULL, formula1=NULL ){
    start <- fit$coefficients[!is.na(fit$coefficients)]
    
    fit0 <- try(
-      glmnb.fit(mm, mf$count, mf$dispersion, log(mf$sizeFactor), start=start)
-   )
+      glmnb.fit(mm, mf$count, mf$dispersion, log(mf$sizeFactor), start=start),
+   silent=TRUE)
    if( inherits( fit0, "try-error" ) ) {
       warning( sprintf( "Error in fit0 for gene %s: %s", gene, fit0 ) )
       return(ans) }
@@ -337,8 +337,8 @@ testGeneForDEU <- function (ecs, gene, formula0=NULL, formula1=NULL ){
       start <- fit$coefficients[!is.na(fit$coefficients)]
 
       fit1 <- try(
-         glmnb.fit(mm, mf$count, mf$dispersion, log(mf$sizeFactor), start=start)
-      )
+         glmnb.fit(mm, mf$count, mf$dispersion, log(mf$sizeFactor), start=start),
+      silent=TRUE)
       if( inherits( fit1, "try-error" ) ) {
          warning( sprintf( "Error in fit1 for gene %s, exon %s: %s", gene, exonID, fit1 ) )
          next }
