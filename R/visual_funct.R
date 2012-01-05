@@ -43,11 +43,11 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
       if(displayTranscripts==TRUE & !is.null(featureData(ecs)$transcripts)){
          transcripts <- sapply(featureData(ecs)$transcripts[rt], function(x){strsplit(x, ";")})
          trans <- Reduce(union, transcripts)
-         if(length(trans) > 42){
-            warning("This gene contains more than 42 transcripts annotated, only the first 42 will be plotted\n")
+         if(length(trans) > 40){
+            warning("This gene contains more than 40 transcripts annotated, only the first 40 will be plotted\n")
          }
-         mat <- 1:(3+min(length(trans), 42)) ## max support from transcripts is 45, which seems to be the max for the layout supported by graphics
-         hei<-c(8, 1, 1.5, rep(1.5, min(length(trans), 42)))
+         mat <- 1:(3+min(length(trans), 40)) ## max support from transcripts is 45, which seems to be the max for the layout supported by graphics
+         hei<-c(8, 1, 1.5, rep(1.5, min(length(trans), 40)))
       }else{
          mat<-1:3
          hei<-c(5, 1, 1.5)
@@ -114,7 +114,7 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
       if(!is.null(featureData(ecs)$transcripts)){
       ##### plot the transcripts #######
          if(displayTranscripts){
-            for(i in 1:min(length(trans), 45)){
+            for(i in 1:min(length(trans), 40)){
                logicexons <- sapply(transcripts, function(x){length(which(x==trans[i]))})
                tr<-data.frame(featureData(ecs)$start[rt][logicexons==1], featureData(ecs)$end[rt][logicexons==1])
                drawGene(min(sub$start), max(sub$end), tr=tr, rango, exoncol=NULL, names, trName=trans[i], cex=0.8)

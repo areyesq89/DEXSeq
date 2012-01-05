@@ -92,10 +92,12 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
          transcripts <- sapply(featureData(ecs)$transcripts[featureData(ecs)$geneID %in% gene], function(x){strsplit(x, ";")})
          trans <- Reduce(union, transcripts)
          h <- ifelse(length(trans) > 10, 7+(length(trans)*0.3), 7)
-      if(sum(loc) > 35){   ############# if there are more than 35 exons, increase the size of the plotting region
-         h <- h + (sum(loc)*0.05)
+      if(sum(loc) > 30){   ############# if there are more than 30 exons, increase the size of the plotting region
+         h <- h + (sum(loc)*0.1)
       }
-      makePlotPage(ecs=ecs, ptowrite=ptowrite, gene=gene, whichtag=c("expression", "transcripts"), links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=h*100, h=h)
+      r <- try(
+         makePlotPage(ecs=ecs, ptowrite=ptowrite, gene=gene, whichtag=c("expression", "transcripts"), links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=h*100, h=h)
+           , silent=TRUE)
       }
    }
 	

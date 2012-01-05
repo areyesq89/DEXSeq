@@ -154,8 +154,13 @@ fitDispersionFunction <- function( ecs )
       if(inherits(fit, "try-error")){
          stop("Failed to fit the dispersion function\n")
       }
-      oldcoefs <- coefs   
+      oldcoefs <- coefs
       coefs <- coefficients(fit)
+      if(coefs[1] < 0){
+         coefs[1] <- 0
+         warning("Negative intercept value in the dispersion function, it will be set to 0. Check fit diagnostics plot section from the vignette.")
+         break
+      }
       if( sum( log( coefs / oldcoefs )^2 ) < .005 )
          break
       iter <- iter + 1
