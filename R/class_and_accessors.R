@@ -277,7 +277,7 @@ geneIDs <- function( ecs ) {
 
 `geneIDs<-` <- function( ecs, value ) {
    stopifnot( is( ecs, "ExonCountSet" ) )
-   fData(ecs)$geneIDs <- value
+   fData(ecs)$geneID <- value
    validObject(ecs)
    ecs
 }
@@ -291,7 +291,7 @@ exonIDs <- function( ecs ) {
 
 `exonIDs<-` <- function( ecs, value ) {
    stopifnot( is( ecs, "ExonCountSet" ) )
-   fData(ecs)$exonIDs <- value
+   fData(ecs)$exonID <- value
    validObject(ecs)
    ecs
 }
