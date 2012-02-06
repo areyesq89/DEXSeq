@@ -501,7 +501,7 @@ makeCompleteDEUAnalysis <- function(ecs, formulaDispersion=count ~ sample + cond
 {
    stopifnot(is(ecs, "ExonCountSet"))
    ecs <- estimateSizeFactors( ecs )
-   ecs <- estimateDispersions( ecs, formulaDispersion, nCores=nCores, quiet=quiet, file=file)
+   ecs <- estimateDispersions( ecs, formulaDispersion, nCores=nCores, quiet=quiet, file=file, minCount=minCount, maxExon=maxExon)
    ecs <- fitDispersionFunction( ecs )
    ecs <- testForDEU( ecs, formula1=formula1, formula0=formula0, nCores=nCores, quiet=quiet, file=file)
    ecs <- estimatelog2FoldChanges(ecs, fitExpToVar=fitExpToVar, nCores=nCores, quiet=quiet, file=file)
