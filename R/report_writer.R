@@ -27,7 +27,7 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
    ### SPECIFY THE GENES TO PUT IN THE REPORT ###
 
    if(is.null(geneIDs)){
-      gns <- as.character(unique(results$geneID[which(results$padjust <= FDR)]))
+      gns <- as.character(unique(results$geneID[which(results$padjust < FDR)]))
    }else{
       gns <- geneIDs
    }
@@ -41,7 +41,7 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
 #   hwrite(sortabletag, p)
    hwrite('DEXSeq differential exon usage test', p, heading=1)
    hwrite('Experimental design', p, heading=2)
-   cond<-as.matrix(cbind(rownames(design(ecs)), design(ecs)))
+   cond<-as.matrix(cbind(rownames(design(ecs, drop=FALSE)), design(ecs, drop=FALSE)))
    rownames(cond) <- NULL
    colnames(cond)<-c("sample", ecs@designColumns)
 #####
@@ -70,13 +70,14 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
 
    for( gene in gns){
       back <- hwrite("back", link=file.path("..", file))
-      otherlinks <- hwrite(c("counts", "expression", "splicing", "transcripts", "results"), link=c(paste(gene, "counts.html", sep=""), paste(gene, "expression.html", sep=""), paste(gene, "splicing.html", sep=""), paste(gene, "transcripts.html", sep=""), paste(gene, "results.html", sep="")), table=FALSE)
+      nameforlinks <- sapply(strsplit(gene, "\\+"), "[[", 1)
+      otherlinks <- hwrite(c("counts", "expression", "splicing", "transcripts", "results"), link=c(paste(nameforlinks, "counts.html", sep=""), paste(nameforlinks, "expression.html", sep=""), paste(nameforlinks, "splicing.html", sep=""), paste(nameforlinks, "transcripts.html", sep=""), paste(nameforlinks, "results.html", sep="")), table=FALSE)
       loc <- as.character(results$geneID) %in% as.character(gene)
       ### this makes the page where to explore the pvalues ###
       subres <- results[loc,]
       submatcol <- matcol[loc,]
       rownames(subres) <- NULL
-      genpage <- openPage(paste(ptowrite, gene, "results.html", sep=""))
+      genpage <- openPage(paste(ptowrite, nameforlinks, "results.html", sep=""))
       hwrite(c(back, otherlinks), table=TRUE, border=0, genpage)
       hwrite(legend, p=genpage)
       hwrite(as.matrix(subres), bgcolor=submatcol, table.class="sortable", style='margin:16px; border:0px solid black; border-width:0px; width:200px', table=TRUE, page=genpage)
