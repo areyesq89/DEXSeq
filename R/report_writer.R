@@ -1,4 +1,4 @@
-DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", fitExpToVar="condition", FDR=0.1, color=NULL, color.samples=NULL)
+DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", fitExpToVar="condition", FDR=0.1, color=NULL, color.samples=NULL, mart="", filter="", attributes="")
 {
    stopifnot(is(ecs, "ExonCountSet"))
    if(any(is.na(sizeFactors(ecs)))){
@@ -113,12 +113,46 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
          })
       ),
       total_exons = rle(as.character(results$geneID))$lengths,
-      exon_changes = sapply(unique(as.character(results$geneID)), function(gene){vec <- as.character(results$geneID) %in% gene; sum(results$padjust[vec] <= FDR)})
+      exon_changes = sapply(unique(as.character(results$geneID)), function(gene){vec <- as.character(results$geneID) %in% gene; sum(results$padjust[vec] < FDR)})
    )
+
+   if(class(mart) == "Mart"){
+      if(attributes(mart)$dataset != ""){
+      forvalues <- strsplit(as.character(genetable$geneID), "\\+")
+      names(forvalues) <- genetable$geneID
+      if(length(filter) > 1){
+         warning("length(filter) > 2, only first element will be taken")
+         filter <- filter[1]
+      }
+      extra <- getBM(attributes=c(filter, attributes), filters=filter, value=forvalues, mart=mart)
+      fromart <- lapply(genetable$geneID, function(x){
+         sep <- do.call(c, strsplit(as.character(x), "\\+"))
+         extra[which(extra[,filter] %in% sep),]
+      })
+
+      extra <- sapply(attributes, 
+         function(r){
+           unlist(
+              lapply(fromart, 
+                 function(x){
+                    paste(x[,r], collapse="")
+                  }
+              )
+           )
+         }
+      )
+      genetable <- cbind(geneID=genetable$geneID, extra, genetable[,2:length(genetable)])
+      }else{
+         warning("No dataset in biomart specified")
+      }
+   }else if( mart != ""){
+      warning("Please provide a Mart class object for parameter mart")
+   }  
+   
 	
-   genetable$geneID <- sapply(as.character(genetable$geneID), function(m){ns <- sapply(strsplit(m, "\\+"), "[[", 1);hwrite(m, link=paste("files/", ns, "expression.html", sep=""))})
+   genetable$geneID <- sapply(as.character(genetable$geneID), function(m){w <- strsplit(m, "\\+");ns <- sapply(w, "[[", 1);hwrite(unlist(w), link=paste("files/", ns, "expression.html", sep=""))})
    rownames(genetable) <- NULL
-   hwrite(genetable, page=p, table=TRUE, table.class="sortable", style='margin:16px; border:0px solid black; border-width:0px; width:200px') 
+   hwrite(genetable, page=p, table=TRUE, table.class="table-layout:fixed", style='margin:16px; border:0px solid black; border-width:1px; width:20%')
    close(p, splash=TRUE)
 }
 
