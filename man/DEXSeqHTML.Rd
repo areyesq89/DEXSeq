@@ -10,7 +10,8 @@ This gives an easy way of exploring the results of the tests.
 }
      \usage{
 DEXSeqHTML(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", 
-     fitExpToVar="condition", FDR=0.1, color=NULL, color.samples=NULL)
+     fitExpToVar="condition", FDR=0.1, color=NULL, color.samples=NULL,
+     mart="", filter="", attributes="")
      }
      \arguments{
        \item{ecs}{An ExonCountSet object}
@@ -35,6 +36,18 @@ DEXSeqHTML(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html",
            A vector of colors for each of the samples. If NULL, the colors 
            of each sample will be asigned according to its corresponding 
            condition. Useful to visualize complex experimental designs.
+       }
+       \item{mart}{object of class Mart, created with the useMart function, with dataset specified}
+       \item{filter}{ 
+          Filters (ONLY ONE) that should be used in the query.  A
+          possible list of filters can be retrieved using the function
+          listFilters. Please note that the value of this filter will
+          always be the geneIDs in the ExonCountSet object.
+       }
+       \item{attributes}{
+          Attributes you want to retrieve.  A possible list of
+          attributes can be retrieved using the biomaRt function
+          listAttributes.
        }
      }
      \value{
