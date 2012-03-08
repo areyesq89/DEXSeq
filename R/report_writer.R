@@ -1,4 +1,4 @@
-DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", fitExpToVar="condition", FDR=0.1, color=NULL, color.samples=NULL, mart="", filter="", attributes="")
+DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", fitExpToVar="condition", FDR=0.1, color=NULL, color.samples=NULL, mart="", filter="", attributes="", extraCols=NULL)
 {
    stopifnot(is(ecs, "ExonCountSet"))
    if(any(is.na(sizeFactors(ecs)))){
@@ -135,7 +135,7 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
            unlist(
               lapply(fromart, 
                  function(x){
-                    paste(x[,r], collapse="")
+                    paste(x[,r], collapse=" ")
                   }
               )
            )
@@ -148,9 +148,13 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
    }else if( mart != ""){
       warning("Please provide a Mart class object for parameter mart")
    }  
+
+   if( !is.null( extraCols )){
+      genetable <- cbind( extraCols, genetable )
+   }
    
 	
-   genetable$geneID <- sapply(as.character(genetable$geneID), function(m){w <- strsplit(m, "\\+");ns <- sapply(w, "[[", 1);hwrite(unlist(w), link=paste("files/", ns, "expression.html", sep=""))})
+   genetable$geneID <- sapply(as.character(genetable$geneID), function(m){w <- strsplit(m, "\\+");ns <- sapply(w, "[[", 1);hwrite(paste(unlist(w), collapse=" "), link=paste("files/", ns, "expression.html", sep=""))})
    rownames(genetable) <- NULL
    hwrite(genetable, page=p, table=TRUE, table.class="table-layout:fixed", style='margin:16px; border:0px solid black; border-width:1px; width:20%')
    close(p, splash=TRUE)

@@ -61,7 +61,7 @@ in the regulation of splicing, on the transcriptome of fly S2-DRSC cells.
 Pasilla is the Drosophila melanogaster ortholog of mammalian NOVA1 and NOVA2.
 The dataset, which is provided by NCBI Gene Expression Omnibus (GEO) under the accession number
 GSE18508\footnote{\url{http://www.ncbi.nlm.nih.gov/projects/geo/query/acc.cgi?acc=GSE18508}}, 
-contains 3 biological replicates of the knockdown as well as 4 biological replicates for the untreated control. 
+contains 3 biological replicates of the knockdown as well as 4 biological replicates of the untreated control. 
 
 In the \Rpackage{pasilla} package, we chose a subset of genes in order to speed up the computations
 shown in this vignette. We start by loading the \Rpackage{DEXSeq}
@@ -115,8 +115,8 @@ pasillaExons <- estimateSizeFactors(pasillaExons)
 sizeFactors(pasillaExons)
 @
 
-Then, to test for differential expression, we need to estimate the data's variance. This is needed
-in order to be able to distinguish between normal technical and biological variation (noise) and real effects
+Then, to test for differential expression, we need to estimate the variance of the data. This is needed
+in order to be able to distinguish between normal technical and biological variation (noise) from real effects
 on exon expression due to the different conditions.  
 The information on the size of the noise is drawn from the biological replicates in the dataset.
 However, as typical for RNA-seq experiments, the number of replicates is too small to estimate
@@ -164,7 +164,7 @@ head(fData(pasillaExons)$dispersion)
 @
 
 To make a fit diagnostic, each individual exon dispersion is plotted vs its mean expression value.
-The function we just fitted is plotted in the panel and passing through the data points. This gives
+The function we just fitted is plotted in the panel and it is passing through the data points. This gives
 a good diagnostic of the fit. Figure ~\ref{fitdiagnostics}
 % fixme\{comment something about the lower cloud of points}
 
@@ -266,7 +266,7 @@ plot(res1$meanBase, res1[,"log2fold(untreated/treated)"], log="x", col=ifelse(re
 %------------------------------------------------------------
 In the previous section we performed the analysis of differential exon usage ignoring the information regarding
 the library type of the samples.  In this case we introduce a technical variable, but the user can introduce
-an additional experimental variable.
+an additional experimental variable as well.
 <<design>>=
 design(pasillaExons)
 @
@@ -292,13 +292,16 @@ pasillaExons <- testForDEU( pasillaExons, formula0=formula0, formula1=formula1 )
 res2 <- DEUresultTable( pasillaExons )
 <<formula3>>=
 table( res2$padjust < 0.1 )
+table(res1$padjust < 0.1, res2$padjust < 0.1) 
 @
 %$
 
-% \fixme{The results look not very different from those of Section~\ref{sec:deu}:}
 <<figcomparep,fig=TRUE>>=
 bottom = function(x) pmax(x, 1e-6)
 plot(bottom(res1$padjust), bottom(res2$padjust), log="xy")
+abline(a=0,b=1, col="red")
+abline(v=0.1, col="blue")
+abline(h=0.1, col="green")
 @ 
 See Figure~\ref{figcomparep}.
 \begin{figure}
@@ -331,7 +334,7 @@ wh = (fData(pasillaExons)$geneID=="FBgn0010909")
 stopifnot(sum(fData(pasillaExons)$padjust[wh] < formals(plotDEXSeq)$FDR)==1)
 @ 
 
-The result is shown in Figure~\ref{figplot1}. This plots shows the fitted expression values of each of the exons.
+The result is shown in Figure~\ref{figplot1}. This plot shows the fitted expression values of each of the exons.
 Optionally, one can also visualize the transcript models (Figure~\ref{figplot2}), which might be
 useful for putting differential exon usage results into the context of isoform regulation.
 %
@@ -375,7 +378,7 @@ To generate an easily browsable, detailed overview over all analysis results,
 the package provides an HTML report generator, implemented in the function \Rpackage{DEXSeqHTML}.  
 This function uses the package \Rpackage{hwriter} to create a result table with links to plots for the 
 significant results, allowing a more detailed exploration of the results. To see an example, visit 
-\url{http://www.embl.de/~reyes/DEXSeqReport/testForDEU.html}. The report shown there was generated using this code.
+\url{http://www.embl.de/~reyes/DEXSeqReport/testForDEU.html}. The report shown there was generated using the code:
 %
 <<DEXSeqHTML,cache=TRUE, eval=FALSE>>=
 DEXSeqHTML( pasillaExons, FDR=0.1, color=c("#FF000080", "#0000FF80") )
@@ -383,14 +386,14 @@ DEXSeqHTML( pasillaExons, FDR=0.1, color=c("#FF000080", "#0000FF80") )
 %--------------------------------------------------
 \section{Parallelization}
 %--------------------------------------------------
-DEXSeq analysis can be computationally slow with large datasets due to the number of iterations and glms
+DEXSeq analysis can be computationally heavy with large datasets due to the number of iterations and glm's
 that are fitted, especially with datasets with a big number of samples, or organisms containing genes with
 a large number of exons.  There are some steps of the analysis that require the whole dataset, but the two 
 parts that are most time consuming can be parallelized (functions \Rfunction{estimateDispersions} and 
 \Rfunction{testForDEU}) by changing the parameter nCores in the functions.  Internally, this functions 
 will subset the \Rclass{ExonCountSet} object into smaller objects to distribute them to different cores.  
 Please note that only the Cox-Reid calculation of the dispersion can be parallelized, the mean-variance 
-dependent fit is done with all the dataset.  This parameter depends on the \Rpackage{multicore} package, but
+dependent fit is done with all the dataset.  The nCores parameter depends on the \Rpackage{multicore} package, but
 the user can do the subsetting manually in order to parallelized with other packages, e.g. \Rpackage{Rmpi}.
 %
 <<para1,cache=TRUE,eval=FALSE>>=
@@ -405,7 +408,7 @@ pasillaExons <- testForDEU( pasillaExons, nCores=3)
 %--------------------------------------------------
 \section{Making a routinary differential exon usage analysis}
 %--------------------------------------------------
-In the previous sections, we pass through each of the steps to make an analysis for differential exon usage using \Rpackage{DEXSeq}.
+In the previous sections, we passed through each of the steps to make an analysis for differential exon usage using \Rpackage{DEXSeq}.
 However, this is a very fragmented work flow, in case that the user wants to perform a routinary analysis (e.g. same analysis on different \Rfunction{ExonCountSet}
 objects) in which all the parameters are already known, the function \Rfunction{makeCompleteDEUAnalysis} can be useful.
 All the analysis we did before could be done by a single function call.
@@ -445,7 +448,6 @@ and returns an \Rclass{ExonCountSet} object with the relevant information for
 differential exon usage analysis and visualization. 
 
 \subsection{From elementary R data structures}
-
 Users can also provide their own data, contained in elementary R objects, directly to the function 
 \Rfunction{newExonCountSet} in order to create an \Rclass{ExonCountSet} object. 
 The package \Rpackage{GenomicRanges} in junction with the annotation packages available in \Rpackage{Bioconductor}

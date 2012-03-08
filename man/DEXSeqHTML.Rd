@@ -49,6 +49,10 @@ DEXSeqHTML(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html",
           attributes can be retrieved using the biomaRt function
           listAttributes.
        }
+       \item{extraCols}{
+          A data frame with one or more columns to add to the report.
+          For example, additional information about the genes.
+       }
      }
      \value{
 	   This function will write an HTML report in the directory specified by 'path'. 
