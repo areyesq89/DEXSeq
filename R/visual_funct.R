@@ -58,7 +58,7 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
       }
       hei <- c(hei, .2)
       mat <- c(mat, length(mat)+1)
-      layout(matrix(mat), height=hei)
+      layout(matrix(mat), heights=hei)
       par(mar=c(2, 4, 4, 2))
    }else if(op > 1){
 		par(mfrow=c(op,1))
@@ -67,7 +67,7 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
    ####### DETERMINE COLORS, IF THE USER DOES NOT PROVIDE ONE PER SAMPLE THE COUNT WILL OBTAIN THEM CORRESPONDING TO THEIR DESIGN ####
    ##### determine colors if not provided by user ######
    if(is.null(color)){
-      color<-rgb(colorRamp(c("#D7191C", "#FFFFBF", "#2B83BA"))(seq(0, 1, length.out=numcond)), max=255, alpha=175)
+      color<-rgb(colorRamp(c("#D7191C", "#FFFFBF", "#2B83BA"))(seq(0, 1, length.out=numcond)), maxColorValue=255, alpha=175)
    }
    names(color) <- sort(levels(design(ecs, drop=FALSE)[[fitExpToVar]]))
 

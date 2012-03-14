@@ -234,15 +234,19 @@ setMethod("estimateDispersions", signature(object="ExonCountSet"),
          toapply <- function(x){estimateDispersions(x, formula=formula, initialGuess=initialGuess, nCores=-1, minCount=minCount, maxExon=maxExon, file=file, quiet=quiet)}
          cds <- divideWork(cds, funtoapply=toapply, fattr="dispBeforeSharing", mc.cores=nCores, testablegenes)
       }else{
-         modelFrames <- sapply( testablegenes, function(gs) {
+         modelFrames <- lapply( testablegenes, function(gs) {
             mf <- modelFrameForGene(cds, gs, onlyTestable=TRUE)
             mf$offset <- log(mf$sizeFactor)
-            mf }, simplify=FALSE )
-         
-         modelmatrices <- sapply( modelFrames, function(mf){
-            model.matrix( formula, data = mf )}, simplify=FALSE )
+            mf })
 
-         muhats <- sapply( testablegenes, function( gn ) { 
+         names(modelFrames) <- testablegenes
+         
+         modelmatrices <- lapply( modelFrames, function(mf){
+            model.matrix( formula, data = mf )} )
+
+         names(modelmatrices) <- testablegenes
+
+         muhats <- lapply( testablegenes, function( gn ) { 
             y <- modelFrames[[gn]]$count
             y1 <- pmax(y, 1/6)
             mf <- modelFrames[[gn]]
@@ -255,6 +259,8 @@ setMethod("estimateDispersions", signature(object="ExonCountSet"),
             muhat <- try(fitted.values(glmnb.fit(mm, y, initialGuess, mf$offset, start=start)), silent=TRUE)
             muhat
          })
+
+         names(muhats) <- testablegenes
    
          badones <- which( sapply( muhats, inherits, "try-error") )
          if( length(badones) > 0 ) {
@@ -473,27 +479,23 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", nCores=1, quie
    ecs
 }
 
-
 divideWork <- function(ecs, funtoapply, fattr, mc.cores, testablegenes)
 {
 #   if(!suppressMessages(suppressWarnings(require("multicore")))){
  #     stop("multicore package not found...")}
    if(!is.loaded("mc_fork", PACKAGE="multicore")){
      stop("Please load first multicore package or set parameter nCores to 1...")}
-   forsubset <- sort(rep(1:mc.cores, length.out=length(testablegenes)))
-   subgenes <- split(testablegenes, forsubset)
-   allecs <- sapply(subgenes, function(x){
-      subsetByGenes(ecs, x)})
-   rowlist <- sapply(1:mc.cores, function(i){which(fData(ecs)$geneID %in% subgenes[[i]])})
-   rows <- do.call(c, rowlist)
-   mcLapply <- get("mclapply", envir=getNamespace("multicore"))
-   allecs <- mcLapply(allecs, FUN=funtoapply, mc.cores=mc.cores)
-   stopifnot(all(as.character(fData(ecs)$geneID)[rows] == do.call(c, sapply(allecs, function(x){as.character(fData(x)$geneID)}))))   #### makes sure the values are
-   if(length(fattr) > 1){
-      fData(ecs)[rows,][,fattr] <- do.call(rbind, lapply(allecs, function(x){fData(x)[,fattr]}))
-   }else{
-      fData(ecs)[,fattr][rows] <- do.call(c, sapply(allecs, function(x){fData(x)[,fattr]}))
+   stopifnot(mc.cores>=1)
+
+   subgenes = split(testablegenes, seq(along=testablegenes) %% mc.cores)
+   allecs <- lapply(subgenes, function(x) subsetByGenes(ecs, x) )
+   allecs <- multicore::mclapply(allecs, FUN=funtoapply, mc.cores=mc.cores)
+
+   for(j in seq(along=allecs)) {
+      rownam =  rownames(fData(allecs[[j]]))
+      fData(ecs)[ rownam, fattr] =  fData(allecs[[j]])[, fattr]
    }
+  
    ecs
 }
 

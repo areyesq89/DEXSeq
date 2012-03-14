@@ -19,7 +19,7 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
    numcond <- length(unique(design(ecs, drop=FALSE)[[fitExpToVar]]))
 #	sortabletag <- hmakeTag(tag="script", src=(system.file(package="DEXSeq"), "/sorttable.js", sep=''))
    if(is.null(color)){
-      color<-rgb(colorRamp(c("#D7191C", "#FFFFBF", "#2B83BA"))(seq(0, 1, length.out=numcond)), max=255, alpha=175)
+      color<-rgb(colorRamp(c("#D7191C", "#FFFFBF", "#2B83BA"))(seq(0, 1, length.out=numcond)), maxColorValue=255, alpha=175)
    }
    names(color) <- sort(levels(design(ecs, drop=FALSE)[[fitExpToVar]]))
    ### MAKING THE MAIN DIRECTORY AND files DIRECTORY
@@ -79,7 +79,7 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
       rownames(subres) <- NULL
       genpage <- openPage(paste(ptowrite, nameforlinks, "results.html", sep=""))
       hwrite(c(back, otherlinks), table=TRUE, border=0, genpage)
-      hwrite(legend, p=genpage)
+      hwrite(legend, page=genpage)
       hwrite(as.matrix(subres), bgcolor=submatcol, table.class="sortable", style='margin:16px; border:0px solid black; border-width:0px; width:200px', table=TRUE, page=genpage)
       close(genpage, splash=TRUE)
 
@@ -124,7 +124,7 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
          warning("length(filter) > 2, only first element will be taken")
          filter <- filter[1]
       }
-      extra <- getBM(attributes=c(filter, attributes), filters=filter, value=forvalues, mart=mart)
+      extra <- getBM(attributes=c(filter, attributes), filters=filter, values=forvalues, mart=mart)
       fromart <- lapply(genetable$geneID, function(x){
          sep <- do.call(c, strsplit(as.character(x), "\\+"))
          extra[which(extra[,filter] %in% sep),]
@@ -171,6 +171,6 @@ makePlotPage <- function(ecs, ptowrite, gene, whichtag, links, color, color.samp
    svg(paste(ptowrite, pagename, onlytag, ".svg", sep=""), height=h, width=12, pointsize=14)
    plotDEXSeq(ecs, geneID=gene, FDR=FDR, lwd=2, expression=opts[1], splicing=opts[2], norCounts=opts[3], displayTranscripts=opts[4], fitExpToVar=fitExpToVar, legend=TRUE, color=color, color.samples=color.samples, cex.axis=1.5)
    dev.off()
-   hwrite(hmakeTag("iframe", src=paste(pagename, onlytag, ".svg", sep=""), width=width, height=height, border=0), p=genpage)
+   hwrite(hmakeTag("iframe", src=paste(pagename, onlytag, ".svg", sep=""), width=width, height=height, border=0), page=genpage)
    close(genpage, splash=TRUE)
 }

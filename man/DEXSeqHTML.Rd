@@ -11,7 +11,7 @@ This gives an easy way of exploring the results of the tests.
      \usage{
 DEXSeqHTML(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", 
      fitExpToVar="condition", FDR=0.1, color=NULL, color.samples=NULL,
-     mart="", filter="", attributes="")
+     mart="", filter="", attributes="", extraCols=NULL)
      }
      \arguments{
        \item{ecs}{An ExonCountSet object}
