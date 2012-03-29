@@ -487,13 +487,13 @@ divideWork <- function(ecs, funtoapply, fattr, mc.cores, testablegenes)
      stop("Please load first multicore package or set parameter nCores to 1...")}
    stopifnot(mc.cores>=1)
 
-   subgenes = split(testablegenes, seq(along=testablegenes) %% mc.cores)
+   subgenes <- split(testablegenes, seq(along=testablegenes) %% mc.cores)
    allecs <- lapply(subgenes, function(x) subsetByGenes(ecs, x) )
    allecs <- multicore::mclapply(allecs, FUN=funtoapply, mc.cores=mc.cores)
 
    for(j in seq(along=allecs)) {
-      rownam =  rownames(fData(allecs[[j]]))
-      fData(ecs)[ rownam, fattr] =  fData(allecs[[j]])[, fattr]
+      rownam <-  rownames(fData(allecs[[j]]))
+      fData(ecs)[ rownam, fattr] <-  fData(allecs[[j]])[, fattr]
    }
   
    ecs
