@@ -47,7 +47,8 @@
   that takes into account this variability.  We use as input the 
   number of reads mapping to each of the exons of a
   genome. The method is demonstrated on the data from the package
-  \Rpackage{pasilla}. 
+  \Rpackage{pasilla}. For citation purposes, please refer to
+  \Rfunction{citation("DEXSeq")}.
 \end{abstract}
 
 %-----------------------------------------------------------
