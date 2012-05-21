@@ -414,7 +414,8 @@ testForDEU <- function( ecs, formula0=NULL, formula1=NULL, nCores=1, quiet=FALSE
    ecs
 }
 
-estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", nCores=1, quiet=FALSE, file="")
+
+estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", denominator="", getOnlyEffects=FALSE, averageOutExpression=TRUE, nCores=1, quiet=FALSE, file="")
 {
    stopifnot(is(ecs, "ExonCountSet"))
    if(any(is.na(sizeFactors(ecs)))){
@@ -424,60 +425,51 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", nCores=1, quie
    if(sum(is.na(featureData(ecs)$dispersion))==nrow(counts(ecs))){
       stop("No dispersion parameters found, first call function estimateDispersions...\n")}
 
-   nms <- sort(levels(design(ecs, drop=FALSE)[[fitExpToVar]]))
-   colfoldnames <- sapply(2:length(nms), function(x){
-      paste("log2fold(", nms[x], "/", nms[1], ")", sep="")
-   })
-
-   if(!interactive() & !quiet & file == ""){  ## if the session is not interactive, quiet is FALSE and there is no file, then quiet does not make any sense
-      quiet=TRUE
-   }
- 
+   frm <- as.formula(paste("count ~", fitExpToVar,  "* exon"))
    testablegenes <- as.character(unique(fData(ecs)[which(fData(ecs)$testable),]$geneID))
-  
-   logfold <- data.frame(matrix(ncol=length(colfoldnames), nrow=nrow(fData(ecs))))
-   colnames(logfold) <- colfoldnames
-   rownames(logfold) <- rownames(fData(ecs))
 
-   if(!any(colfoldnames %in% colnames(fData(ecs)))){
-      fData(ecs) <- cbind(fData(ecs), logfold)
+   geteffects <- function(geneID){
+     coefficients <- DEXSeq:::fitAndArrangeCoefs(ecs, gene=geneID, frm, balanceExons=TRUE)
+     ret <- t(DEXSeq:::getEffectsForPlotting(coefficients, averageOutExpression=averageOutExpression, groupingVar=fitExpToVar))
+     rownames(ret) <- paste(geneID, ":", gsub("E", "", rownames(ret)), sep="")
+     return(ret)
    }
+   
+   if( nCores > 1 ){
+      if(!is.loaded("mc_fork", PACKAGE="multicore")){
+      stop("Please load first multicore package or set parameter nCores to 1...")}
+      alleffects <- multicore:::mclapply( testablegenes, function(x){geteffects(x)}, mc.cores=nCores)
+    }else{
+      alleffects <- lapply( testablegenes, function(x){geteffects(x)})
+    }
 
-   if(!quiet & nCores==1){
-      cat("Calculating fold changes. (Progress report: one dot per 100 genes)\n", file=file,append=TRUE)}
+    names(alleffects) <- testablegenes
+    alleffects <- do.call(rbind, alleffects)
+    alleffects <- DEXSeq:::vst(exp( alleffects ), ecs)
+    toadd <- matrix(NA, nrow=nrow(ecs), ncol=ncol(alleffects))
+    rownames(toadd) <- featureNames(ecs)
  
-   if (nCores > 1){
-      if(!quiet){
-      cat(sprintf("Calculating fold changes using %d cores. (Progress report: one dot per 100 genes)\n", nCores), file=file, append=TRUE)}
-      toapply <- function(x){estimatelog2FoldChanges(x, fitExpToVar=fitExpToVar, nCores=-1, file=file, quiet=quiet)}
-      ecs <- divideWork(ecs, toapply, fattr=colfoldnames, mc.cores=nCores, testablegenes)
-   }else{
-      frm <- as.formula(paste("count ~", fitExpToVar,  "* exon"))
-      colstosteal <- paste(fitExpToVar, ":exon", sep="")
-      colstopass <- c(2:length(nms))
-      i <- 0
-      for(gene in testablegenes){
-         i <- i + 1
-         if(!quiet & i %% 100 == 0 ){
-            cat( ".", file=file, append=TRUE)}
-         tr <- fitAndArrangeCoefs( ecs, gene, frm=frm)
-         if(is.null(tr)){
-              warning(sprintf("log fold change calculation failed for gene %s", gene))
-              next
-         }
-         rows <- as.character(geneIDs(ecs)) %in% gene
-         tr <- tr[[colstosteal]]
-         stopifnot(all(fData(ecs)$exonID[rows] == colnames(tr))) ##### makes sure to do good the assignation
-         vals <- log2(exp(t(tr)))[,colstopass]
-         logfold[rows, colfoldnames] <- vals
-      }
-      fData(ecs)[,colfoldnames] <- logfold
-   }
-   if(nCores==1 & !quiet){
-      cat("\n", file=file, append=TRUE)
-   }
-   ecs
+    if( getOnlyEffects ){
+       colnames(toadd) <- colnames(alleffects)
+       toadd[rownames(alleffects), colnames(alleffects)] <- alleffects
+     }else{
+       if( denominator == "" ){
+          denominator <- as.character(design(ecs, drop=FALSE)[[fitExpToVar]][1])
+       }
+       stopifnot( any( colnames(alleffects) %in% denominator ) )
+       denoCol <- which(colnames(alleffects) == denominator)
+       alleffects <- log2(alleffects / alleffects[,denoCol])
+       colnames(alleffects) <- sprintf("log2fold(%s/%s)", colnames(alleffects), denominator)
+       colnames(toadd) <- colnames(alleffects)
+       alleffects <- alleffects[,-denoCol, drop=FALSE]
+       toadd <- toadd[,-denoCol, drop=FALSE]
+       toadd[rownames(alleffects), colnames(alleffects)] <- alleffects
+     }
+    
+    fData(ecs) <- cbind(fData(ecs), toadd)
+    ecs
 }
+
 
 divideWork <- function(ecs, funtoapply, fattr, mc.cores, testablegenes)
 {

@@ -9,3 +9,7 @@
 2011-07-01: version 0.1.10
 
 - 'estimateSizeFactors' and 'estimatedispersions' function added as S4 methods, no more problems when loading DESeq and DEXSeq in the same R session
+
+2012-05-21: version 1.3.2
+
+- More options and flexibilty added to "estimatelog2FoldChanges"

@@ -9,6 +9,7 @@
    }
    \usage{
 estimatelog2FoldChanges(ecs, fitExpToVar="condition", 
+          denominator="", getOnlyEffects=FALSE, averageOutExpression=TRUE, 
           nCores=1, quiet=FALSE, file="")
    }
    \arguments{
@@ -19,6 +20,19 @@ estimatelog2FoldChanges(ecs, fitExpToVar="condition",
          A variable contained in \code{design(ecs)}. The expression 
          values will be fitted to this variable using the the formula 
          "count ~ sample + fitExpToVar * exon".
+      }
+      \item{denominator}{
+         A value of the sample annotation (e.g. condition) to use as a denominator 
+         in the log2 fold change. As a default, the function will take 
+         the annotation of the first sample
+      }
+      \item{getOnlyEffects}{
+         If TRUE, the raw effects are added as columns to the feature data and any
+         operation (log2) is performed with them.
+      }
+      \item{averageOutExpression}{
+         The default, TRUE, gives back splicing effects.  If FALSE, the gene 
+         expression effects won't be substracted.
       }
       \item{nCores}{
          Number of CPU cores to be used to estimate the dispersions.  
