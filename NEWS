@@ -13,3 +13,7 @@
 2012-05-21: version 1.3.2
 
 - More options and flexibilty added to "estimatelog2FoldChanges"
+
+2012-06-26: version 1.3.3
+
+- Now any function relies on the order of the levels of the factors.

@@ -44,7 +44,7 @@ modelFrameForGene <- function( ecs, geneID, onlyTestable=FALSE) {
       exon = exonCol,
       sizeFactor = rep( sizeFactors(ecs), each = numExons ) )
    for( cn in colnames( design(ecs,drop=FALSE) ) )
-      modelFrame[[cn]] <- factor(rep( design(ecs,drop=FALSE)[[cn]], each=numExons ))
+      modelFrame[[cn]] <- factor(rep( design(ecs,drop=FALSE)[[cn]], each=numExons ), levels=sort(levels(design(ecs,drop=FALSE)[[cn]] )))
    modelFrame$dispersion <- fData(ecs)$dispersion[ rows ][ 
       match( modelFrame$exon, exonIDs(ecs)[rows] ) ]
    modelFrame$count <- as.vector( counts(ecs)[rows,] )
