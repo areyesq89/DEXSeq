@@ -102,6 +102,7 @@ newExonCountSet <- function( countData, design, geneIDs, exonIDs, exonIntervals=
    
    if( is( design, "data.frame" ) || is( design, "AnnotatedDataFrame" ) ) {
       stopifnot( nrow( design ) == ncol( countData ) )
+      stopifnot( all( unlist( lapply(design, class) ) == "factor" ) )
       design <- as( design, "AnnotatedDataFrame" )
       dimLabels(design) <- dimLabels(phenoData)
       rownames( pData(design) ) <- rownames( pData(phenoData) )

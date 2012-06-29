@@ -4,11 +4,11 @@ citEntry(entry="article",
 		                      as.person("Alejandro Reyes"),
                               as.person("Wolfgang Huber")),
          year = 2012,
-         journal = "Nature Precedings",
-         url = "http://precedings.nature.com/documents/6837/version/2",
-         
+         journal = "Genome Research",
+         url = "http://genome.cshlp.org/content/early/2012/06/21/gr.133744.111.full.pdf+html",
+         doi = "10.1101/gr.133744.111",
          textVersion = 
          paste("Simon Anders, Alejandro Reyes and Wolfgang Huber (2012):", 
                "Detecting differential usage of exons from RNA-seq data.",
-                "Nature Precedings" ) )
+                "Genome Research", "10.1101/gr.133744.111" ) )
 
