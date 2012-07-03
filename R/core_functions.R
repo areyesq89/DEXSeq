@@ -3,8 +3,8 @@ setMethod("estimateSizeFactors", signature(object="ExonCountSet"),
       cds <- object
       stopifnot( is( cds, "ExonCountSet") )
       geomeans <- exp( rowMeans( log( counts(cds) ) ) )
-      sizeFactors(cds) <- 
-         apply( counts(cds), 2, function(cnts) 
+      sizeFactors(cds) <-
+         apply( counts(cds), 2, function(cnts)
             median( ( cnts / geomeans )[ geomeans>0 ] ) )
       cds
    }
@@ -36,7 +36,7 @@ modelFrameForGene <- function( ecs, geneID, onlyTestable=FALSE) {
    }else{
       rows <- geneIDs(ecs) == geneID
    }
-   
+
    numExons <- sum(rows)
    exonCol <- rep( factor( exonIDs(ecs)[rows], levels=exonIDs(ecs)[rows] ), ncol( counts(ecs) ) )
    modelFrame <- data.frame(
@@ -45,7 +45,7 @@ modelFrameForGene <- function( ecs, geneID, onlyTestable=FALSE) {
       sizeFactor = rep( sizeFactors(ecs), each = numExons ) )
    for( cn in colnames( design(ecs,drop=FALSE) ) )
       modelFrame[[cn]] <- factor(rep( design(ecs,drop=FALSE)[[cn]], each=numExons ), levels=sort(levels(design(ecs,drop=FALSE)[[cn]] )))
-   modelFrame$dispersion <- fData(ecs)$dispersion[ rows ][ 
+   modelFrame$dispersion <- fData(ecs)$dispersion[ rows ][
       match( modelFrame$exon, exonIDs(ecs)[rows] ) ]
    modelFrame$count <- as.vector( counts(ecs)[rows,] )
    attr( modelFrame, "geneID" ) <- geneID
@@ -59,7 +59,7 @@ profileLogLikelihood <- function( disp, mm, y, muhat )
       disp <- rep(disp, length(y))
    }
 
-   ll <- sum( sapply( 1:length(y), function(i) 
+   ll <- sum( sapply( 1:length(y), function(i)
       dnbinom( y[i], mu=muhat[i], size=1/disp[i], log=TRUE ) ) )
 
    # transform the residuals, i.e., y - muhat, to the linear
@@ -70,7 +70,7 @@ profileLogLikelihood <- function( disp, mm, y, muhat )
    z <- log(muhat) + ( y - muhat ) / muhat
 
    # the variance function of the NB is as follows
-   v0 <- muhat + disp * muhat^2 
+   v0 <- muhat + disp * muhat^2
 
    # transform the variance vector to linear predictor scale by
    # multiplying with the squared derivative of the link to
@@ -83,10 +83,10 @@ profileLogLikelihood <- function( disp, mm, y, muhat )
 
    # from it, we extract we leverages and calculate the Cox-Reid
    # term:
-   cr <- sum( log( abs( diag( qrres$qr )[ 1:qrres$rank ] ) ) )  
+   cr <- sum( log( abs( diag( qrres$qr )[ 1:qrres$rank ] ) ) )
 
    # return the profile log likelihood:
-   ll - cr 
+   ll - cr
 }
 
 estimateExonDispersionsForModelFrame <- function( modelFrame, formula=NULL, mm=NULL, muhat=NULL, initialGuess = .01 )
@@ -100,7 +100,7 @@ estimateExonDispersionsForModelFrame <- function( modelFrame, formula=NULL, mm=N
    if(is.null(formula)){
 	formula <- count ~ sample + condition*exon
    }
-   
+
    if(is.null(mm)){
       mm <- model.matrix( formula, modelFrame )
    }
@@ -123,13 +123,13 @@ estimateExonDispersionsForModelFrame <- function( modelFrame, formula=NULL, mm=N
    names(disp) <- exonNames
       for( exon in exonNames[ countsums > 0 ] )
          disp[exon] <- exp(
-            optimize( 
+            optimize(
                function(logalpha) {
                   disp[exon] <- exp( logalpha )
                   profileLogLikelihood( disp[as.character(modelFrame$exon)], mm, y, muhat ) },
                log( c( 1e-11, 1e5 ) ),
    	       tol = 0.1,
-               maximum=TRUE 
+               maximum=TRUE
             )$maximum )
    disp[ countsums == 0 ] <- NA
    disp[ disp < 1e-10 ] <- 0
@@ -145,7 +145,7 @@ fitDispersionFunction <- function( ecs )
    means <- colMeans( t(counts(ecs))/sizeFactors(ecs) )
    disps <- fData(ecs)$dispBeforeSharing
    coefs <- c( .1, 1 )
-   iter <- 0   
+   iter <- 0
    while(TRUE) {
       residuals <- disps / ( coefs[1] + coefs[2] / means )
       good <- which((residuals > 1e-4) & (residuals < 15))
@@ -171,8 +171,8 @@ fitDispersionFunction <- function( ecs )
     ecs@dispFitCoefs <- coefs
     fData(ecs)$dispFitted <- ecs@dispFitCoefs[1] + ecs@dispFitCoefs[2] / colMeans( t(counts(ecs))/sizeFactors(ecs) )
     fData(ecs)$dispersion <- pmin(
-       pmax( 
-          fData(ecs)$dispBeforeSharing, 
+       pmax(
+          fData(ecs)$dispBeforeSharing,
           fData(ecs)$dispFitted,
           na.rm = TRUE ),
           1e8 )   # 1e8 as an arbitrary way-too-large value to capture infinities
@@ -186,7 +186,7 @@ setMethod("estimateDispersions", signature(object="ExonCountSet"),
       cds <- object
       stopifnot(is(cds, "ExonCountSet"))
       if( all( is.na(sizeFactors(cds)) ) ){
-         stop( "Estimate size factors first." )	
+         stop( "Estimate size factors first." )
       }
       cds@formulas[["formulaDispersion"]] <- deparse(formula)
 
@@ -195,11 +195,11 @@ setMethod("estimateDispersions", signature(object="ExonCountSet"),
          quiet=TRUE
       }
       ########## DEFINE TESTABLE GENES #############
-      # Which exons are actually testable? 
+      # Which exons are actually testable?
        # take away those exons with counts lower than minCounts
-      testable <- rowSums(counts(cds)) > minCount
+      testable <- rowSums(counts(cds)) >= minCount
       if(!all(testable) & nCores<=1){
-         warning(sprintf("Exons with less than %d counts will be discarded. For more details read the documentation, parameter minCount", minCount + 1))
+         warning(sprintf("Exons with less than %d counts will not be tested. For more details please see the manual page of 'estimateDispersions', parameter 'minCount'", minCount))
       }
       # If a gene contains less than two high count exons, all its exons non-testable
       for( r in split( 1:nrow(cds), geneIDs(cds) ) ) {
@@ -214,9 +214,9 @@ setMethod("estimateDispersions", signature(object="ExonCountSet"),
       # take away those exons bigger than maxExon (default 70)
 #      fData(cds)$testable[which(geneIDs(cds) %in% generle$values[which( generle$lengths > maxExon )])] <- FALSE
       ###
-      
-      if(max(generle$lengths) > maxExon & nCores<=1){
-         warning(sprintf("Genes with more than %d testable exons will be kicked out of the analysis. For more details read the documentation, parameter maxExon", maxExon))
+
+      if(max(generle$lengths) > maxExon & nCores<=1) {
+         warning(sprintf("Genes with more than %d testable exons will be omitted from the analysis. For more details please see the manual page of 'estimateDispersions', parameter 'maxExon'.", maxExon))
       }
 
       ##### DOES THE SAME AS A TAPPLY, but without considering the order of the levels ##
@@ -226,7 +226,7 @@ setMethod("estimateDispersions", signature(object="ExonCountSet"),
       if(!quiet & nCores==1 ) {
          cat( "Dispersion estimation. (Progress report: one dot per 100 genes)\n", file=file, append=TRUE)
       }
-         
+
       i <- 0
       if(nCores > 1){
          if(!quiet){
@@ -240,13 +240,13 @@ setMethod("estimateDispersions", signature(object="ExonCountSet"),
             mf })
 
          names(modelFrames) <- testablegenes
-         
+
          modelmatrices <- lapply( modelFrames, function(mf){
             model.matrix( formula, data = mf )} )
 
          names(modelmatrices) <- testablegenes
 
-         muhats <- lapply( testablegenes, function( gn ) { 
+         muhats <- lapply( testablegenes, function( gn ) {
             y <- modelFrames[[gn]]$count
             y1 <- pmax(y, 1/6)
             mf <- modelFrames[[gn]]
@@ -261,11 +261,11 @@ setMethod("estimateDispersions", signature(object="ExonCountSet"),
          })
 
          names(muhats) <- testablegenes
-   
+
          badones <- which( sapply( muhats, inherits, "try-error") )
          if( length(badones) > 0 ) {
             testablegenes <- testablegenes[ ! testablegenes %in% names(badones) ]
-    	      warning( paste( "Failed to set up model frames for genes ", 
+    	      warning( paste( "Failed to set up model frames for genes ",
    	         paste( names(badones), collapse=", " ) ) )
          }
 
@@ -277,22 +277,22 @@ setMethod("estimateDispersions", signature(object="ExonCountSet"),
 
          for( genename in testablegenes ){
             mf <- modelFrames[[genename]]
-            disps <- try( 
-               estimateExonDispersionsForModelFrame( mf, 
+            disps <- try(
+               estimateExonDispersionsForModelFrame( mf,
                   mm=modelmatrices[[genename]], muhat=muhats[[genename]] ),
                silent=TRUE )
             if( inherits( disps, "try-error" ) ) {
                disps <- rep( NA_real_, length( muhats[[genename]] ) )
                warning( sprintf( "Failed to fit dispersion for gene %s", genename ) )
-            }   
-      
+            }
+
             rows <- as.character(geneIDs(cds)) %in% genename & testable
             stopifnot(all(names(disps)==exonids[rows]))
-            dispBeforeSharing[rows] <- disps 
-      
+            dispBeforeSharing[rows] <- disps
+
             i <- i + 1
             if(!quiet & i %% 100 == 0 ){
-               cat( ".", file=file, append=TRUE)}    
+               cat( ".", file=file, append=TRUE)}
          }
          fData(cds)$dispBeforeSharing <- dispBeforeSharing
       }
@@ -306,13 +306,13 @@ setMethod("estimateDispersions", signature(object="ExonCountSet"),
 testGeneForDEU <- function (ecs, gene, formula0=NULL, formula1=NULL ){
    stopifnot(is(ecs, "ExonCountSet"))
    if( all( is.na(featureData(ecs)$dispersion ) ) ) {
-      stop("No dispersion values found, call function fitDispersionFunction first.")		
+      stop("No dispersion values found, call function fitDispersionFunction first.")
    }
 
    mf <- modelFrameForGene(ecs, gene, onlyTestable=TRUE)
-   
+
    ans <- data.frame( row.names = levels( mf$exon ) )
-   ans$deviance = NA_real_ 
+   ans$deviance = NA_real_
    ans$df = NA_integer_
    ans$pvalue = NA_real_
 
@@ -320,19 +320,19 @@ testGeneForDEU <- function (ecs, gene, formula0=NULL, formula1=NULL ){
       formula0 <- count ~ sample + exon + condition}
    if(is.null(formula1)){
       formula1 <- count ~ sample + exon + condition * I(exon == exonID)}
-   
+
 
    # This makes sure that the formula see the 'exonID' variable used
    # below even if it the formula was supplied as parameter
    environment(formula0) <- environment()
    environment(formula1) <- environment()
-   
+
    mm <- model.matrix(formula0, mf)
    y1 <- pmax(mf$count, 1/6)
    fit <- lm.fit(mm, log(y1) - log(mf$sizeFactor))
    mm <- mm[,!is.na(fit$coefficients)]
    start <- fit$coefficients[!is.na(fit$coefficients)]
-   
+
    fit0 <- try(
       glmnb.fit(mm, mf$count, mf$dispersion, log(mf$sizeFactor), start=start),
    silent=TRUE)
@@ -365,9 +365,9 @@ testForDEU <- function( ecs, formula0=NULL, formula1=NULL, nCores=1, quiet=FALSE
 {
    stopifnot(is(ecs, "ExonCountSet"))
    if( all( is.na(featureData(ecs)$dispersion ) ) ) {
-      stop("No dispersion values found, call function fitDispersionFunction first.")		
+      stop("No dispersion values found, call function fitDispersionFunction first.")
    }
-   
+
    if(!interactive() & !quiet & file == ""){  ## if the session is not interactive, quiet is FALSE and there is no file, then quiet does not make any sense
       quiet=TRUE
    }
@@ -394,7 +394,7 @@ testForDEU <- function( ecs, formula0=NULL, formula1=NULL, nCores=1, quiet=FALSE
          rows <- as.character(geneIDs(ecs)) %in% genename & testable
          res <- testGeneForDEU( ecs, genename, formula0, formula1 )
          stopifnot(all(rownames(res) == exonids[rows]))    ### makes sure to do the assignment correctly
-         pvalue[rows] <- res$pvalue 
+         pvalue[rows] <- res$pvalue
       }
       fData(ecs)$pvalue <- pvalue
    }
@@ -434,7 +434,7 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", denominator=""
      rownames(ret) <- paste(geneID, ":", gsub("E", "", rownames(ret)), sep="")
      return(ret)
    }
-   
+
    if( nCores > 1 ){
       if(!is.loaded("mc_fork", PACKAGE="multicore")){
       stop("Please load first multicore package or set parameter nCores to 1...")}
@@ -448,7 +448,7 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", denominator=""
     alleffects <- DEXSeq:::vst(exp( alleffects ), ecs)
     toadd <- matrix(NA, nrow=nrow(ecs), ncol=ncol(alleffects))
     rownames(toadd) <- featureNames(ecs)
- 
+
     if( getOnlyEffects ){
        colnames(toadd) <- colnames(alleffects)
        toadd[rownames(alleffects), colnames(alleffects)] <- alleffects
@@ -465,7 +465,7 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", denominator=""
        toadd <- toadd[,-denoCol, drop=FALSE]
        toadd[rownames(alleffects), colnames(alleffects)] <- alleffects
      }
-    
+
     fData(ecs) <- cbind(fData(ecs), toadd)
     ecs
 }
@@ -487,7 +487,7 @@ divideWork <- function(ecs, funtoapply, fattr, mc.cores, testablegenes)
       rownam <-  rownames(fData(allecs[[j]]))
       fData(ecs)[ rownam, fattr] <-  fData(allecs[[j]])[, fattr]
    }
-  
+
    ecs
 }
 
