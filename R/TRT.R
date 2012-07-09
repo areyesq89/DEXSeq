@@ -16,7 +16,10 @@ estimateDispersionsTRT <- function( ecs ) {
                   ecs,  
                   geneIDs(pasillaExons)[i],
                   exonIDs(pasillaExons)[i] ),
-               sizeFactors(ecs) ) },
+               sizeFactors(ecs) ) 
+          if(i %% 100 == 0 )
+             cat( "." ) 
+         },
          silent=TRUE) 
    attr( disps, "TRT" ) <- TRUE
    fData(ecs)$dispBeforeSharing <- disps
@@ -41,7 +44,10 @@ testForDEU.TRT <- function( ecs ) {
          {
             fit1 <- statmod::glmnb.fit( mm1, cv, disps[i], log(sf) )
             fit0 <- statmod::glmnb.fit( mm0, cv, disps[i], log(sf) )
-            pvals[i] <- 1 - pchisq( deviance(fit0) - deviance(fit1), 1 ) },
+            pvals[i] <- 1 - pchisq( deviance(fit0) - deviance(fit1), 1 )
+         if(i %% 100 == 0 )
+             cat( "." ) 
+         },
          silent=TRUE)
    }
    
