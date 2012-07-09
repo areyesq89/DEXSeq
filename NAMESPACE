@@ -27,7 +27,9 @@ export(
   DEUresultTable,
   plotDEXSeq,
   estimatelog2FoldChanges,
-  makeCompleteDEUAnalysis
+  makeCompleteDEUAnalysis,
+  estimateDispersionsTRT,
+  testForDEU.TRT
 )
 
 
