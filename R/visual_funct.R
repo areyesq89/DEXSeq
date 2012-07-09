@@ -158,7 +158,12 @@ makevstaxis <- function(min, ylimn, ecs, ...)
    decade_lengths <- ( vst(ticks, ecs)[ 2 : length(ticks) ] - vst(ticks, ecs)[ 1 : (length(ticks)-1) ] ) /
       ( vst( ylimn[2], ecs) - vst( ylimn[1], ecs) )
 #   ticks <- c( 0, ticks[ min( which( decade_lengths > .1 ) ) : length(ticks) ] )
-   fromw <- pmax( which( decade_lengths > .1 ), 0 )[1]
+   mlength <- which( decade_lengths > .1)
+   if( length( mlength ) ){
+      fromw <- pmax(mlength, 0, na.rm=TRUE)[1]
+   }else{
+      fromw <- 0
+   }
    ticks <- ticks[ fromw : length(ticks) ]
    axis( 2, at=vst(c(0, ticks), ecs), labels=c("",ticks), las=2, pos=0, ...)
 
