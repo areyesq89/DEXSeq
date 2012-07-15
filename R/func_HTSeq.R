@@ -17,7 +17,7 @@ read.HTSeqCounts <- function( countfiles, design, flattenedfile=NULL )
       x <- gsub("\"", "", x)
       x <- gsub("=", " ", x)
       x <- strsplit(x, "; ")
-      sapply(1:length(x), function(i){
+      sapply(seq(along=x), function(i) {
    	sapply(strsplit(x[[i]][grepl(attribute, x[[i]])], " "), "[[", 2)
       })
    }

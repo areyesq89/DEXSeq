@@ -1,6 +1,6 @@
-setClass( "ExonCountSet", 
+setClass( "ExonCountSet",
    contains = "eSet",
-   representation = representation( 
+   representation = representation(
       designColumns = "character",
       dispFitCoefs = "numeric",
       formulas = "list",
@@ -31,7 +31,7 @@ newExonCountSet <- function( countData, design, geneIDs, exonIDs, exonIntervals=
 
    phenoData <- annotatedDataFrameFrom( countData, byrow=FALSE )
    featureData <- annotatedDataFrameFrom( countData, byrow=TRUE )
-      
+
    phenoData$sizeFactor <- rep( NA_real_, ncol(countData) )
    varMetadata( phenoData )[ "sizeFactor", "labelDescription" ] <- "size factor (relative estimate of sequencing depth)"
 
@@ -51,9 +51,9 @@ newExonCountSet <- function( countData, design, geneIDs, exonIDs, exonIntervals=
 
    if( is.null(exonIntervals) ){
       exonIntervals <- data.frame(
-         chr    = rep( NA_character_, nrow( countData ) ), 
-         start  = rep( NA_integer_,   nrow( countData ) ), 
-         end    = rep( NA_integer_,   nrow( countData ) ), 
+         chr    = rep( NA_character_, nrow( countData ) ),
+         start  = rep( NA_integer_,   nrow( countData ) ),
+         end    = rep( NA_integer_,   nrow( countData ) ),
          strand = rep( NA_character_, nrow( countData ) ) ) }
 
    featureData$testable <- rep( NA_real_, nrow( countData ) )
@@ -75,11 +75,11 @@ newExonCountSet <- function( countData, design, geneIDs, exonIDs, exonIntervals=
    varMetadata( featureData )[ "padjust", "labelDescription" ] <- "BH adjusted p-value"
 
    exonIntervals <- as.data.frame( exonIntervals )
-   
+
    # in case it was a GRanges object before, change the colname:
    if( "seqnames" %in% colnames(exonIntervals) ){
       colnames(exonIntervals)[ colnames(exonIntervals) == "seqnames" ] <- "chr"   }
-   
+
    if( !all( c( "chr", "start", "end", "strand" ) %in% colnames(exonIntervals) ) ){
       stop( "exonIntervals must be a data frame with columns 'chr', 'start', 'end', and 'strand'." )}
 
@@ -88,7 +88,7 @@ newExonCountSet <- function( countData, design, geneIDs, exonIDs, exonIntervals=
 
    if(!is(transcripts, "character")){
       stop("transcript information must be a character vector")}
-   
+
    featureData$chr    <- factor( exonIntervals$chr )
    featureData$start  <- exonIntervals$start
    featureData$end    <- exonIntervals$end
@@ -99,7 +99,7 @@ newExonCountSet <- function( countData, design, geneIDs, exonIDs, exonIntervals=
    varMetadata( featureData )[ "end",    "labelDescription" ] <- "end of exon"
    varMetadata( featureData )[ "strand", "labelDescription" ] <- "strand of exon"
    varMetadata( featureData )[ "transcripts", "labelDescription" ] <- "transcripts in which this exon is contained"
-   
+
    if( is( design, "data.frame" ) || is( design, "AnnotatedDataFrame" ) ) {
       stopifnot( nrow( design ) == ncol( countData ) )
       stopifnot( all( unlist( lapply(design, class) ) == "factor" ) )
@@ -118,7 +118,7 @@ newExonCountSet <- function( countData, design, geneIDs, exonIDs, exonIntervals=
    }
    ecs <- new( "ExonCountSet",
       assayData = assayDataNew( "environment", counts=countData ),
-      phenoData = phenoData, 
+      phenoData = phenoData,
       featureData = featureData,
       designColumns = designColumns,
       dispFitCoefs = c( NA_real_, NA_real_ )
@@ -209,7 +209,7 @@ setReplaceMethod("counts", signature(object="ExonCountSet", value="matrix"),
    assayData(cds)[[ "counts" ]] <- value
    validObject(cds)
    cds
-})   
+})
 
 setMethod("sizeFactors",  signature(object="ExonCountSet"),
   function(object) {
@@ -256,10 +256,10 @@ setReplaceMethod("design", signature(object="ExonCountSet"),
 
       rownames( pData(value) ) <- rownames( pData(cds) )
       dimLabels( value ) <- dimLabels( phenoData(cds) )
-      phenoData(cds) <- combine( 
-         phenoData(cds)[ , !( colnames(pData(cds)) %in% cds@designColumns ), drop=FALSE ], 
+      phenoData(cds) <- combine(
+         phenoData(cds)[ , !( colnames(pData(cds)) %in% cds@designColumns ), drop=FALSE ],
          value )
-      cds@designColumns <- colnames( pData(value) )   
+      cds@designColumns <- colnames( pData(value) )
       validObject(cds)
       cds
 })
@@ -282,7 +282,7 @@ geneIDs <- function( ecs ) {
    validObject(ecs)
    ecs
 }
-      
+
 exonIDs <- function( ecs ) {
    stopifnot( is( ecs, "ExonCountSet" ) )
    g <- fData(ecs)$exonID
@@ -296,7 +296,7 @@ exonIDs <- function( ecs ) {
    validObject(ecs)
    ecs
 }
-            
+
 
 subsetByGenes <- function( ecs, genes ) {
    stopifnot( is( ecs, "ExonCountSet" ) )
@@ -304,21 +304,21 @@ subsetByGenes <- function( ecs, genes ) {
    ecs2 <- ecs[ as.character(geneIDs(ecs)) %in% genes, ]
    ecs2
 }
-   
+
 geneCountTable <- function( ecs ) {
    stopifnot( is( ecs, "ExonCountSet" ) )
-   do.call( rbind, 
-      tapply( 1:nrow(ecs), geneIDs(ecs), function(rows) 
+   do.call( rbind,
+      tapply( seq_len(nrow(ecs)), geneIDs(ecs), function(rows)
          colSums( counts(ecs)[rows,,drop=FALSE] ) ) )
 }
 
 DEUresultTable <- function(ecs)
 {
    result <- data.frame(
-      geneID=geneIDs(ecs), 
-      exonID=exonIDs(ecs), 
-      dispersion=featureData(ecs)$dispersion, 
-      pvalue=fData(ecs)$pvalue, 
+      geneID=geneIDs(ecs),
+      exonID=exonIDs(ecs),
+      dispersion=featureData(ecs)$dispersion,
+      pvalue=fData(ecs)$pvalue,
       padjust=fData(ecs)$padjust,
       meanBase=rowMeans(counts(ecs, normalized=TRUE)))
 

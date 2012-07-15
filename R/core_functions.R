@@ -59,7 +59,7 @@ profileLogLikelihood <- function( disp, mm, y, muhat )
       disp <- rep(disp, length(y))
    }
 
-   ll <- sum( sapply( 1:length(y), function(i)
+   ll <- sum( sapply( seq(along=y), function(i)
       dnbinom( y[i], mu=muhat[i], size=1/disp[i], log=TRUE ) ) )
 
    # transform the residuals, i.e., y - muhat, to the linear
@@ -83,7 +83,7 @@ profileLogLikelihood <- function( disp, mm, y, muhat )
 
    # from it, we extract we leverages and calculate the Cox-Reid
    # term:
-   cr <- sum( log( abs( diag( qrres$qr )[ 1:qrres$rank ] ) ) )
+   cr <- sum( log( abs( diag( qrres$qr )[ seq_len(qrres$rank) ] ) ) )
 
    # return the profile log likelihood:
    ll - cr
@@ -202,7 +202,7 @@ setMethod("estimateDispersions", signature(object="ExonCountSet"),
          warning(sprintf("Exons with less than %d counts will not be tested. For more details please see the manual page of 'estimateDispersions', parameter 'minCount'", minCount))
       }
       # If a gene contains less than two high count exons, all its exons non-testable
-      for( r in split( 1:nrow(cds), geneIDs(cds) ) ) {
+      for( r in split( seq_len(nrow(cds)), geneIDs(cds) ) ) {
          if( sum( testable[r] ) <= 1 | sum( testable[r] ) > maxExon )
             testable[r] <- FALSE
       }

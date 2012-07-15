@@ -19,7 +19,7 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
    if(FDR>1|FDR<0){
       stop("FDR has to be a numeric value between 0 - 1")}
 
-   rango <- 1:length(rt)
+   rango <- seq(along=rt)
    intervals<-(0:nrow(count))/nrow(count)
    numcond<-length(unique(design(ecs, drop=FALSE)[[fitExpToVar]]))
    numexons<-nrow(count)
@@ -38,7 +38,7 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
    ################## DETERMINE THE LAYOUT OF THE PLOT DEPENDING OF THE OPTIONS THE USER PROVIDES ###########
    if(!any(is.na(featureData(ecs)$start))){
       sub<-data.frame(start=featureData(ecs)$start[rt], end=featureData(ecs)$end[rt], chr=featureData(ecs)$chr[rt], strand=featureData(ecs)$strand[rt])
-      rel<-(data.frame(sub$start, sub$end))-min(sub$start)	
+      rel<-(data.frame(sub$start, sub$end))-min(sub$start)
       rel<-rel/max(rel[,2])
       if(displayTranscripts==TRUE & !is.null(featureData(ecs)$transcripts)){
          transcripts <- sapply(featureData(ecs)$transcripts[rt], function(x){strsplit(x, ";")})
@@ -46,7 +46,7 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
          if(length(trans) > 40){
             warning("This gene contains more than 40 transcripts annotated, only the first 40 will be plotted\n")
          }
-         mat <- 1:(3+min(length(trans), 40)) ## max support from transcripts is 45, which seems to be the max for the layout supported by graphics
+         mat <- seq_len(3+min(length(trans), 40)) ## max support from transcripts is 45, which seems to be the max for the layout supported by graphics
          hei<-c(8, 1, 1.5, rep(1.5, min(length(trans), 40)))
       }else{
          mat<-1:3
@@ -54,7 +54,7 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
       }
       if(op > 1){
          hei <- c(rep(hei[1], op-1), hei)
-         mat <- c(mat, (length(mat)+(1:length(op))))
+         mat <- c(mat, length(mat)+seq(along=op))
       }
       hei <- c(hei, .2)
       mat <- c(mat, length(mat)+1)
@@ -63,7 +63,7 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
    }else if(op > 1){
 		par(mfrow=c(op,1))
    }
-   
+
    ####### DETERMINE COLORS, IF THE USER DOES NOT PROVIDE ONE PER SAMPLE THE COUNT WILL OBTAIN THEM CORRESPONDING TO THEIR DESIGN ####
    ##### determine colors if not provided by user ######
    if(is.null(color)){
@@ -71,7 +71,7 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
    }
    names(color) <- sort(levels(design(ecs, drop=FALSE)[[fitExpToVar]]))
 
-   
+
    if(expression){
       es <- fitAndArrangeCoefs( ecs, geneID, frm=as.formula(paste("count ~", fitExpToVar,  "* exon")) )
       if(is.null(es)){
@@ -114,7 +114,7 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
       if(!is.null(featureData(ecs)$transcripts)){
       ##### plot the transcripts #######
          if(displayTranscripts){
-            for(i in 1:min(length(trans), 40)){
+            for(i in seq_len(min(length(trans), 40))) {
                logicexons <- sapply(transcripts, function(x){length(which(x==trans[i]))})
                tr<-data.frame(featureData(ecs)$start[rt][logicexons==1], featureData(ecs)$end[rt][logicexons==1])
                drawGene(min(sub$start), max(sub$end), tr=tr, rango, exoncol=NULL, names, trName=trans[i], cex=0.8)
@@ -126,7 +126,7 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
    if(legend){
       mtext(paste(geneID, unique(featureData(ecs)$strand[rt])), side=3, adj=0.25, padj=1.5, line=0, outer=TRUE, cex=1.5)
       posforlegend <- seq(.7, .9, length.out=numcond)
-      for(i in 1:length(color)){
+      for(i in seq(along=color)) {
          mtext(names(color[i]), side=3, adj=posforlegend[i], padj=1.5, line=0, outer=TRUE, col=color[i], ...)
       }
    }else{
@@ -139,10 +139,10 @@ plotDEXSeq <- function(ecs, geneID, FDR=0.1, fitExpToVar="condition", norCounts=
 ###################
 vst <- function(x, ecs)
 {
-( 2 / ( sqrt(ecs@dispFitCoefs[1]) ) ) * 
-   log( 2 * ecs@dispFitCoefs[1] * sqrt(x) + 
+( 2 / ( sqrt(ecs@dispFitCoefs[1]) ) ) *
+   log( 2 * ecs@dispFitCoefs[1] * sqrt(x) +
         2 * sqrt( ecs@dispFitCoefs[1] * ( ecs@dispFitCoefs[2] + 1 + ecs@dispFitCoefs[1] * x ) ) ) -
-( 2 / ( sqrt(ecs@dispFitCoefs[1]) ) ) * 
+( 2 / ( sqrt(ecs@dispFitCoefs[1]) ) ) *
    log( 2 * sqrt( ecs@dispFitCoefs[1] * ( ecs@dispFitCoefs[2] + 1 ) ) )
 }
 
@@ -194,12 +194,12 @@ drawPlot <- function(matr, ylimn, ecs, intervals, rango, fitExpToVar, numexons, 
    intervals<-(0:nrow(matr))/nrow(matr)
    middle <- apply(cbind(intervals[rango], (intervals[rango+1]-((intervals[rango+1])-intervals[rango])*0.2)), 1, median)
    matr<-rbind(matr, NA)
-   j <- 1:ncol(matr)
+   j <- seq_len(ncol(matr))
    segments(intervals[rango], matr[rango,j], intervals[rango+1]-((intervals[rango+1]-intervals[rango])*0.2), matr[rango,j], col=color, ...)  #### line with the y level
    segments(intervals[rango+1]-((intervals[rango+1]-intervals[rango])*0.2), matr[rango,j], intervals[rango+1], matr[rango+1,j], col=color, lty="dotted", ...)  #### line joining the y levels
    abline(v=middle[rango], lty="dotted", col=colorlines)
    mtext(textAxis, side=2, adj=0.5, line=1.5, outer=FALSE, ...)
-   axis(1, at=middle[1:length(rt)], labels=featureData(ecs)$exonID[rt], ...)
+   axis(1, at=middle[seq(along=rt)], labels=featureData(ecs)$exonID[rt], ...)
 }
 
 
