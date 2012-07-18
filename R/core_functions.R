@@ -430,6 +430,9 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", denominator=""
 
    geteffects <- function(geneID){
      coefficients <- DEXSeq:::fitAndArrangeCoefs(ecs, gene=geneID, frm, balanceExons=TRUE)
+     if( is.null( coefficients ) ){
+        return(coefficients)
+     }
      ret <- t(DEXSeq:::getEffectsForPlotting(coefficients, averageOutExpression=averageOutExpression, groupingVar=fitExpToVar))
      rownames(ret) <- paste(geneID, ":", gsub("E", "", rownames(ret)), sep="")
      return(ret)
@@ -438,7 +441,7 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", denominator=""
    if( nCores > 1 ){
       if(!is.loaded("mc_fork", PACKAGE="multicore")){
       stop("Please load first multicore package or set parameter nCores to 1...")}
-      alleffects <- multicore:::mclapply( testablegenes, function(x){geteffects(x)}, mc.cores=nCores)
+      alleffects <- multicore:::mclapply( testablegenes, function(x){ geteffects(x) }, mc.cores=nCores )
     }else{
       alleffects <- lapply( testablegenes, function(x){geteffects(x)})
     }
