@@ -228,7 +228,7 @@ plotDispEsts = function( cds, ymin, linecol="#ff000080",
   sel = (px>0)
   px = px[sel]
 
-  py = fData(pasillaExons)$dispBeforeSharing[sel]
+  py = fData(cds)$dispBeforeSharing[sel]
   if(missing(ymin))
       ymin = 10^floor(log10(min(py[py>0], na.rm=TRUE))-0.1)
 
