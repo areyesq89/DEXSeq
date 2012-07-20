@@ -21,13 +21,10 @@ newExonCountSet <- function( countData, design, geneIDs, exonIDs, exonIntervals=
    if( is( design, "matrix" ) ){
       design <- as.data.frame( design )}
 
-#   if(!(is(design, "data.frame") || is(design, "AnnotatedDataFrame"))){
- #     countData <- countData[,order(as.character(design))]
-  #    design <- design[order(as.character(design))]
- #  }else{
- #     countData <- countData[,order(design$condition)]
- #     design <- design[order(design$condition),]
- #  }
+   rownames(countData) <- paste(geneIDs, exonIDs, sep=":")
+   if( any( duplicated(rownames(countData) ) ) ) {
+      stop("The geneIDs or exonIDs are not unique")
+   }
 
    phenoData <- annotatedDataFrameFrom( countData, byrow=FALSE )
    featureData <- annotatedDataFrameFrom( countData, byrow=TRUE )
@@ -156,6 +153,17 @@ setValidity( "ExonCountSet", function( object ) {
    if( ! is( fData(object)$start, "integer" ) )
       return( "The 'start' column in fData is not integer." )
 
+   if( ! all(featureNames(object) == paste(geneIDs(object), exonIDs(object), sep=":") ) )
+      return( "The featureNames do not match with the geneIDs:exonIDs" )
+
+   if( ! all(rownames( counts(object) ) == featureNames(object) ) )
+      return( "The rownames of the count matrix do not coincide with the featureNames" )
+
+   if( ! all(rownames( fData( object ) ) == featureNames( object ) ) )
+      return( "The rownames of the featureData do not coincide with the featureNames" )
+
+   
+
    if( ! "end"  %in% names(fData(object)) )
       return( "featureData does not contain a 'end' column.")
    if( ! is( fData(object)$end, "integer" ) )
@@ -165,8 +173,6 @@ setValidity( "ExonCountSet", function( object ) {
       return( "featureData does not contain a 'strand' column.")
    if( ! is( fData(object)$strand, "factor" ) )
       return( "The 'strand' column in fData is not a factor." )
-#   if( any( sort( levels(fData(object)$strand)) != c( "-", "+" ) ) )
-#      return( "The 'strand' column in fData does not have the levels '+' and '-'." )   ### strange reason, make pasilla check crash only in the check, not sourcing exactly the same code
    if( !is(fData(object)$dispersion, "numeric")){
       return( "The 'dispersion' is not numeric")}
    if( !is(fData(object)$dispFitted, "numeric")){

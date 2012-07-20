@@ -434,7 +434,7 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", denominator=""
         return(coefficients)
      }
      ret <- t(DEXSeq:::getEffectsForPlotting(coefficients, averageOutExpression=averageOutExpression, groupingVar=fitExpToVar))
-     rownames(ret) <- paste(geneID, ":", gsub("E", "", rownames(ret)), sep="")
+     rownames(ret) <- paste(geneID, rownames(ret), sep=":")
      return(ret)
    }
 
@@ -503,7 +503,7 @@ makeCompleteDEUAnalysis <- function(ecs, formulaDispersion=count ~ sample + cond
    ecs <- testForDEU( ecs, formula1=formula1, formula0=formula0, nCores=nCores, quiet=quiet, file=file)
    ecs <- estimatelog2FoldChanges(ecs, fitExpToVar=fitExpToVar, nCores=nCores, quiet=quiet, file=file)
    if(!is.null(path)){
-      DEXSeqHTML(ecs, path=path, FDR=0.1, fitExpToVar=fitExpToVar, color=color, color.samples=color.samples)
+      DEXSeqHTML(ecs, path=path, FDR=FDR, fitExpToVar=fitExpToVar, color=color, color.samples=color.samples)
    }
    ecs
 }
