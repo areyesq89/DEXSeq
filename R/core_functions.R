@@ -439,9 +439,9 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", denominator=""
    }
 
    if( nCores > 1 ){
-      if(!is.loaded("mc_fork", PACKAGE="multicore")){
-      stop("Please load first multicore package or set parameter nCores to 1...")}
-      alleffects <- multicore:::mclapply( testablegenes, function(x){ geteffects(x) }, mc.cores=nCores )
+      if(!is.loaded("mc_fork", PACKAGE="parallel")){
+      stop("Please load first parallel package or set parameter nCores to 1...")}
+      alleffects <- parallel:::mclapply( testablegenes, function(x){ geteffects(x) }, mc.cores=nCores )
     }else{
       alleffects <- lapply( testablegenes, function(x){geteffects(x)})
     }
@@ -476,15 +476,15 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", denominator=""
 
 divideWork <- function(ecs, funtoapply, fattr, mc.cores, testablegenes)
 {
-#   if(!suppressMessages(suppressWarnings(require("multicore")))){
- #     stop("multicore package not found...")}
-   if(!is.loaded("mc_fork", PACKAGE="multicore")){
-     stop("Please load first multicore package or set parameter nCores to 1...")}
+#   if(!suppressMessages(suppressWarnings(require("parallel")))){
+ #     stop("parallel package not found...")}
+   if(!is.loaded("mc_fork", PACKAGE="parallel")){
+     stop("Please load first parallel package or set parameter nCores to 1...")}
    stopifnot(mc.cores>=1)
 
    subgenes <- split(testablegenes, seq(along=testablegenes) %% mc.cores)
    allecs <- lapply(subgenes, function(x) subsetByGenes(ecs, x) )
-   allecs <- multicore::mclapply(allecs, FUN=funtoapply, mc.cores=mc.cores)
+   allecs <- parallel::mclapply(allecs, FUN=funtoapply, mc.cores=mc.cores)
 
    for(j in seq(along=allecs)) {
       rownam <-  rownames(fData(allecs[[j]]))
