@@ -288,8 +288,8 @@ in the feature data column \emph{dispBeforeSharing}.
 pasillaExons <- estimateDispersions(pasillaExons)
 @
 Note that for a full, genome-wide data set, execution of this function may take a while. To indicate
-progress, one dot is printed on the console whenever 100 genes have been processed. If you have a multicore
-machine, you may want to use the \texttt{nCores} option to instruct the function to parallelize the
+progress, one dot is printed on the console whenever 100 genes have been processed. If you have a machine
+with multiple cores, you may want to use the \texttt{nCores} option to instruct the function to parallelize the
 task over several CPU cores. See Section \ref{parallelization} and the function's help page for details.
 
 Afterwards, the function \Rfunction{fitDispersionFunction} needs to be called, in which a dispersion-mean
@@ -564,10 +564,10 @@ consuming (the functions \Rfunction{estimateDispersions} and
 nCores.  These functions will then distribute the
 \Rclass{ExonCountSet} object into smaller objects that are processed
 in parallel on different cores.  This functionality uses the
-\Rpackage{multicore} package.
+\Rpackage{parallel} package.
 <<para1,cache=TRUE,eval=FALSE>>=
 data("pasillaExons", package="pasilla")
-library(multicore)
+library(parallel)
 pasillaExons <- estimateSizeFactors( pasillaExons )
 pasillaExons <- estimateDispersions( pasillaExons, nCores=3, quiet=TRUE)
 pasillaExons <- fitDispersionFunction( pasillaExons )
