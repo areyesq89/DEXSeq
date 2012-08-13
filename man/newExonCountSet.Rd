@@ -20,7 +20,7 @@ newExonCountSet(countData, design, geneIDs, exonIDs, exonIntervals=NULL,
            A factor or data frame with the design annotation (e.g. treatments, or tissue 
            types, or phenotypes, or the like).  The length of the factor (or rows in the data frame) 
            has to be equal to the number of columns of the countData matrix, assigning a 
-           condition to each sample. If 'design' is not a factor, it will be converted to one.
+           condition to each sample. All the columns of the design need to be factors.
         }
 	\item{geneIDs}{
            A vector of gene identificators ordered according to its respective row in countData.  
