@@ -3,23 +3,27 @@
 ##--------------------------------------------------
 perGeneQValue = function(ecs, p = "pvalue", method = perGeneQValueExact) {
   wTest     = which(fData(ecs)$testable)
+  ## use only those exons that were testable
   pvals     = fData(ecs)[[p]][wTest]
-
-  ## 'factor' removes ununsed levels; use only those exons that were testable
+  ## 'factor' removes ununsed levels
   geneID    = factor(fData(ecs)$geneID[wTest])
   geneSplit = split(seq(along=geneID), geneID)
 
-  ## The function that summarises p-values of exons for one gene: take the minimum
-  pGene   = sapply(geneSplit, function(i) min(pvals[i]))
+  ## summarise p-values of exons for one gene: take the minimum
+  pGene = sapply(geneSplit, function(i) min(pvals[i]))
 
   ## Determine the thetas to be used
-  ord      = order(pGene)
-  ord      = ord[!duplicated(pGene[ord])]
-  theta    = pGene[ord]
-  q        = rep(NA_real_, length(pGene))
-  names(q) = names(geneSplit)
-  q[ord]   = method(pGene, theta, geneSplit)
-  return(q)
+  theta = unique(sort(pGene))
+
+  ## compute q-values associated with each theta
+  q = method(pGene, theta, geneSplit)
+
+  ## return a named vector of q-values per gene
+  res        = rep(NA_real_, length(pGene))
+  names(res) = names(geneSplit)
+  res        = q[match(pGene, theta)]
+  stopifnot(!any(is.na(res)))
+  return(res)
 }
 
 ##----------------------------------------------------------------------
