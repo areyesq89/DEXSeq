@@ -1,19 +1,19 @@
 import(Biobase, hwriter, methods, stringr, statmod, biomaRt)
 
-exportClasses( `ExonCountSet` )
+exportClasses( "ExonCountSet" )
 
 exportMethods(
-  counts, `counts<-`,
-  sizeFactors, `sizeFactors<-`,
-  design, `design<-`,
+  counts, "counts<-",
+  sizeFactors, "sizeFactors<-",
+  design, "design<-",
   estimateSizeFactors,
   estimateDispersions
 )
 
 export(
   newExonCountSet,
-  geneIDs, `geneIDs<-`,
-  exonIDs, `exonIDs<-`,
+  geneIDs, "geneIDs<-",
+  exonIDs, "exonIDs<-",
   subsetByGenes,
   geneCountTable,
   countTableForGene,
