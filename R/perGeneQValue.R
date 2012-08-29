@@ -11,6 +11,7 @@ perGeneQValue = function(ecs, p = "pvalue", method = perGeneQValueExact) {
 
   ## summarise p-values of exons for one gene: take the minimum
   pGene = sapply(geneSplit, function(i) min(pvals[i]))
+  stopifnot(all(is.finite(pGene)))
 
   ## Determine the thetas to be used
   theta = unique(sort(pGene))
