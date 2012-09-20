@@ -209,8 +209,8 @@ setMethod("estimateDispersions", signature(object="ExonCountSet"),
       fData(cds)$testable <- testable
 
       # take away genes with just one exon
-      generle <- rle( as.character( geneIDs(cds) ) )
-      fData(cds)$testable[which(geneIDs(cds) %in% generle$values[which( generle$lengths ==1 )])] <- FALSE
+      generle <- rle( sort(as.character( geneIDs(cds) ) ))
+#      fData(cds)$testable[which(geneIDs(cds) %in% generle$values[which( generle$lengths ==1 )])] <- FALSE
       # take away those exons bigger than maxExon (default 70)
 #      fData(cds)$testable[which(geneIDs(cds) %in% generle$values[which( generle$lengths > maxExon )])] <- FALSE
       ###
