@@ -76,7 +76,8 @@
 
 % The following command makes use of SVN's 'Date' keyword substitution
 % To activate this, I used: svn propset svn:keywords Date DESeq.Rnw
-\date{\StrMid{$Date$}{8}{18}}
+%\date{\StrMid{$Date$}{8}{18}}
+\date{\Rpackage{DEXSeq} version \Sexpr{packageDescription("DEXSeq")$Version} (Last revision \StrMid{$Date$}{8}{18})}
 
 \begin{document}
 
