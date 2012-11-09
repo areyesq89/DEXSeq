@@ -1,4 +1,4 @@
-DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", fitExpToVar="condition", FDR=0.1, color=NULL, color.samples=NULL, mart="", filter="", attributes="", extraCols=NULL)
+DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", fitExpToVar="condition", FDR=0.1, color=NULL, color.samples=NULL, mart="", filter="", attributes="", extraCols=NULL, nCores=1)
 {
    stopifnot(is(ecs, "ExonCountSet"))
    if(any(is.na(sizeFactors(ecs)))){
@@ -68,7 +68,8 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
    }
    legend <- hwrite(c("<= 0.01", "<= 0.05", "<= 0.1", "<= 0.25", "> 0.25"), bgcolor=m2col)
 
-   for( gene in gns){
+
+  makePagesForGene <- function(gene){
       back <- hwrite("back", link=file.path("..", file))
       nameforlinks <- sapply(strsplit(gene, "\\+"), "[[", 1)
       otherlinks <- hwrite(c("counts", "expression", "splicing", "transcripts", "results"), link=c(paste(nameforlinks, "counts.html", sep=""), paste(nameforlinks, "expression.html", sep=""), paste(nameforlinks, "splicing.html", sep=""), paste(nameforlinks, "transcripts.html", sep=""), paste(nameforlinks, "results.html", sep="")), table=FALSE)
@@ -100,7 +101,28 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
          makePlotPage(ecs=ecs, ptowrite=ptowrite, gene=gene, whichtag=c("expression", "transcripts"), links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=h*100, h=h)
            , silent=TRUE)
       }
+      return()
    }
+
+
+
+   if( nCores > 1 ){
+     if(!is.loaded("mc_fork", PACKAGE="parallel")){
+       stop("Please load first parallel package or set parameter nCores to 1...")
+     }else{
+       funapply <- function(X, FUN){ parallel:::mclapply( X, FUN, mc.cores=nCores) }
+     }
+   }else{
+       funapply <- lapply
+   }
+
+
+   funapply(gns, makePagesForGene)
+
+#   for( gene in gns)
+
+
+#   }
 	
 	
    results <- results[as.character(results$geneID) %in% gns,]

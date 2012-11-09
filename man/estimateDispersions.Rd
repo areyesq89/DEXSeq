@@ -28,7 +28,7 @@
    }
   \item{nCores}{
      Number of cores to be used to estimate the dispersions.
-     The \code{multicore} package must be loaded in order to spread the
+     The \code{parallel} package must be loaded in order to spread the
      job onto several cores.
    }
   \item{minCount}{

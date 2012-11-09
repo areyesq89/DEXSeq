@@ -24,8 +24,8 @@ testForDEU(ecs, formula0=NULL, formula1=NULL, nCores=1, quiet=FALSE, file="")
      See below for details.
   }
   \item{nCores}{
-     Number of CPUcores to be used to estimate the dispersions.  
-     The \code{multicore} package must be loaded to use more than 1 core.
+     Number of CPUcores to be used to calculate the $p$-values.  
+     The \code{parallel} package must be loaded to use more than 1 core.
   }
   \item{quiet}{
      If TRUE, no progress report is shown.  In case the session is 

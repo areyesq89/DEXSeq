@@ -11,7 +11,7 @@ This gives an easy way of exploring the results of the tests.
      \usage{
 DEXSeqHTML(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", 
      fitExpToVar="condition", FDR=0.1, color=NULL, color.samples=NULL,
-     mart="", filter="", attributes="", extraCols=NULL)
+     mart="", filter="", attributes="", extraCols=NULL, nCores=1)
      }
      \arguments{
        \item{ecs}{An ExonCountSet object}
@@ -52,6 +52,11 @@ DEXSeqHTML(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html",
        \item{extraCols}{
           A data frame with one or more columns to add to the report.
           For example, additional information about the genes.
+       }
+       \item{nCores}{
+        Number of cores to be used.
+        The \code{parallel} package must be loaded in order to spread the
+        job onto several cores.
        }
      }
      \value{
