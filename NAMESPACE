@@ -28,8 +28,9 @@ export(
   plotDEXSeq,
   estimatelog2FoldChanges,
   makeCompleteDEUAnalysis,
-  #estimateDispersionsTRT,
-  #testForDEU.TRT,
+  modelFrameForTRT,
+  estimateDispersionsTRT,
+  testForDEUTRT,
   perGeneQValue
 )
 
