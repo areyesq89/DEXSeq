@@ -10,7 +10,7 @@ modelFrameForTRT <- function( ecs ){
   stopifnot( inherits( ecs, "ExonCountSet" ) )
   modelFrame <- cbind(
      sample = sampleNames(ecs),
-     design(ecs),
+     design(ecs, drop=FALSE),
      sizeFactor = sizeFactors(ecs) )
   modelFrame <- rbind(
      cbind( modelFrame, exon="this" ),
