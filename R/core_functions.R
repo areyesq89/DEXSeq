@@ -429,11 +429,11 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", denominator=""
    testablegenes <- as.character(unique(fData(ecs)[which(fData(ecs)$testable),]$geneID))
 
    geteffects <- function(geneID){
-     coefficients <- DEXSeq:::fitAndArrangeCoefs(ecs, gene=geneID, frm, balanceExons=TRUE)
+     coefficients <- fitAndArrangeCoefs(ecs, geneID=geneID, frm, balanceExons=TRUE)
      if( is.null( coefficients ) ){
         return(coefficients)
      }
-     ret <- t(DEXSeq:::getEffectsForPlotting(coefficients, averageOutExpression=averageOutExpression, groupingVar=fitExpToVar))
+     ret <- t(getEffectsForPlotting(coefficients, averageOutExpression=averageOutExpression, groupingVar=fitExpToVar))
      rownames(ret) <- paste(geneID, rownames(ret), sep=":")
      return(ret)
    }
@@ -448,7 +448,7 @@ estimatelog2FoldChanges <- function(ecs, fitExpToVar="condition", denominator=""
 
     names(alleffects) <- testablegenes
     alleffects <- do.call(rbind, alleffects)
-    alleffects <- DEXSeq:::vst(exp( alleffects ), ecs)
+    alleffects <- vst(exp( alleffects ), ecs)
     toadd <- matrix(NA, nrow=nrow(ecs), ncol=ncol(alleffects))
     rownames(toadd) <- featureNames(ecs)
 
