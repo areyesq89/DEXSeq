@@ -281,12 +281,11 @@ setMethod("estimateDispersions", signature(object="ExonCountSet"),
                estimateExonDispersionsForModelFrame( mf,
                   mm=modelmatrices[[genename]], muhat=muhats[[genename]] ),
                silent=TRUE )
+            rows <- as.character(geneIDs(cds)) %in% genename & testable
             if( inherits( disps, "try-error" ) ) {
-               disps <- rep( NA_real_, length( muhats[[genename]] ) )
+               disps <- rep( NA_real_, sum( rows ) )
                warning( sprintf( "Failed to fit dispersion for gene %s", genename ) )
             }
-
-            rows <- as.character(geneIDs(cds)) %in% genename & testable
             stopifnot(all(names(disps)==exonids[rows]))
             dispBeforeSharing[rows] <- disps
 
