@@ -80,7 +80,7 @@ estimateDispersionsTRT <- function( ecs, formula= ~ sample + condition * exon, n
       if( i %% 100 == 0 )
          cat(".")
       if( fData(ecs)$testable[i] ) {
-         a <- try( estimateExonDispersionTRT( ecs, geneIDs(ecs)[i], exonIDs(ecs)[i], modelFrame, mm ) )
+         a <- try( estimateExonDispersionTRT( ecs, geneIDs(ecs)[i], exonIDs(ecs)[i], modelFrame, mm ), silent=TRUE)
          if( inherits( a, "try-error" ) ) {
             warning( sprintf("Unable to estimate dispersions for %s:%s", as.character( geneIDs(ecs)[i] ), exonIDs(ecs)[i]) )
             NA }
