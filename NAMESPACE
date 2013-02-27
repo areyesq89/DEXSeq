@@ -1,4 +1,4 @@
-import(Biobase, hwriter, methods, stringr, statmod, biomaRt)
+import(Biobase, hwriter, methods, stringr, statmod, biomaRt, GenomicRanges, Rsamtools)
 
 exportClasses( "ExonCountSet" )
 
