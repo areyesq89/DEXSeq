@@ -661,6 +661,45 @@ The necessary information about exons start and end positions can be given as a 
 the \Rfunction{newExonCountSet} function, or can be added to the \Rclass{ExonCountSet} object after its creation
 via the \Rfunction{featureData} accessor. For more information, please see the manual page of \Rfunction{newExonCountSet}.
 
+\subsection{From GRanges, BamListFiles and transcriptDb objects}
+
+Alternatively, users can create their ExonCountSet objects from other \Rpackage{Bioconductor} data objects.
+The code for implementating these functions was kindly contributed by Mike Love. For details, check the
+\Rpackage{parathyroidSE} package. The workflow is the same as with the \Rpackage{HTSeq} python scripts.
+First we prepare the annotation file, in order to define non-overlapping exonic parts. In order to control the 
+exons that are used by many genes, the parameter \emph{aggregateGenes} allows the users to either ignore
+these exons and treat the genes separately, or merge the genes into a single "aggregate gene" and take into account
+these exons.
+
+<<buildExonCountSet,cache=TRUE, eval=FALSE>>=
+
+  library(GenomicFeatures)
+  hse <- makeTranscriptDbFromBiomart(biomart="ensembl", dataset="hsapiens_gene_ensembl")
+  exonicParts <- prepareAnnotationForDEXSeq( hse, aggregateGenes=TRUE )
+@
+
+The \Robject{ exonicParts } object contains a GRanges object, that we can further use to count the number
+of read fragments that overlap with our exonic bins. We do this using the function 
+\Rfunction{countReadsForDEXSeq}.
+
+<<buildExonCountSet2,cache=TRUE, eval=FALSE>>=
+  
+  bamDir <- system.file("extdata",package="parathyroidSE",mustWork=TRUE)
+  fls <- list.files(bamDir, pattern="bam$",full=TRUE)
+  bamlst <- BamFileList(fls)
+  SE <- countReadsForDEXSeq( exonicParts, bamlst )
+@
+
+Using the output of the functions \Rfunction{ prepareAnnotationForDEXSeq } and
+\Rfunction{ countReadsForDEXSeq }, we can call the function \Rfunction{ buildExonCountSet }
+in order to build our typical \Robject{ExonCountSet} object.
+     
+<<buildExonCountSet3,cache=TRUE, eval=FALSE>>=
+
+  ecs <- buildExonCountSet( SE, c("A", "A", "B"), exonicParts )
+@
+
+
 %--------------------------------------------------
 \section{Lower-level functions}
 %--------------------------------------------------

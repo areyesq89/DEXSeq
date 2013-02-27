@@ -1,6 +1,27 @@
-import sys, collections, itertools, os.path
+import sys, collections, itertools, os.path, optparse
 
-if len( sys.argv ) != 3:
+optParser = optparse.OptionParser( 
+   
+   usage = "python %prog [options] <in.gtf> <out.gff>",
+   
+   description=
+      "Script to prepare annotation for DEXSeq." +
+      "This script takes an annotation file in Ensembl GTF format" +
+      "and outputs a 'flattened' annotation file suitable for use " +
+      "with the count_in_exons.py script ",
+      
+   epilog = 
+      "Written by Simon Anders (sanders@fs.tum.de), European Molecular Biology " +
+      "Laboratory (EMBL). (c) 2010. Released under the terms of the GNU General " +
+      "Public License v3. Part of the 'DEXSeq' package." )
+
+optParser.add_option( "-r", "--aggregate", type="choice", dest="aggregate",
+   choices = ( "no", "yes" ), default = "yes",
+   help = "'yes' or 'no'. Indicates whether two or more genes sharing an exon should be merged into an 'aggregate gene'. If 'no', the exons that can not be assiged to a single gene are ignored." )
+
+(opts, args) = optParser.parse_args()
+
+if len( args ) != 2:
    sys.stderr.write( "Script to prepare annotation for DEXSeq.\n\n" )
    sys.stderr.write( "Usage: python %s <in.gtf> <out.gff>\n\n" % os.path.basename(sys.argv[0]) )
    sys.stderr.write( "This script takes an annotation file in Ensembl GTF format\n" )
@@ -15,8 +36,13 @@ except ImportError:
    sys.stderr.write( "available from http://www-huber.embl.de/users/anders/HTSeq\n" )   
    sys.exit(1)
 
-gtf_file = sys.argv[1]
-out_file = sys.argv[2]
+
+
+
+gtf_file = args[0]
+out_file = args[1]
+
+aggregateGenes = opts.aggregate == "yes"
 
 # Step 1: Store all exons with their gene and transcript ID 
 # in a GenomicArrayOfSets
@@ -37,20 +63,21 @@ for f in HTSeq.GFF_Reader( gtf_file ):
 # the set that contains the gene.
 # Each gene set forms an 'aggregate gene'.
 
-gene_sets = collections.defaultdict( lambda: set() )
-for iv, s in exons.steps():
-   # For each step, make a set, 'full_set' of all the gene IDs occuring
-   # in the present step, and also add all those gene IDs, whch have been
-   # seen earlier to co-occur with each of the currently present gene IDs.
-   full_set = set()
-   for gene_id, transcript_id in s:
-      full_set.add( gene_id )
-      full_set |= gene_sets[ gene_id ]
-   # Make sure that all genes that are now in full_set get associated
-   # with full_set, i.e., get to know about their new partners
-   for gene_id in full_set:
-      assert gene_sets[ gene_id ] <= full_set
-      gene_sets[ gene_id ] = full_set
+if aggregateGenes == True:
+   gene_sets = collections.defaultdict( lambda: set() )
+   for iv, s in exons.steps():
+      # For each step, make a set, 'full_set' of all the gene IDs occuring
+      # in the present step, and also add all those gene IDs, whch have been
+      # seen earlier to co-occur with each of the currently present gene IDs.
+      full_set = set()
+      for gene_id, transcript_id in s:
+         full_set.add( gene_id )
+         full_set |= gene_sets[ gene_id ]
+      # Make sure that all genes that are now in full_set get associated
+      # with full_set, i.e., get to know about their new partners
+      for gene_id in full_set:
+         assert gene_sets[ gene_id ] <= full_set
+         gene_sets[ gene_id ] = full_set
 
 
 # Step 3: Go through the steps again to get the exonic sections. Each step
@@ -65,14 +92,25 @@ for iv, s in exons.steps( ):
    # Skip empty steps
    if len(s) == 0:
       continue
+   gene_id = list(s)[0][0]
+   ## if aggregateGenes=FALSE, ignore the exons associated to more than one gene ID
+   if aggregateGenes == False:
+      check_set = set()
+      for geneID, transcript_id in s:
+         check_set.add( geneID )
+      if( len( check_set ) > 1 ):
+         continue
+      else:
+         aggregate_id = gene_id
    # Take one of the gene IDs, find the others via gene sets, and
    # form the aggregate ID from all of them   
-   gene_id = list(s)[0][0]
-   assert set( gene_id for gene_id, transcript_id in s ) <= gene_sets[ gene_id ] 
-   aggregate_id = '+'.join( gene_sets[ gene_id ] )
+   else:
+      assert set( gene_id for gene_id, transcript_id in s ) <= gene_sets[ gene_id ] 
+      aggregate_id = '+'.join( gene_sets[ gene_id ] )
    # Make the feature and store it in 'aggregates'
    f = HTSeq.GenomicFeature( aggregate_id, "exonic_part", iv )   
-   f.source = os.path.basename( sys.argv[1] )
+   f.source = os.path.basename( sys.argv[0] )
+#   f.source = "camara"
    f.attr = {}
    f.attr[ 'gene_id' ] = aggregate_id
    transcript_set = set( ( transcript_id for gene_id, transcript_id in s ) )
@@ -94,7 +132,7 @@ for l in aggregates.values():
    aggr_feat = HTSeq.GenomicFeature( l[0].name, "aggregate_gene", 
       HTSeq.GenomicInterval( l[0].iv.chrom, l[0].iv.start, 
          l[-1].iv.end, l[0].iv.strand ) )
-   aggr_feat.source = os.path.basename( sys.argv[1] )
+   aggr_feat.source = os.path.basename( sys.argv[0] )
    aggr_feat.attr = { 'gene_id': aggr_feat.name }
    for i in xrange( len(l) ):
       l[i].attr['exonic_part_number'] = "%03d" % ( i+1 )

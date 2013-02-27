@@ -21,3 +21,9 @@
 2012-11-28: version 1.5.3
 
 - The TRT method is implemented, for people with a big number of samples without completions or speed issues
+
+2013-02-27: version 1.5.3
+
+- A parameter -r was added to the python scripts, that allow the users either to ignore the exonic bins belonging
+  to several genes and treat the genes separately, or merge the genes into an aggregate gene. The equivalent R implementations
+  of the python scripts were finally added.

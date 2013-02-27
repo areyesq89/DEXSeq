@@ -31,7 +31,10 @@ export(
   modelFrameForTRT,
   estimateDispersionsTRT,
   testForDEUTRT,
-  perGeneQValue
+  perGeneQValue,
+  prepareAnnotationForDEXSeq,
+  countReadsForDEXSeq,
+  buildExonCountSet
 )
 
 
