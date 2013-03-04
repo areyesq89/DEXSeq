@@ -53,6 +53,8 @@ modelFrameForGene <- function( ecs, geneID, onlyTestable=FALSE) {
 }
 
 profileLogLikelihood <- function( disp, mm, y, muhat )
+# FIXME: Change function name; this is a conditional likelihood, not
+# a profile likelihood. 
 {
    # calculate the log likelihood:
    if(length(disp) != length(y)){
