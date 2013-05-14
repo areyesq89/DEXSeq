@@ -234,6 +234,13 @@ setReplaceMethod("sizeFactors",  signature(object="ExonCountSet", value="numeric
 })
 
 
+setMethod("[", "ExonCountSet", function(x, i, j, ..., drop = FALSE) {
+  x <- callNextMethod()
+  design(x) <- droplevels(design(x))
+  x
+})
+
+
 setMethod("design", signature(object="ExonCountSet"),
    function( object, drop=TRUE, asAnnotatedDataFrame=FALSE ) {
       cds <- object
