@@ -105,20 +105,19 @@ estimateExonDispersionsForModelFrame <- function( modelFrame, formula=NULL, mm=N
 
    if(is.null(mm)){
       mm <- model.matrix( formula, modelFrame )
+
    }
 
-   if( nrow(mm) <= ncol(mm) )
-      stop( "Underdetermined model; cannot estimate dispersions. Maybe replicates have not been properly specified." )
 
    countsums <- tapply( modelFrame$count, modelFrame$exon, sum )
    y <- modelFrame$count
 
+   mm <- rmDepCols( mm )
+
    if(is.null(muhat)){
-      y1 <- pmax(y, 1/6)
-      fit <- lm.fit(mm, log(y1) - log(modelFrame$sizeFactor))
-      mm <- mm[,!is.na(fit$coefficients)]
-      start <- fit$coefficients[!is.na(fit$coefficients)]
-      muhat <- fitted.values(glmnb.fit(mm, y, initialGuess, log(modelFrame$sizeFactor), coef.start=start))
+      if( nrow(mm) <= ncol(mm) )
+         stop( "Underdetermined model; cannot estimate dispersions. Maybe replicates have not been properly specified." )
+      muhat <- fitted.values(glmnb.fit(mm, y, initialGuess, log(modelFrame$sizeFactor)))
    }
 
    disp <- rep( initialGuess, length(exonNames) )
@@ -253,12 +252,10 @@ setMethod("estimateDispersions", signature(object="ExonCountSet"),
             y1 <- pmax(y, 1/6)
             mf <- modelFrames[[gn]]
             mm <- modelmatrices[[gn]]
-            fit <- lm.fit(mm, log(y1) - mf$offset)
-            mm <- mm[,!is.na(fit$coefficients)]
+            mm <- rmDepCols(mm)
             if( nrow(mm) <= ncol(mm) )
                stop( "Underdetermined model; cannot estimate dispersions. Maybe replicates have not been properly specified." )
-            start <- fit$coefficients[!is.na(fit$coefficients)]
-            muhat <- try(fitted.values(glmnb.fit(mm, y, initialGuess, mf$offset, coef.start=start)), silent=TRUE)
+            muhat <- try(fitted.values(glmnb.fit(mm, y, initialGuess, mf$offset)), silent=TRUE)
             muhat
          })
 

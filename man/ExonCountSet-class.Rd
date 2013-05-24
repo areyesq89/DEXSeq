@@ -1,6 +1,11 @@
-\name{ExonCountSet-class}
+\name{ExonCountSet}
 \docType{class}
+\alias{ExonCountSet}
+
+\alias{class:ExonCountSet}
 \alias{ExonCountSet-class}
+\alias{[,ExonCountSet-method}
+\alias{[,ExonCountSet,ANY,ANY-method}
 
 \title{"ExonCountSet", a container for exon count data }
 \description{	This is the principal class of DEXSeq package. }
@@ -40,3 +45,4 @@ are filled later throughout the analysis, when the user calls \code{\link{estima
 \examples{
 # See the vignette
 }
+

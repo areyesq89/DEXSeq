@@ -3,7 +3,7 @@ import(Biobase, hwriter, methods, stringr, statmod, biomaRt, GenomicRanges, Rsam
 exportClasses( "ExonCountSet" )
 
 exportMethods(
-  counts, "counts<-",
+  counts, "counts<-", "[",
   sizeFactors, "sizeFactors<-",
   design, "design<-",
   estimateSizeFactors,
