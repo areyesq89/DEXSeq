@@ -14,7 +14,7 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
    if(!is.null(results$log2change)){
       results$log2change <- round(results$log2change, 3)
    }
-   results[which(is.na(results$pvalue)),][,c("pvalue","padjust")]=1
+   results[is.na(results$pvalue), c("pvalue","padjust")]=1
    rownames(results) <- NULL
    numcond <- length(unique(design(ecs, drop=FALSE)[[fitExpToVar]]))
 #	sortabletag <- hmakeTag(tag="script", src=(system.file(package="DEXSeq"), "/sorttable.js", sep=''))
@@ -172,7 +172,7 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
    }  
 
    if( !is.null( extraCols )){
-      genetable <- cbind( extraCols, genetable )
+      genetable <- cbind(extraCols[match(genetable$geneID, rownames(extraCols)),], genetable)
    }
    
 	

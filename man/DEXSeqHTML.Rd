@@ -51,7 +51,10 @@ DEXSeqHTML(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html",
        }
        \item{extraCols}{
           A data frame with one or more columns to add to the report.
-          For example, additional information about the genes.
+          For example, additional information about the genes. The data frame
+          should be indexed by the gene names of the ExonCountSet object,
+          e.g. the rownames of the data frame should correspond to the gene 
+          names.
        }
        \item{nCores}{
         Number of cores to be used.
