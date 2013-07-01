@@ -7,10 +7,11 @@
    This function takes a transcriptDb object and defines non-overlapping exonic regions.
 }
 \usage{
-countReadsForDEXSeq( exonicParts, bamFileList, scanBamParam=ScanBamParam(), 
-   singleEnd=TRUE, ignoreStrand=TRUE, 
-   mode=function(reads, features, ignore.strand){ 
-      countOverlaps( features, reads, ignore.strand=ignoreStrand)} )
+countReadsForDEXSeq( exonicParts, bamFileList, scanBamParam =
+                 ScanBamParam(), singleEnd = TRUE, ignoreStrand = TRUE,
+                 mode = function(features, reads, ignore.strand,
+                 inter.feature = FALSE) { countOverlaps(features,
+                 reads, ignore.strand = ignoreStrand)})
 }
 \arguments{
   \item{exonicParts}{
@@ -32,7 +33,7 @@ countReadsForDEXSeq( exonicParts, bamFileList, scanBamParam=ScanBamParam(),
   }
   \item{mode}{
      A function with the method used to count the overlaps to exons. The default allows 
-     a read fragment to be counted in two exons, if it overlaps with both of them
+     a read fragment to be counted in two exons, if it overlaps with both of them.
   }
 }
 \author{

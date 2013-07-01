@@ -1,60 +1,24 @@
-
-prepareAnnotationForDEXSeq <- function( transcriptDb, aggregateGenes=FALSE, includeTranscripts=TRUE )
+prepareAnnotationForDEXSeq <- function(transcriptDb, aggregateGenes = FALSE,
+                 includeTranscripts = TRUE)
 {
-
-  stopifnot( is( transcriptDb, "TranscriptDb" ) )
-  exonsByGene <- exonsBy(transcriptDb, by="gene")
-  
-  exonicParts <- disjoin( unlist(exonsByGene) )
-
-  if( !aggregateGenes ){
-     overlaps <- findOverlaps( exonicParts, exonsByGene )
-     geneNames <- names(exonsByGene)[ subjectHits( overlaps ) ]
-     aggregateGeneNames <- split( geneNames, queryHits(overlaps) )
-     toRemove <- names(aggregateGeneNames)[which( sapply( aggregateGeneNames, length ) > 1 )]
-     toRemove <- as.numeric( toRemove )
-     if( length( toRemove ) > 0 ){
-       exonicParts <- exonicParts[-toRemove]
-       geneNames <- aggregateGeneNames[-toRemove]
-     }
-     mcols( exonicParts )$geneNames <- unlist( geneNames )
-  }else{ 
-     foGG <- findOverlaps(exonsByGene, exonsByGene)
-     splitByGene <- split(subjectHits(foGG), queryHits(foGG))
-     aggregateGeneNames <- sapply( splitByGene, function(i){
-                             paste(names(exonsByGene)[i],collapse="+")} )
-     foEG <- findOverlaps(exonicParts, exonsByGene, select="first")
-     mcols(exonicParts)$geneNames <- aggregateGeneNames[foEG]
-  }
-
-  if( includeTranscripts ){
-     exonsByTranscript <- exonsBy( transcriptDb, by="tx", use.names=TRUE )
-     foET <- findOverlaps(exonicParts, exonsByTranscript)
-     splitByExonicPart <- split(subjectHits(foET), queryHits(foET))
-     mcols(exonicParts)$transcripts <- sapply(splitByExonicPart, function(i){
-        paste(names(exonsByTranscript)[i],collapse=";")})
-   }
-
-   exonicParts <- exonicParts[order(mcols(exonicParts)$geneNames)]
-   mcols(exonicParts)$exonic_part_number <- do.call( c, lapply(
-      split(mcols(exonicParts)$geneNames,mcols(exonicParts)$geneNames), 
-      function(z){ seq(along=z) } ) )
-
-
-   mcols( exonicParts )$exonID <- sprintf("E%03.0f", mcols( exonicParts )$exonic_part_number )
-   exonicParts
-
+    .Deprecated("disjointExons", package="DEXSeq")
 }
 
-countReadsForDEXSeq <- function( exonicParts, bamFileList, scanBamParam=ScanBamParam(), singleEnd=TRUE, ignoreStrand=TRUE, 
-   mode=function(reads, features, ignore.strand){ countOverlaps( features, reads, ignore.strand=ignoreStrand)} )
+countReadsForDEXSeq <- function (exonicParts, bamFileList, scanBamParam = ScanBamParam(), 
+        singleEnd = TRUE, ignoreStrand = TRUE, mode = function(features, reads, 
+        ignore.strand, inter.feature=FALSE) {
+        countOverlaps(features, reads, ignore.strand = ignoreStrand)
+    }) 
 {
-   stopifnot( is( bamFileList, "BamFileList" ) )
-   stopifnot( is( exonicParts, "GRanges" ) )
-
-   exonHits <- summarizeOverlaps( exonicParts, bamFileList, mode=mode, singleEnd=singleEnd, ignore.strand=ignoreStrand, param=scanBamParam)
-   exonHits
+    stopifnot(is(bamFileList, "BamFileList"))
+    stopifnot(is(exonicParts, "GRanges"))
+    exonHits <- summarizeOverlaps(exonicParts, bamFileList, mode = mode, 
+        singleEnd = singleEnd, fragments=FALSE, ignore.strand = ignoreStrand, 
+        param = scanBamParam, inter.feature=FALSE)
+    exonHits
 }
+
+
 
 buildExonCountSet <- function( summarizedExperiment, design, exonicParts ){
    stopifnot( is( exonicParts, "GRanges" ) )

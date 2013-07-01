@@ -32,9 +32,9 @@ export(
   estimateDispersionsTRT,
   testForDEUTRT,
   perGeneQValue,
-  prepareAnnotationForDEXSeq,
   countReadsForDEXSeq,
-  buildExonCountSet
+  buildExonCountSet,
+  prepareAnnotationForDEXSeq
 )
 
 

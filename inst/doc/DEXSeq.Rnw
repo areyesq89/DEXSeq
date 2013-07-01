@@ -675,7 +675,7 @@ these exons.
 
   library(GenomicFeatures)
   hse <- makeTranscriptDbFromBiomart(biomart="ensembl", dataset="hsapiens_gene_ensembl")
-  exonicParts <- prepareAnnotationForDEXSeq( hse, aggregateGenes=TRUE )
+  exonicParts <- disjointExons( hse, aggregateGenes=TRUE )
 @
 
 The \Robject{ exonicParts } object contains a GRanges object, that we can further use to count the number
@@ -688,6 +688,7 @@ of read fragments that overlap with our exonic bins. We do this using the functi
   fls <- list.files(bamDir, pattern="bam$",full=TRUE)
   bamlst <- BamFileList(fls)
   SE <- countReadsForDEXSeq( exonicParts, bamlst )
+
 @
 
 Using the output of the functions \Rfunction{ prepareAnnotationForDEXSeq } and
@@ -697,6 +698,7 @@ in order to build our typical \Robject{ExonCountSet} object.
 <<buildExonCountSet3,cache=TRUE, eval=FALSE>>=
 
   ecs <- buildExonCountSet( SE, c("A", "A", "B"), exonicParts )
+
 @
 
 
