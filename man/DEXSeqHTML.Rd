@@ -65,9 +65,14 @@ DEXSeqHTML(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html",
      \value{
 	   This function will write an HTML report in the directory specified by 'path'. 
            There, it will create an html file with the initial report page and a 
-           directory called "files" in which SCG files with the plots and other html files are
-           placed.  To see an example please visit 
-           \url{http://www.embl.de/~reyes/DEXSeqReport/testForDEU.html}.
+           directory called "files" in which SVG files with the plots and other html files are
+           placed. Different plots with different labels are generated for each gene:
+           - counts: the raw data, for each sample
+           - fitted expression: the fitted coefficients per compared condition (e.g.: treated, untreated)
+           - fitted splicing: as 'expression', but after removing overall gene-level differential expression: this is the view most relevant for the interpretation of DEXSeq results, which are about changes in relative exon usage (i.e.: relative to overall gene expression) 
+
+           To see an example please visit 
+           \url{http://www-huber.embl.de/pub/DEXSeq/psfb/testForDEU.html}.
      }
      \seealso{
        \code{hwrite}
