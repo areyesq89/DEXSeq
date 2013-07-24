@@ -2,84 +2,32 @@
 %\VignettePackage{DEXSeq}
 
 % To compile this document
-% library('cacheSweave'); rm(list=ls()); unlink("DEXSeqReport", recursive=TRUE); Sweave('DEXSeq.Rnw', driver=cacheSweaveDriver())
+% library('cacheSweave'); rm(list=ls()); Sweave('DEXSeq.Rnw', driver=cacheSweaveDriver())
 
-\documentclass[10pt,oneside]{article}
-\usepackage[a4paper,left=1.9cm,top=1.9cm,bottom=2.5cm,right=1.9cm,ignoreheadfoot]{geometry}
-\pagestyle{empty}
-\usepackage[usenames,dvipsnames]{color}
-\usepackage{helvet}
-\renewcommand{\familydefault}{\sfdefault}
+\documentclass[12pt]{article}
 
-\newcommand{\Robject}[1]{{\small\texttt{#1}}}
-\newcommand{\Rfunction}[1]{\Robject{#1}}
-\newcommand{\Rpackage}[1]{\textit{#1}}
-\newcommand{\Rclass}[1]{\textit{#1}}
-\newenvironment{packeditemize}{
-\begin{itemize}
-  \setlength{\itemsep}{1pt}
-  \setlength{\parskip}{0pt}
-  \setlength{\parsep}{0pt}
-}{\end{itemize}}
-
-\newenvironment{packedenumerate}{
-\begin{enumerate}
-  \setlength{\itemsep}{1pt}
-  \setlength{\parskip}{0pt}
-  \setlength{\parsep}{0pt}
-}{\end{enumerate}}
-
-\newcommand{\thetitle}{Analyzing RNA-seq data for differential exon usage with the DEXSeq package}
-
-\usepackage[pdftitle={\thetitle},%
-  pdfauthor={Wolfgang Huber},%
-  bookmarks,%
-  colorlinks,%
-  linktoc=section,%
-  linkcolor=RedViolet,%
-  citecolor=RedViolet,%
-  urlcolor=RedViolet,%
-  linkbordercolor={1 1 1},%
-  citebordercolor={1 1 1},%
-  urlbordercolor={1 1 1},%
-  raiselinks,%
-  plainpages,%
-  pdftex]{hyperref}
+<<style, eval=TRUE, echo=FALSE, results=tex>>=
+BiocStyle::latex()
+@
 
 \usepackage{cite}
-\renewcommand{\floatpagefraction}{0.9}
-
-\usepackage{sectsty}
-\sectionfont{\sffamily\bfseries\color{RoyalBlue}\sectionrule{0pt}{0pt}{-1ex}{1pt}}
-\subsectionfont{\sffamily\bfseries\color{RoyalBlue}}
-\subsubsectionfont{\sffamily\bfseries\color{RoyalBlue}}
-\usepackage{fancyhdr}
-\pagestyle{fancy}
-\fancyhead{}
-\fancyfoot{}
-\lfoot{}\cfoot{\thetitle}\rfoot{}
-\renewcommand{\headrule}{}
-
-\usepackage{graphicx}
-\usepackage{xstring}
 
 \usepackage{Sweave}
-\SweaveOpts{keep.source=TRUE,eps=FALSE,include=FALSE,width=6,height=4}
+\SweaveOpts{keep.source=TRUE, eps=FALSE,pdf=TRUE,png=FALSE,include=FALSE,width=4,height=4.5}
 
-\newcommand{\fixme}[1]{{\textbf{Fixme:} \textit{\textcolor{blue}{#1}}}}
 
 \author{Alejandro Reyes, Simon Anders, Wolfgang Huber\\[1em]
   European Molecular Biology Laboratory (EMBL),\\
   Heidelberg, Germany}
 
-\title{\textsf{\textbf{\thetitle}}}
+\title{Analyzing RNA-seq data for differential exon usage with the DEXSeq package}
 
-% The following command makes use of SVN's 'Date' keyword substitution
-% To activate this, I used: svn propset svn:keywords Date DESeq.Rnw
-%\date{\StrMid{$Date$}{8}{18}}
-\date{\Rpackage{DEXSeq} version \Sexpr{packageDescription("DEXSeq")$Version} (Last revision \StrMid{$Date$}{8}{18})}
+
+%\date{\Rpackage{DEXSeq} version \Sexpr{packageDescription("DEXSeq")$Version} (Last revision \StrMid{$Date$}{8}{18})}
 
 \begin{document}
+
+
 
 \maketitle
 
@@ -103,7 +51,7 @@
 \end{abstract}
 
 <<options,results=hide,echo=FALSE>>=
-options(digits=3, width=106)
+options(digits=2, width=80)
 @
 
 \tableofcontents
@@ -177,7 +125,7 @@ of the feature data annotation:
 <<fData>>=
 head(fData(pasillaExons)[,c(1,2,9:12)])
 @
-<<tabtab1,echo=FALSE>>=
+<<tabtab1, results=hide>>=
 tabGeneIDsPasillaExons = table(geneIDs(pasillaExons))
 ngenesPasillaExons = sum(tabGeneIDsPasillaExons>0)
 tabtabGeneIDsPasillaExons = table(tabGeneIDsPasillaExons)
@@ -276,11 +224,11 @@ the function \emph{estimateDispersions}, using Cox-Reid (CR)
 likelihood estimation (our method follows that of the package \Rpackage{edgeR}~\cite{edgeR}).
 Before starting estimating the CR dispersion estimates, \Rfunction{estimateDispersions}
 first defines the ``testable'' exons, which fulfill the following criteria:
-\begin{packedenumerate}
+\begin{enumerate}
   \item The exon's total sum of counts over all samples is higher than the parameter \texttt{minCount},
   \item the exon comes from a gene that has at most \texttt{maxExon} exons, and
   \item the exon comes from a gene that has more than one ``testable'' exon.
-\end{packedenumerate}
+\end{enumerate}
 These testable exons are marked in the column \texttt{testable} of the feature data.
 Then, a CR estimate is computed for each gene, and the obtained values are stored
 in the feature data column \emph{dispBeforeSharing}.
@@ -302,7 +250,7 @@ slot.\footnote{Especially when the dispersion estimates are very large, this fit
   and has occasionally caused the function to fail. In these rare cases please contact the developers.}
 See our paper~\cite{Anders:2012:GR} for the rationale behind this ``sharing'' scheme.
 
-<<fitDisp1, cache=TRUE>>=
+<<fitDisp1>>=
 pasillaExons <- fitDispersionFunction(pasillaExons)
 @
 <<fitDisp2>>=
@@ -316,17 +264,15 @@ As a fit diagnostic, we plot the per-exon dispersion estimates versus the mean n
 <<fitdiagnostics, fig=TRUE>>=
 plotDispEsts( pasillaExons )
 @
+
+\incfig{DEXSeq-fitdiagnostics}{.5\textwidth}{Fit Diagnostics.}{
+Per-gene dispersion estimates (shown by points) and the fitted mean-dispersion function (red line).
+}
+
 %
-\begin{figure}
-\centering
-\includegraphics[width=.5\textwidth]{DEXSeq-fitdiagnostics}
-\caption{Per-gene dispersion estimates (shown by points) and the fitted mean-dispersion function (red line).}
-\label{fitdiagnostics}
-\end{figure}
-%
-The plot (Figure~\ref{fitdiagnostics}) shows the estimates for all exons as dots and the fit as red
+The plot (Figure~\ref{DEXSeq-fitdiagnostics}) shows the estimates for all exons as dots and the fit as red
 line. The red line follows the trend of the dots in the upper cluster of dots. The lower cluster
-stems from exons for which the sample noise happens to fall below shot noise, i.\,e., their sample estimates
+stems from exons for which the sample noise happens to fall below shot noise, i.e., their sample estimates
 of the dispersion is zero or close to zero and hence form another cluster at the bottom. The fact that these
 two clusters look so well separated is to a large extent an artifact of the logarithmic $y$-axis scaling.
 Inspect the fit and make sure that
@@ -393,7 +339,7 @@ contain interesting cases; so this large fraction of affected genes is not typic
 
 To see how the power to detect differential exon usage depends on the number of reads that
 map to an exon, a so-called MA plot is useful, which plots the logarithm of fold change versus average
-normalized count per exon and marks by red colour the exons with adjusted $p$ values of less than 0.1 (Figure \ref{MvsA}).
+normalized count per exon and marks by red colour the exons with adjusted $p$ values of less than 0.1 (Figure \ref{DEXSeq-MvsA}).
 There is of course nothing special about the number 0.1, and you can specify other thresholds in the call to \Rfunction{plotMA}.
 For the definition of the function \Rfunction{plotMA}, see Section~\ref{sec:helperfun}.
 %
@@ -403,12 +349,9 @@ plotMA(with(res1, data.frame(baseMean = meanBase,
                              padj = padjust)),
      ylim=c(-4,4), cex=0.8)
 @
-\begin{figure}
-\centering
-\includegraphics[width=.5\textwidth]{DEXSeq-MvsA}
-\caption{Mean expression versus $\log_2$ fold change plot. Significant hits (at \Robject{padj}<0.1) are colored in red.}
-\label{MvsA}
-\end{figure}
+\incfig{DEXSeq-MvsA}{.5\textwidth}{M vs A plot.}{
+Mean expression versus $\log_2$ fold change plot. Significant hits (at \Robject{padj}<0.1) are colored in red.
+}
 
 %$
 %------------------------------------------------------------
@@ -458,18 +401,14 @@ abline(a=0,b=1, col="red3")
 abline(v=0.1, h=0.1, col="blue")
 @
 %
-We can see from Figure~\ref{figcomparep} and the table above that
+We can see from Figure~\ref{DEXSeq-figcomparep} and the table above that
 with the \emph{type}-aware analysis, detection power for differential
 exon usage due to \emph{condition} is improved.
 %
-\begin{figure}
-\centering
-\includegraphics[width=.5\textwidth]{DEXSeq-figcomparep}
-\caption{Comparison of differential exon usage
-$p$ values from analysis with ($y$-axis, \Robject{res2}) and without ($x$-axis, \Robject{res1})
-consideration of batch (library type) effects.}
-\label{figcomparep}
-\end{figure}
+\incfig{DEXSeq-figcomparep}{.5\textwidth}{Tests comparison}{
+Comparison of differential exon usage $p$ values from analysis with ($y$-axis, \Robject{res2}) and without ($x$-axis, \Robject{res1})
+consideration of batch (library type) effects.
+}
 
 %--------------------------------------------------
 \section{Visualization}
@@ -479,52 +418,46 @@ consideration of batch (library type) effects.}
 <<plot1, fig=TRUE, height=8, width=12>>=
 plotDEXSeq(pasillaExons, "FBgn0010909", cex.axis=1.2, cex=1.3, lwd=2, legend=TRUE)
 @
-\begin{figure}
-\centering
-\includegraphics[width=\textwidth]{DEXSeq-plot1}
-\caption{The plot represents the expression estimates from a call to \texttt{testForDEU}.
-Shown in red is the exon that showed significant differential exon usage.}
-\label{figplot1}
-\end{figure}
+\incfig{DEXSeq-plot1}{\textwidth}{Fitted expression}{
+The plot represents the expression estimates from a call to \texttt{testForDEU}.
+Shown in red is the exon that showed significant differential exon usage.
+}
 
 <<checkClaim,echo=FALSE>>=
 wh = (fData(pasillaExons)$geneID=="FBgn0010909")
 stopifnot(sum(fData(pasillaExons)$padjust[wh] < formals(plotDEXSeq)$FDR)==1)
 @
 
-The result is shown in Figure~\ref{figplot1}. This plot shows the fitted expression values of each of the exons.
+The result is shown in Figure~\ref{DEXSeq-plot1}. This plot shows the fitted expression values of each of the exons.
 The function \Rfunction{plotDEXSeq} takes at least two arguments, the \Robject{pasillaExons} object and the gene ID.
 The option \texttt{legend=TRUE} causes a legend to be included. The three remaining
 arguments in the code chunk above are ordinary plotting parameters which are simply handed over to R's standard
 plotting functions. They are usually not needed and included here only to improve appearance of
 the plots for this vignette. See the help page for \Rfunction{par} for details.
 
-Optionally, one can also visualize the transcript models (Figure~\ref{figplot2}), which might be
+Optionally, one can also visualize the transcript models (Figure~\ref{DEXSeq-plot2}), which might be
 useful for putting differential exon usage results into the context of isoform regulation.
 %
 <<plot2, fig=TRUE, height=8, width=12>>=
 plotDEXSeq(pasillaExons, "FBgn0010909", displayTranscripts=TRUE,
    cex.axis=1.2, cex=1.3, lwd=2, legend=TRUE)
 @
-\begin{figure}
-\centering
-\includegraphics[width=\textwidth]{DEXSeq-plot2}
-\caption{As in Figure~\ref{figplot1}, but including the annotated transcript models.}
-\label{figplot2}
-\end{figure}
+
+\incfig{DEXSeq-plot2}{\textwidth}{Transcripts}{
+As in Figure~\ref{DEXSeq-plot1}, but including the annotated transcript models.
+}
+
 Other useful options are to look at the count values from the individual samples, rather than at the
-model effect estimates. For this display (option \texttt{norCounts=TRUE}), the counts are normalized by dividing them by the size factors (Figure~\ref{figplot3}).
+model effect estimates. For this display (option \texttt{norCounts=TRUE}), the counts are normalized by dividing them by the size factors (Figure~\ref{DEXSeq-plot3}).
 %
 <<plot3, fig=TRUE, height=8, width=12>>=
 plotDEXSeq(pasillaExons, "FBgn0010909", expression=FALSE, norCounts=TRUE,
    cex.axis=1.2, cex=1.3, lwd=2, legend=TRUE)
 @
-\begin{figure}
-\centering
-\includegraphics[width=\textwidth]{DEXSeq-plot3}
-\caption{As in Figure~\ref{figplot1}, with normalized count values of each exon in each of the samples.}
-\label{figplot3}
-\end{figure}
+
+\incfig{DEXSeq-plot3}{\textwidth}{Normalized counts}{
+As in Figure~\ref{DEXSeq-plot1}, with normalized count values of each exon in each of the samples.
+}
 
 As explaoined in detail in the paper, \Rpackage{DEXSeq} is designed to find difference in exon usage, i.e. differences in expression
 that only some but not all exons show, while differences in the overall expression of
@@ -536,19 +469,17 @@ to remove overall differences in expression also from the plots. Use the option 
 plotDEXSeq(pasillaExons, "FBgn0010909", expression=FALSE, splicing=TRUE,
    cex.axis=1.2, cex=1.3, lwd=2, legend=TRUE )
 @
-\begin{figure}
-\centering
-\includegraphics[width=\textwidth]{DEXSeq-plot4}
-\caption{The plot represents the splicing estimates, as in Figure~\ref{figplot1},
-but taking away the overall gene expression.}
-\label{figplot4}
-\end{figure}
+
+\incfig{DEXSeq-plot4}{\textwidth}{Fitted splicing}{
+The plot represents the splicing estimates, as in Figure~\ref{DEXSeq-plot1},
+but taking away the overall gene expression.
+}
 
 To generate an easily browsable, detailed overview over all analysis results,
 the package provides an HTML report generator, implemented in the function \Rpackage{DEXSeqHTML}.
 This function uses the package \Rpackage{hwriter} to create a result table with links to plots for the
-significant results, allowing a more detailed exploration of the results. To see an example, visit
-\url{http://www.embl.de/~reyes/DEXSeqReport/testForDEU.html}. The report shown there was generated using the code:
+significant results, allowing a more detailed exploration of the results. 
+
 %
 <<DEXSeqHTML,cache=TRUE, eval=FALSE>>=
 DEXSeqHTML( pasillaExons, FDR=0.1, color=c("#FF000080", "#0000FF80") )
@@ -602,7 +533,7 @@ pasillaExons <- makeCompleteDEUAnalysis(
 In this section, we describe how to create an \Rclass{ExonCountSet} from an alignment of the RNA-seq reads to the genome,
 in SAM format, and a file describing gene and transcript models in GTF format.
 
-The first steps of this workflow involve two scripts for the Python library \Rpackage{HTSeq} \cite{HTSeq}.
+The first steps of this workflow involve two scripts for the Python library \Rpackage{HTSeq}
 These scripts are provided as part of the R package \Rpackage{DEXSeq}, and are installed in the sub-directory texttt{python\_scripts} of the package's installation directory.
 To find the latter, use \Rfunction{system.file}.
 <<pkgRoot>>=
@@ -611,7 +542,7 @@ pkgDir
 list.files(pkgDir)
 list.files(file.path(pkgDir, "python_scripts"))
 @
-To use the scripts, you need to first install \emph{HTSeq} as explained on the web site \cite{HTSeq}. Run the scripts from the command line. Both scripts display usage instructions
+To use the scripts, you need to first install \emph{HTSeq} as explained on the web site. Run the scripts from the command line. Both scripts display usage instructions
 when called without arguments.
 
 The first script, \texttt{dexseq\_prepare\_annotation.py}, parses an annotation file in GTF format to define non-overlapping
