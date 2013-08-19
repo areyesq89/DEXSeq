@@ -6,34 +6,30 @@ read.HTSeqCounts <- function( countfiles, design, flattenedfile=NULL )
       stop( "Count files have differing gene ID column." )
    dcounts <- sapply( lf, `[[`, "V2" )
    rownames(dcounts) <- lf[[1]][,1]
+   rownames(dcounts)
    dcounts <- dcounts[ substr(rownames(dcounts),1,1)!="_", ]
-   genesrle <- sapply( strsplit( rownames(dcounts), ":"), "[[", 1)
-   index <- order(genesrle)
-   dcounts <- dcounts[index,]
-   genesrle <- genesrle[index]
-   exons <- paste("E", sapply(strsplit(rownames(dcounts), ":"), function(x){return(x[2])}), sep="")
+   rownames(dcounts) <- sub(":", ":E", rownames(dcounts))
    colnames(dcounts) <- countfiles
-   get_attribute <- function(x, attribute){
-      x <- gsub("\"", "", x)
-      x <- gsub("=", " ", x)
-      x <- strsplit(x, "; ")
-      sapply(seq(along=x), function(i) {
-   	sapply(strsplit(x[[i]][grepl(attribute, x[[i]])], " "), "[[", 2)
-      })
-   }
+   splitted <- strsplit(rownames(dcounts), ":")
+   exons <- sapply(splitted, "[[", 2)
+   genesrle <- sapply( splitted, "[[", 1)
    if(!is.null(flattenedfile)){
       aggregates<-read.delim(flattenedfile, stringsAsFactors=FALSE, header=FALSE)
       colnames(aggregates)<-c("chr", "source", "class", "start", "end", "ex", "strand", "ex2", "attr")
-      aggregates<-aggregates[-which(aggregates$class!="exonic_part"),]
-      aggregates$gene_id <- get_attribute(aggregates$attr, attribute="gene_id")
-      aggregates<-aggregates[order(aggregates$gene_id),]
-      transcripts <- get_attribute(aggregates$attr, attribute="transcripts")
+      aggregates<-aggregates[which(aggregates$class =="exonic_part"),]
+      aggregates$attr <- gsub("\"|=|;", "", aggregates$attr)
+      aggregates$gene_id <- sub(".*gene_id\\s(\\S+).*", "\\1", aggregates$attr)
+      transcripts <- gsub(".*transcripts\\s(\\S+).*", "\\1", aggregates$attr)
       transcripts <- gsub("\\+", ";", transcripts)
+      exonids <- gsub(".*exonic_part_number\\s(\\S+).*", "\\1", aggregates$attr)
       exoninfo<-data.frame(chr=aggregates$chr, start=aggregates$start, end=aggregates$end, strand=aggregates$strand)
-      if (!all(aggregates$gene_id == genesrle)){
+      rownames( exoninfo ) <- paste( aggregates$gene_id, exonids, sep=":E" )
+      names(transcripts) <- rownames(exoninfo)
+      if (!all( rownames(dcounts) %in% rownames(exoninfo) )){
          stop("Count files do not correspond to the flattened annotation file")
       }
-      ecs<-newExonCountSet(countData=dcounts, design=design, geneIDs=genesrle, exonIDs=exons, exonIntervals=exoninfo, transcripts=transcripts)
+      matching <- match(rownames(dcounts), rownames(exoninfo))
+      ecs<-newExonCountSet(countData=dcounts, design=design, geneIDs=genesrle, exonIDs=exons, exonIntervals=exoninfo[matching,], transcripts=transcripts[matching])
       ecs@annotationFile <- flattenedfile
       pData(ecs)$countfiles <- countfiles
       return(ecs)
