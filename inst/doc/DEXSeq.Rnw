@@ -605,8 +605,11 @@ these exons.
 <<buildExonCountSet,cache=TRUE, eval=FALSE>>=
 
   library(GenomicFeatures)
+  library(GenomicRanges)
+  library(Rsamtools)
   hse <- makeTranscriptDbFromBiomart(biomart="ensembl", dataset="hsapiens_gene_ensembl")
   exonicParts <- disjointExons( hse, aggregateGenes=TRUE )
+
 @
 
 The \Robject{ exonicParts } object contains a GRanges object, that we can further use to count the number
@@ -617,8 +620,9 @@ of read fragments that overlap with our exonic bins. We do this using the functi
   
   bamDir <- system.file("extdata",package="parathyroidSE",mustWork=TRUE)
   fls <- list.files(bamDir, pattern="bam$",full=TRUE)
-  bamlst <- BamFileList(fls)
-  SE <- countReadsForDEXSeq( exonicParts, bamlst )
+  bamlst <- BamFileList(fls, index=character(), yieldSize=100000, obeyQname=TRUE)
+  SE <- summarizeOverlaps(exonicParts, bamlst, mode="Union", singleEnd=FALSE, ignore.strand=TRUE, inter.feature=FALSE,
+  fragments=TRUE)
 
 @
 

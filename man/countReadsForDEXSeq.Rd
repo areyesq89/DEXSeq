@@ -1,10 +1,11 @@
 \name{countReadsForDEXSeq}
 \alias{countReadsForDEXSeq}
+\alias{countReadsForDEXSeq-deprecated}
 \title{
    Prepare annotation transcriptDb object for DEXSeq.
 }
 \description{
-   This function takes a transcriptDb object and defines non-overlapping exonic regions.
+   WARNING: This function is deprecated, use summarizedOverlaps from the package GenomicRanges instead.
 }
 \usage{
 countReadsForDEXSeq( exonicParts, bamFileList, scanBamParam =

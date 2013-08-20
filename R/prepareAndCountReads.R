@@ -8,14 +8,9 @@ countReadsForDEXSeq <- function (exonicParts, bamFileList, scanBamParam = ScanBa
         singleEnd = TRUE, ignoreStrand = TRUE, mode = function(features, reads, 
         ignore.strand, inter.feature=FALSE) {
         countOverlaps(features, reads, ignore.strand = ignoreStrand)
-    }) 
+    })
 {
-    stopifnot(is(bamFileList, "BamFileList"))
-    stopifnot(is(exonicParts, "GRanges"))
-    exonHits <- summarizeOverlaps(exonicParts, bamFileList, mode = mode, 
-        singleEnd = singleEnd, fragments=FALSE, ignore.strand = ignoreStrand, 
-        param = scanBamParam, inter.feature=FALSE)
-    exonHits
+    .Deprecated("summarizedOverlaps", package="DEXSeq")
 }
 
 
@@ -23,16 +18,17 @@ countReadsForDEXSeq <- function (exonicParts, bamFileList, scanBamParam = ScanBa
 buildExonCountSet <- function( summarizedExperiment, design, exonicParts ){
    stopifnot( is( exonicParts, "GRanges" ) )
    stopifnot( is( summarizedExperiment, "SummarizedExperiment" ) )
-   stopifnot( length( mcols(exonicParts)$geneNames ) == length( exonicParts ) )
-   stopifnot( length( mcols(exonicParts)$exonID ) == length( exonicParts ) )
-   chr <- rep( seqnames(exonicParts)@values, times=seqnames(exonicParts)@lengths)
-   strand <- rep( strand(exonicParts)@values, times=strand(exonicParts)@lengths)
+   stopifnot( all( colnames( mcols( exonicParts ) ) %in% c("gene_id", "tx_name", "exonic_part") ))
+   chr <- rep( as.character(seqnames(exonicParts)@values), times=seqnames(exonicParts)@lengths)
+   strand <- rep( as.character( strand(exonicParts)@values), times=strand(exonicParts)@lengths)
+   geneIDsReady <- sapply( as.list(mcols(exonicParts)$gene_id), paste, collapse="+" )
+   transcriptsReady <- sapply( as.list(mcols(exonicParts)$tx_name), paste, collapse=";" )
    newExonCountSet( 
       assay( summarizedExperiment), 
       design=design, 
-      geneIDs=mcols( exonicParts )$geneNames, 
-      exonIDs=mcols( exonicParts )$exonID,
-      transcripts=mcols( exonicParts )$transcripts,
+      geneIDs=geneIDsReady, 
+      exonIDs=sprintf("E%3.3d", unlist( mcols( exonicParts )$exonic_part)),
+      transcripts=transcriptsReady,
       exonIntervals= data.frame(chr=chr, start=start(exonicParts), end=end(exonicParts), strand=strand)
    )
 }
