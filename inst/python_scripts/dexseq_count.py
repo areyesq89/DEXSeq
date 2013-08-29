@@ -1,15 +1,15 @@
-import sys, itertools, optparse
+import sys, itertools, optparse, pysam, warnings
 
 optParser = optparse.OptionParser( 
    
-   usage = "python %prog [options] <flattened_gff_file> <sam_file> <output_file>",
+   usage = "python %prog [options] <flattened_gff_file> <alignment_file> <output_file>",
    
    description=
-      "This script counts how many reads in <sam_file> fall onto each exonic " +
+      "This script counts how many reads in <alignment_file> fall onto each exonic " +
       "part given in <flattened_gff_file> and outputs a list of counts in " +
       "<output_file>, for further analysis with the DEXSeq Bioconductor package. " +
       "(Notes: The <flattened_gff_file> should be produced with the script " +
-      "dexseq_prepare_annotation.py). <sam_file> may be '-' to indicate standard input.",
+      "dexseq_prepare_annotation.py). <alignment_file> may be '-' to indicate standard input.",
       
    epilog = 
       "Written by Simon Anders (sanders@fs.tum.de), European Molecular Biology " +
@@ -25,13 +25,25 @@ optParser.add_option( "-s", "--stranded", type="choice", dest="stranded",
    help = "'yes', 'no', or 'reverse'. Indicates whether the data is " +
       "from a strand-specific assay (default: yes ). " +
       "Be sure to switch to 'no' if you use a non strand-specific RNA-Seq library " +
-      "preparation protocol. 'reverse' inverts strands and is neede for certain " +
+      "preparation protocol. 'reverse' inverts strands and is needed for certain " +
       "protocols, e.g. paired-end with circularization."  )
    
 optParser.add_option( "-a", "--minaqual", type="int", dest="minaqual",
    default = 10,
    help = "skip all reads with alignment quality lower than the given " +
       "minimum value (default: 10)" )
+
+optParser.add_option( "-f", "--format", type="choice", dest="alignment",
+   choices=("sam", "bam"), default="sam",
+   help = "'bam' or 'sam'. The formats allowed for the alignment file are either bam or " +
+      "sam files." )
+
+optParser.add_option( "-r", "--order", type="choice", dest="order",
+   choices=("position", "name"), default="position",
+   help = "'position' or 'name'. If your reads are paired end, indicate the order of the reads in" +
+      " your alignment file. The file should be sorted either by position or by " +
+      "read name." )
+
    
 if len( sys.argv ) == 1:
    optParser.print_help()
@@ -57,7 +69,9 @@ out_file = args[2]
 stranded = opts.stranded == "yes" or opts.stranded == "reverse"
 reverse = opts.stranded == "reverse"
 is_PE = opts.paired == "yes"
+alignment = opts.alignment
 minaqual = opts.minaqual
+order = opts.order
 
 if sam_file == "-":
    sam_file = sys.stdin
@@ -94,12 +108,75 @@ def reverse_strand( s ):
    else:
       raise SystemError, "illegal strand"
 
+def update_count_vector( counts, rs ):
+   if( type(rs) == str):
+      counts[ rs ] += 1
+   else:
+      for f in rs:
+         counts[f.name] += 1
+   return counts
+
+
+def map_read_pair(af, ar):
+   rs = set()
+   if ar != None and ar.optional_field("NH") > 1:
+        return '_notunique'
+   if af != None and af.optional_field("NH") > 1:
+        return '_notunique'
+   if af and ar and not af.aligned and not ar.aligned:
+      return '_notaligned'
+   if af and ar and not af.aQual < minaqual and ar.aQual < minaqual:
+      return '_lowaqual'
+   if af and af.aligned and af.aQual >= minaqual and af.iv.chrom in features.chrom_vectors.keys():
+      for cigop in af.cigar:
+         if cigop.type != "M":
+            continue
+         if reverse:
+            cigop.ref_iv.strand = reverse_strand( cigop.ref_iv.strand )
+         for iv, s in features[cigop.ref_iv].steps():
+            rs = rs.union( s )
+   if ar and ar.aligned and ar.aQual >= minaqual and ar.iv.chrom in features.chrom_vectors.keys():
+      for cigop in ar.cigar:
+         if cigop.type != "M":
+            continue
+         if not reverse:
+            cigop.ref_iv.strand = reverse_strand( cigop.ref_iv.strand )
+         for iv, s in features[cigop.ref_iv].steps():
+               rs = rs.union( s )
+   set_of_gene_names = set( [ f.name.split(":")[0] for f in rs ] )
+   if len( set_of_gene_names ) == 0:
+      return '_empty'
+   elif len( set_of_gene_names ) > 1:
+      return '_ambiguous'
+   else:
+      return rs
+
+
+def clean_read_queue( queue, current_position ):
+   clean_queue = dict( queue )
+   for i in queue:
+      if queue[i].mate_start.pos < current_position:
+         warnings.warn( "Read "+ i + " claims to have an aligned mate that could not be found." )
+         del clean_queue[i]
+   return clean_queue
+
+   
+if alignment == "sam":
+   reader = HTSeq.SAM_Reader
+else:
+   if HTSeq.__version__ < '0.5.4p4':
+      raise SystemError, "If you are using alignment files in a bam format, please update your HTSeq to 0.5.4p4 or higher"
+   reader = HTSeq.BAM_Reader
+
+
 # Now go through the aligned reads
+num_reads = 0
 
 if not is_PE:
 
-   num_reads = 0
-   for a in HTSeq.SAM_Reader( sam_file ):
+   for a in reader( sam_file ):
+      if a.optional_field("NH") > 1:
+         continue
       if not a.aligned:
          counts[ '_notaligned' ] += 1
          continue
@@ -127,43 +204,68 @@ if not is_PE:
          sys.stderr.write( "%d reads processed.\n" % num_reads )
 
 else: # paired-end
+   alignments = dict()
+   if order == "name":
+      for af, ar in HTSeq.pair_SAM_alignments( reader( sam_file ) ):
+         if af == None and ar.mate_aligned:
+            continue
+         elif ar == None and af.mate_aligned:
+            continue
+         else:
+            rs = map_read_pair( af, ar )
+            if rs == '_notunique':
+               continue
+            counts = update_count_vector( counts, rs )
+            num_reads += 1
+         if num_reads % 100000 == 0:
+            sys.stderr.write( "%d reads processed.\n" % num_reads )
 
-   num_reads = 0
-   for af, ar in HTSeq.pair_SAM_alignments( HTSeq.SAM_Reader( sam_file ) ):
-      rs = set()
-      if af and ar and not af.aligned and not ar.aligned:
-         counts[ '_notaligned' ] += 1
-         continue
-      if af and ar and not af.aQual < minaqual and ar.aQual < minaqual:
-         counts[ '_lowaqual' ] += 1
-         continue
-      if af and af.aligned and af.aQual >= minaqual and af.iv.chrom in features.chrom_vectors.keys():
-         for cigop in af.cigar:
-            if cigop.type != "M":
-               continue
-            if reverse:
-               cigop.ref_iv.strand = reverse_strand( cigop.ref_iv.strand )
-            for iv, s in features[cigop.ref_iv].steps():
-               rs = rs.union( s )
-      if ar and ar.aligned and ar.aQual >= minaqual and ar.iv.chrom in features.chrom_vectors.keys():
-         for cigop in ar.cigar:
-            if cigop.type != "M":
-               continue
-            if not reverse:
-               cigop.ref_iv.strand = reverse_strand( cigop.ref_iv.strand )
-            for iv, s in features[cigop.ref_iv].steps():
-                  rs = rs.union( s )
-      set_of_gene_names = set( [ f.name.split(":")[0] for f in rs ] )
-      if len( set_of_gene_names ) == 0:
-         counts[ '_empty' ] += 1
-      elif len( set_of_gene_names ) > 1:
-         counts[ '_ambiguous' ] = 0
-      else:
-         for f in rs:
-            counts[ f.name ] += 1
-      num_reads += 1
-      if num_reads % 100000 == 0:
-         sys.stderr.write( "%d reads processed.\n" % num_reads )
+   else:
+      processed_chromosomes = dict()
+      num_reads = 0
+      current_chromosome=''
+      current_position=''
+      for a in reader( sam_file ):
+         if current_chromosome != a.iv.chrom:
+            if current_chromosome in processed_chromosomes:
+               raise SystemError, "A chromosome that had finished to be processed before was found again in the alignment file, is your alignment file properly sorted by position?"
+            processed_chromosomes[current_chromosome] = 1
+            alignments = clean_read_queue( alignments, current_position )
+            del alignments
+            alignments = dict()
+         if current_chromosome == a.iv.chrom and a.iv.start < current_position:
+            raise SystemError, "Current read position is smaller than previous reads, is your alignment file properly sorted by position?"
+         current_chromosome = a.iv.chrom
+         current_position = a.iv.start
+         if a.read.name and a.mate_aligned:
+            if a.read.name in alignments:
+               b = alignments[ a.read.name ]
+               if a.pe_which == "first" and b.pe_which == "second":
+                  af=a
+                  ar=b
+               else:
+                  af=b
+                  ar=a
+               rs = map_read_pair(af, ar)
+               del alignments[ a.read.name ]
+               if rs == '_notunique':
+                  continue
+               counts = update_count_vector(counts, rs)
+            else:
+               alignments[ a.read.name ] = a
+         else:
+            if a.pe_which == "first":
+               rs = map_read_pair(a, None)
+            else:
+               rs = map_read_pair(None, a)
+            if rs == '_notunique':
+               continue        
+            counts = update_count_vector(counts, rs)
+         num_reads += 1
+         if num_reads % 200000 == 0:
+            alignments = clean_read_queue( alignments, current_position )
+            sys.stderr.write( "%d reads processed.\n" % (num_reads / 2) )
+ 
 
  
 # Step 3: Write out the results
