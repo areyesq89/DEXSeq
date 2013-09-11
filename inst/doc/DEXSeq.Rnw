@@ -16,7 +16,7 @@ BiocStyle::latex()
 \usepackage{xstring}
 
 \usepackage{Sweave}
-\SweaveOpts{keep.source=TRUE, eps=FALSE, pdf=TRUE, png=FALSE, include=FALSE, width=4, height=4.5, prefix=FALSE}
+\SweaveOpts{keep.source=TRUE, eps=FALSE, pdf=TRUE, png=FALSE, include=FALSE, width=4, height=4.5}
 
 
 \author{Alejandro Reyes, Simon Anders, Wolfgang Huber\\[1em]
