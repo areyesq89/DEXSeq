@@ -7,7 +7,9 @@ exportMethods(
   sizeFactors, "sizeFactors<-",
   design, "design<-",
   estimateSizeFactors,
-  estimateDispersions
+  estimateDispersions,
+  plotDispEsts,
+  plotMA
 )
 
 export(

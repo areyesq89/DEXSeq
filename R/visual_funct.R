@@ -219,3 +219,63 @@ drawGene <- function(minx, maxx, tr, rango, exoncol=NULL, names, trName, ...)
    }
 }
 
+setMethod( "plotDispEsts", signature(object="ExonCountSet"),
+function( object, ymin = NULL, cex = 0.45 )
+{
+  if (all(is.na(fData(object)$dispBeforeSharing))) {
+      stop("No dispersion estimations found; call function estimateDispersions first.")
+  }
+
+  px = rowMeans( counts( object, normalized=TRUE ) )
+  sel = (px>0)
+  px = px[sel]
+
+  py = fData(object)$dispBeforeSharing[sel]
+  if(is.null(ymin))
+      ymin = 10^floor(log10(min(py[py>0], na.rm=TRUE))-0.1)
+
+  plot(px, pmax(py, ymin), xlab="mean of normalized counts", ylab="dispersion",
+    log="xy", pch=ifelse(py<ymin, 6, 16), cex=cex )
+  xg = 10^seq( -.5, 5, length.out=100 )
+  fun = function(x) { object@dispFitCoefs[1] + object@dispFitCoefs[2] / x }
+  lines( xg, fun(xg), col="#ff000080", lwd=4)
+}
+)
+
+setMethod( "plotMA", signature( object="data.frame" ),
+function( object, ylim = NULL,
+  colNonSig = "gray32", colSig = "red3", colLine = "#ff000080",
+  log = "x", cex=0.45, xlab="mean expression", ylab="log fold change", ... )
+{
+   if( !( ncol(object) == 3 & inherits( object[[1]], "numeric" ) & inherits( object[[2]], "numeric" )
+         & inherits( object[[3]], "logical" ) ) ) {
+      stop( "When called with a data.frame, plotMA expects the data frame to have 3 columns, two numeric ones for mean and log fold change, and a logical one for significance.")
+   }
+   colnames(object) <- c( "mean", "lfc", "sig" )
+   object = subset( object, mean != 0 )
+   py = object$lfc
+   if( is.null(ylim) )
+      ylim = c(-1,1) * quantile(abs(py[is.finite(py)]), probs=0.99) * 1.1
+   plot(object$mean, pmax(ylim[1], pmin(ylim[2], py)),
+       log=log, pch=ifelse(py<ylim[1], 6, ifelse(py>ylim[2], 2, 16)),
+       cex=cex, col=ifelse( object$sig, colSig, colNonSig ), xlab=xlab, ylab=ylab, ylim=ylim, ...)
+  abline( h=0, lwd=4, col=colLine )
+}
+)
+
+setMethod( "plotMA", signature( object="ExonCountSet" ),
+function( object, FDR = 0.1, ... )
+{
+   res <- DEUresultTable( object )
+   if( ncol(res) != 7 )
+      stop( "DEUresultTable has unexpected format. Have you already called estimatelog2FoldChanges?")
+   plotMA( 
+      data.frame( 
+         mean = res$meanBase,
+         lfc = res[,7],
+         sig = res$padjust < FDR ),
+      xlab = "average normalized count",
+      ylab = colnames(res)[7], 
+      ... )
+}
+)   

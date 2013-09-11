@@ -13,6 +13,7 @@ BiocStyle::latex()
 \newcommand{\tttildemiddle}{\raise.17ex\hbox{$\scriptstyle\mathtt{\sim}$}}
 
 \usepackage[sort]{cite}
+\usepackage{xstring}
 
 \usepackage{Sweave}
 \SweaveOpts{keep.source=TRUE, eps=FALSE, pdf=TRUE, png=FALSE, include=FALSE, width=4, height=4.5, prefix=FALSE}
@@ -24,14 +25,21 @@ BiocStyle::latex()
 
 \title{Inferring differential exon usage in RNA-Seq data with the DEXSeq package}
 
-
-%\date{\Rpackage{DEXSeq} version \Sexpr{packageDescription("DEXSeq")$Version} (Last revision \StrMid{$Date$}{8}{18})}
+\date{}
+%\date{\Rpackage{DEXSeq} version \Sexpr{packageDescription("DEXSeq")$Version} %
+%(Last revision \StrMid{$Date$}{8}{18})}
 
 \begin{document}
 
-
-
 \maketitle
+
+\noindent This vignette describes version \Sexpr{packageDescription("DEXSeq")$Version} of the \Rpackage{DEXSeq} package.
+
+\noindent Last revision of this document: \StrMid{$Date$}{8}{18}
+% Note: The preceding line uses SVN's keyword substitution mechanism: The text between "$Date:" and the second "$" 
+% is automatically replaced by a current time stamp when "svn ci"  is used. The \StrMid function (from the 
+% xstring package) takes out the relevant part. (To activate keyword substitution for another file, use
+% "svn propset svn:keywords Date filename.txt".)
 
 <<options,results=hide,echo=FALSE>>=
 options(digits=2, width=80)
@@ -42,8 +50,6 @@ options(digits=2, width=80)
 %-----------------------------------------------------------
 \section{Overview}
 %-----------------------------------------------------------
-
-\subsection{Concepts}
 
 The Bioconductor package \Rpackage{DEXseq} implements a method to test for differential exon usage
 in comparative RNA-Seq experiments. By ``differential exon usage'', we mean that the fraction of
@@ -83,20 +89,6 @@ true value, because of the low amount of data.) Second, \emph{DEXSeq} is not lim
 simple two-group comparisons. Rather, \emph{DEXSeq} is based on so-called generalized linear mdoels
 (GLMs) and hence any experimental design that is suitable for an ANOVA-like analysis can be
 examined.
-
-\subsection{Workflow}
-
-The input for a \emph{DEXSeq} analysis is a count table, with one column for each sample, and
-one row for each \emph{couting bin}, where the latter term refers to an exon, or part of an exon.
-The table fields contains read counts, i.e., integer numbers which indicate how many sequencing
-reads were aligned to the given counting bin in the given sample. There are different ways to obtain
-such a count table: the recommended approach for standard situations is described in Section 
-\ref{PythonScripts}, an alternative approach is documented in Appendix \ref{sec:creatingInR}.
-
-From this input data, an R object of class \Rclass{ExonCountSet} is constructed. In the 
-subsequent analysis steps, this object is filled with intermediate and final results.
-
-\fixme{Continue...}
 
 \section{Preparations} \label{preps}
 
@@ -376,6 +368,11 @@ genomic coordinates of the exon, and the list of transcripts that contain an exo
 columns for intermediate and final results are already present but will be filled in only
 in the subsequents steps of the analysis.
 
+In the following sections, we will update the object by calling a number of analysis function,
+always using the idiom ``\verb| ecs <- |\textit{\texttt{someFunction}}\verb|( ecs )|'', which
+takes the ecs objects, fills in the results of the performed computation and writes the returned
+and updated object back into the variable \verb|ecs|.
+
  %--------------------------------------------------
 \subsection{Normalisation}\label{sec:norm}
 %--------------------------------------------------
@@ -392,60 +389,6 @@ sizeFactors(ecs)
 @
 
 
-%------------------------------------------------------------
-\subsection{Helper functions}\label{sec:helperfun}
-%------------------------------------------------------------
-
-\fixme{Make sure these are in the package, then remove this section.}
-
-The \texttt{.Rnw} file that underlies this document contains the
-definition of helper functions that this lab uses for the preparation
-of plots: \Rfunction{plotDispEsts} and \Rfunction{plotMA}.  Before
-preceding, please run the code chunk where these functions are
-defined, so you have them available in your workspace. (In future
-versions of the \Rpackage{DEXSeq} package, these functions will
-already be defined in the package.)
-%
-<<helperfunctions, echo=FALSE>>=
-plotDispEsts = function( cds, ymin, linecol="#ff000080",
-  xlab = "mean of normalized counts", ylab = "dispersion",
-  log = "xy", cex = 0.45, ... )
-{
-  px = rowMeans( counts( cds, normalized=TRUE ) )
-  sel = (px>0)
-  px = px[sel]
-
-  py = fData(cds)$dispBeforeSharing[sel]
-  if(missing(ymin))
-      ymin = 10^floor(log10(min(py[py>0], na.rm=TRUE))-0.1)
-
-  plot(px, pmax(py, ymin), xlab=xlab, ylab=ylab,
-    log=log, pch=ifelse(py<ymin, 6, 16), cex=cex, ... )
-  xg = 10^seq( -.5, 5, length.out=100 )
-  fun = function(x) { cds@dispFitCoefs[1] + cds@dispFitCoefs[2] / x }
-  lines( xg, fun(xg), col=linecol, lwd=4)
-}
-
-plotMA = function(x, ylim,
-  col = ifelse(x$padj>=0.1, "gray32", "red3"),
-  linecol = "#ff000080",
-  xlab = "mean of normalized counts", ylab = expression(log[2]~fold~change),
-  log = "x", cex=0.45, ...)
-{
-  if (!(is.data.frame(x) && all(c("baseMean", "log2FoldChange") %in% colnames(x))))
-    stop("'x' must be a data frame with columns named 'baseMean', 'log2FoldChange'.")
-
-  x = subset(x, baseMean!=0)
-  py = x$log2FoldChange
-  if(missing(ylim))
-      ylim = c(-1,1) * quantile(abs(py[is.finite(py)]), probs=0.99) * 1.1
-  plot(x$baseMean, pmax(ylim[1], pmin(ylim[2], py)),
-       log=log, pch=ifelse(py<ylim[1], 6, ifelse(py>ylim[2], 2, 16)),
-       cex=cex, col=col, xlab=xlab, ylab=ylab, ylim=ylim, ...)
-  abline(h=0, lwd=4, col=linecol)
-}
-@
-
 %--------------------------------------------------
 \subsection{Dispersion estimation}\label{sec:dispest}
 %--------------------------------------------------
@@ -457,7 +400,8 @@ However, in RNA-seq experiments the number of replicates is often too small to e
 variance or dispersion parameters individually exon by exon. Instead, variance information is shared
 across exons and genes, in an intensity dependent manner.
 
-In this section, we discuss simple one-way designs: In this setting, samples with the same experimental condition, as indicated in the \emph{conditions} factor of the design table (see above), are 
+In this section, we discuss simple one-way designs: In this setting, samples with the same experimental 
+condition, as indicated in the \emph{conditions} factor of the design table (see above), are 
 considered as replicates -- and therefore, the design table needs to contain a column with the
 name \verb|condition|. In Section \ref{sec:glm}, we discuss how to treat more complicated experimental
 design which cannot be accomodated by a single ``condition'' factor.
@@ -613,15 +557,11 @@ the exons with an adjusted $p$ values of less than 0.1 (Figure \ref{DEXSeq-MvsA}
 There is of course nothing special about the number 0.1, and you can specify other thresholds in the call to \Rfunction{plotMA}.
 %
 <<MvsA, fig=TRUE, pdf=FALSE, png=TRUE, resolution=180>>=
-plotMA(with(res1, data.frame(baseMean = meanBase,
-                             log2FoldChange = `log2fold(untreated/treated)`,
-                             padj = padjust)),
-     ylim=c(-4,4), cex=0.8)
+plotMA( ecs, FDR=0.1, ylim=c(-4,4), cex=0.8 )
 @
 \incfig{DEXSeq-MvsA}{.5\textwidth}{M vs A plot.}{
 Mean expression versus $\log_2$ fold change plot. Significant hits (at \Robject{padj}<0.1) are colored in red.
 }
-\fixme{Make MA plots nicer.}
 
 %$
 %------------------------------------------------------------

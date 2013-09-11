@@ -30,6 +30,7 @@ doCompleteDEUAnalysis <- function( ecs,
 \item{minCount}{
    Exons with less than `minCount' reads (summed over all samples) are
    excluded from the test. See \code{\link{estimateDispersions}} for details.
+}   
 \item{nCores}{
     Number of CPU cores to be used when running \code{\link{estimateDispersions}} and \code{\link{testForDEU}}.
     Load the ``parallel'' package beforehands if you want to use more than one core.
