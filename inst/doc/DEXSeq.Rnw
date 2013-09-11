@@ -457,12 +457,12 @@ As a fit diagnostic, we plot the per-exon dispersion estimates versus the mean n
 plotDispEsts( ecs )
 @
 
-\incfig{fitdiagnostics}{.5\textwidth}{Fit Diagnostics.}{
+\incfig{DEXSeq-fitdiagnostics}{.5\textwidth}{Fit Diagnostics.}{
 Per-gene dispersion estimates (shown by points) and the fitted mean-dispersion function (red line).
 }
 
 %
-The plot (Figure~\ref{fitdiagnostics}) shows the estimates for all exons as dots and the fit as red
+The plot (Figure~\ref{DEXSeq-fitdiagnostics}) shows the estimates for all exons as dots and the fit as red
 line. The red line follows the trend of the dots in the upper cluster of dots. The lower cluster
 stems from exons for which the sample noise happens to fall below shot noise, i.e., their sample estimates
 of the dispersion is zero or close to zero and hence form another cluster at the bottom. The fact that these
