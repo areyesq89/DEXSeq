@@ -302,12 +302,11 @@ data package, an \Robject{ExonCountSet}, similar to the one constructed in the p
 However, in order to keep the run-time of the vignette small, we have subset the object to
 only a few genes.
 
-To start, we load the packages \Rpackage{DEXSeq} and \Rpackage{pasilla} and load the
-example data with the \Rfunction{data} command.
+To start, we load the packages \Rpackage{DEXSeq} load the
+example data from the \Rpackage{pasilla} package with the \Rfunction{data} command.
 
 <<start,results=hide>>=
 library( DEXSeq )
-library( pasilla )
 data( "pasillaExons", package="pasilla" )
 @
 

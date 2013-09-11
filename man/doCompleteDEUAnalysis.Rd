@@ -7,7 +7,7 @@
  with p values, adjusted p values and fold change estimates.
 }
 \usage{
-doCompleteDEUAnalysis <- function( ecs, 
+doCompleteDEUAnalysis( ecs, 
      formula0 = ~ sample + exon, 
      formula1 = ~ sample + condition * exon, 
      minCount = 10,
@@ -16,7 +16,8 @@ doCompleteDEUAnalysis <- function( ecs,
      FDR = 0.1, 
      fitExpToVar = "condition", 
      color = NULL, 
-     color.samples = NULL ) }
+     color.samples = NULL ) 
+}
 \arguments{
 \item{ecs}{
     An ExonCountSet object.
