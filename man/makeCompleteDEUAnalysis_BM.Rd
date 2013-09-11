@@ -1,13 +1,14 @@
-\name{makeCompleteDEUAnalysis}
-     \alias{makeCompleteDEUAnalysis}
+\name{makeCompleteDEUAnalysis_BM}
+     \alias{makeCompleteDEUAnalysis_BM}
      \title{Complete differential exon usage analysis}
      \description{
-       This function performs a complete differential exon usage analysis, calling
+       This function performs a complete differential exon usage analysis, in the
+       old (now deprecated) "big model" approach, calling
        all the necessary functions and giving back an \code{ExonCountSet} object 
        with p values and p adjusted values.
      }
      \usage{
-makeCompleteDEUAnalysis(ecs, 
+makeCompleteDEUAnalysis_BM(ecs, 
         formulaDispersion=count ~ sample + condition*exon, 
         minCount=10, maxExon=50, formula0=NULL, formula1=NULL, 
         FDR=0.1, fitExpToVar="condition", nCores=1, path=NULL, 
@@ -101,7 +102,7 @@ data("pasillaExons", package="pasilla")
 formuladispersion <- count ~ sample + ( exon + type ) * condition
 formula0 <- count ~ sample + type * exon + condition
 formula1 <- count ~ sample + type * exon + condition * I(exon == exonID)
-pasillaExons <- makeCompleteDEUAnalysis(pasillaExons, 
+pasillaExons <- makeCompleteDEUAnalysis_BM(pasillaExons, 
    formulaDispersion=formuladispersion, 
    formula0=formula0, 
    formula1=formula1)

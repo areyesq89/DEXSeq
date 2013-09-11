@@ -1,7 +1,7 @@
-\name{testGeneForDEU}
-\alias{testGeneForDEU}
+\name{testGeneForDEU_BM}
+\alias{testGeneForDEU_BM}
 \title{
-      Test a single gene for differential exon usage.
+      Test a single gene for differential exon usage using the old (and deprecated) "big model" approach.
 }
 \description{
     This function first fits a GLM for the null model, then a GLM for
@@ -9,7 +9,7 @@
     a chi-squared test from the deviance differences between the models.
 }
 \usage{
-testGeneForDEU( ecs, gene, formula0=NULL, formula1=NULL )
+testGeneForDEU_BM( ecs, gene, formula0=NULL, formula1=NULL )
 }
 \arguments{
   \item{ecs}{
@@ -42,9 +42,9 @@ testGeneForDEU( ecs, gene, formula0=NULL, formula1=NULL )
 \examples{
    data("pasillaExons", package="pasilla")
    pasillaExons <- estimateSizeFactors( pasillaExons )
-   pasillaExons <- estimateDispersions( pasillaExons )
+   pasillaExons <- estimateDispersions_BM( pasillaExons )
    pasillaExons <- fitDispersionFunction( pasillaExons )
-   testGeneForDEU(pasillaExons, "FBgn0085442")
+   testGeneForDEU_BM(pasillaExons, "FBgn0085442")
 }
 \seealso{
    \code{testForDEU}

@@ -6,7 +6,7 @@ rmDepCols <- function(m) {
       m
 }
 
-modelFrameForTRT <- function( ecs ){
+constructModelFrame <- function( ecs ){
   stopifnot( inherits( ecs, "ExonCountSet" ) )
   modelFrame <- cbind(
      sample = sampleNames(ecs),
@@ -19,7 +19,7 @@ modelFrameForTRT <- function( ecs ){
   return( modelFrame )
 }
 
-getCountVectorTRT <- function( ecs, geneID, exonID ) {
+getCountVector <- function( ecs, geneID, exonID ) {
    stopifnot( inherits( ecs, "ExonCountSet" ) )
    ctfg <- countTableForGene( ecs, geneID )
    w <- which( rownames(ctfg) == exonID )
@@ -27,13 +27,13 @@ getCountVectorTRT <- function( ecs, geneID, exonID ) {
    c( ctfg[ w, ], colSums( ctfg[ -w, , drop=FALSE ] ) )
 }
 
-estimateExonDispersionTRT <- function( ecs, geneID, exonID, modelFrame, mm ){
+estimateExonDispersion <- function( ecs, geneID, exonID, modelFrame, mm ){
    stopifnot( inherits( ecs, "ExonCountSet" ) )
    if( all( is.na( sizeFactors( ecs ) )) ){
      stop("Please calculate size factors before estimating dispersions\n")
    }
    
-   count <- getCountVectorTRT( ecs, geneID, exonID )
+   count <- getCountVector( ecs, geneID, exonID )
    disp <- .1
    for( i in 1:10 ) {
      fit <- glmnb.fit( mm, count, disp, log( modelFrame$sizeFactor ) )
@@ -46,43 +46,40 @@ estimateExonDispersionTRT <- function( ecs, geneID, exonID, modelFrame, mm ){
   disp
 }
 
-estimateDispersionsTRT <- function( ecs, formula= ~ sample + condition * exon, nCores=1, minCount=10 ){
-  stopifnot( inherits( ecs, "ExonCountSet" ) )
-   if( all( is.na( sizeFactors( ecs )) ) ){
+setMethod("estimateDispersions", signature(object="ExonCountSet"),
+function( object, formula= ~ sample + condition * exon, nCores=1, minCount=10 ){
+  stopifnot( inherits( object, "ExonCountSet" ) )
+   if( all( is.na( sizeFactors( object )) ) ){
      stop("Please calculate size factors before estimating dispersions\n")
    }
-   testable <- rowSums(counts(ecs)) >= minCount
-   for( r in split( seq_len(nrow(ecs)), geneIDs(ecs) ) ) {
+   testable <- rowSums(counts(object)) >= minCount
+   for( r in split( seq_len(nrow(object)), geneIDs(object) ) ) {
      if( sum( testable[r] ) <= 1 )
        testable[r] <- FALSE
    }
-   fData(ecs)$testable <- testable
-
-   if(!all(testable) & nCores<=1){
-      warning(sprintf("Exons with less than %d counts will not be tested. For more details please see the manual page of 'estimateDispersions', parameter 'minCount'", minCount))
-   }
+   fData(object)$testable <- testable
 
    if( nCores > 1 ){
       if (!is.loaded("mc_fork", PACKAGE = "parallel")) {
-          stop("Please load first parallel package or set parameter nCores to 1...")
+          stop("Please load first parallel package or set parameter nCores to 1.")
       }else{
           myApply <- function(X, FUN){ parallel:::mclapply( X, FUN, mc.cores=nCores ) }
       }
    }else{
      myApply <- lapply
    }
-   ecs@formulas[["formulaDispersionTRT"]] <- deparse(formula)
+   object@formulas[["formulaDispersion"]] <- deparse(formula)
 
-   rows <- seq_len(nrow(ecs))
-   modelFrame <- modelFrameForTRT( ecs )
+   rows <- seq_len(nrow(object))
+   modelFrame <- constructModelFrame( object )
    mm <- rmDepCols( model.matrix( formula, modelFrame ) )
    disps <- myApply( rows, function(i) {
       if( i %% 100 == 0 )
          cat(".")
-      if( fData(ecs)$testable[i] ) {
-         a <- try( estimateExonDispersionTRT( ecs, geneIDs(ecs)[i], exonIDs(ecs)[i], modelFrame, mm ), silent=TRUE)
+      if( fData(object)$testable[i] ) {
+         a <- try( estimateExonDispersion( object, geneIDs(object)[i], exonIDs(object)[i], modelFrame, mm ), silent=TRUE)
          if( inherits( a, "try-error" ) ) {
-            warning( sprintf("Unable to estimate dispersions for %s:%s", as.character( geneIDs(ecs)[i] ), exonIDs(ecs)[i]) )
+            warning( sprintf("Unable to estimate dispersions for %s:%s", as.character( geneIDs(object)[i] ), exonIDs(object)[i]) )
             NA }
          else{
             a }
@@ -90,28 +87,28 @@ estimateDispersionsTRT <- function( ecs, formula= ~ sample + condition * exon, n
           NA 
       }
     })
-    names(disps) <- featureNames(ecs)
-    fData(ecs)[names(disps), "dispBeforeSharing"] <- unlist(disps)
-    fData(ecs)$testable[which( is.na( fData(ecs)$dispBeforeSharing ) )] <- FALSE
+    names(disps) <- featureNames(object)
+    fData(object)[names(disps), "dispBeforeSharing"] <- unlist(disps)
+    fData(object)$testable[which( is.na( fData(object)$dispBeforeSharing ) )] <- FALSE
     cat("\nDone\n")
-    ecs
-}
+    object
+} )
 
-
-testExonForDEUTRT <- function(ecs, geneID, exonID, modelFrame, mm0, mm1, disp){
+testExonForDEU <- function(ecs, geneID, exonID, modelFrame, mm0, mm1, disp){
   stopifnot( inherits( ecs, "ExonCountSet" ) )
   stopifnot( !is.na(disp) )
   stopifnot( any(geneIDs(ecs) %in% geneID & exonIDs(ecs) %in% exonID ) )
   if( all( is.na( sizeFactors( ecs )) ) ){
     stop("Please calculate size factors first\n")
   }
-  count <- getCountVectorTRT( ecs, geneID, exonID )
+  count <- getCountVector( ecs, geneID, exonID )
   fit0  <- glmnb.fit( mm0,  count, disp, log( modelFrame$sizeFactor ) )
   fit1 <- glmnb.fit( mm1, count, disp, log( modelFrame$sizeFactor ) )
   pchisq( deviance( fit0 ) - deviance( fit1 ), ncol( mm1 ) - ncol( mm0 ), lower.tail=FALSE )
 }
 
-testForDEUTRT <- function( ecs, nCores=1, formula0= ~sample + condition + exon, formula1= ~sample + condition * exon, dispColumn="dispersion"){
+testForDEU <- function( ecs, nCores=1, formula0= ~ sample + exon, 
+     formula1= ~ sample + condition * exon, dispColumn="dispersion"){
   stopifnot( inherits( ecs, "ExonCountSet" ) )
    if( all( is.na( sizeFactors( ecs )))) {
      stop("Please calculate size factors before estimating dispersions\n")
@@ -128,10 +125,10 @@ testForDEUTRT <- function( ecs, nCores=1, formula0= ~sample + condition + exon, 
    }else{
      myApply <- lapply
    }
-   ecs@formulas[["formula0TRT"]] <- deparse(formula0)
-   ecs@formulas[["formula1TRT"]] <- deparse(formula1)
+   ecs@formulas[["formula0"]] <- deparse(formula0)
+   ecs@formulas[["formula1"]] <- deparse(formula1)
    rows <- seq_len(nrow(ecs))
-   modelFrame <- modelFrameForTRT( ecs )
+   modelFrame <- constructModelFrame( ecs )
    mm0 <- rmDepCols( model.matrix( formula0, modelFrame ) )
    mm1 <- rmDepCols( model.matrix( formula1, modelFrame ) )
 
@@ -140,7 +137,7 @@ testForDEUTRT <- function( ecs, nCores=1, formula0= ~sample + condition + exon, 
        if( i %% 1000 == 0 )
           cat(".")
        if( fData(ecs)$testable[i] ) {
-          a <- try( testExonForDEUTRT( ecs, geneIDs(ecs)[i], exonIDs(ecs)[i], modelFrame, mm0, mm1, fData(ecs)[i, dispColumn] ) )
+          a <- try( testExonForDEU( ecs, geneIDs(ecs)[i], exonIDs(ecs)[i], modelFrame, mm0, mm1, fData(ecs)[i, dispColumn] ) )
           if( any(inherits( a, "try-error" ) )) {
              warning( sprintf("Unable to calculate p-values for %s:%s\n", as.character( geneIDs(ecs)[i] ), exonIDs(ecs)[i]) )
              NA }
@@ -157,4 +154,20 @@ testForDEUTRT <- function( ecs, nCores=1, formula0= ~sample + condition + exon, 
 }
 
 
+
+
+doCompleteDEUAnalysis <- function( ecs, formula0 = ~ sample + exon, formula1 = ~ sample + condition * exon, minCount=10,
+     nCores=1, path=NULL, FDR=0.1, fitExpToVar="condition", color=NULL, color.samples=NULL )
+{
+   stopifnot(is(ecs, "ExonCountSet"))
+   ecs <- estimateSizeFactors( ecs )
+   ecs <- estimateDispersions( ecs, formula1, nCores=nCores, minCount=minCount )
+   ecs <- fitDispersionFunction( ecs )
+   ecs <- testForDEU( ecs, formula0=formula0, formula1=formula1, nCores=nCores )
+   ecs <- estimatelog2FoldChanges(ecs, fitExpToVar=fitExpToVar, nCores=nCores )
+   if( !is.null(path) ) {
+      DEXSeqHTML( ecs, path=path, FDR=FDR, fitExpToVar=fitExpToVar, color=color, color.samples=color.samples )
+   }
+   ecs
+}
 

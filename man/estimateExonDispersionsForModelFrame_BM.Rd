@@ -1,13 +1,14 @@
-\name{estimateExonDispersionsForModelFrame}
-   \alias{estimateExonDispersionsForModelFrame}
-   \title{Estimates exon dispersions}
+\name{estimateExonDispersionsForModelFrame_BM}
+   \alias{estimateExonDispersionsForModelFrame_BM}
+   \title{Estimates exon dispersions for the (deprecated) "big model" method}
    \description{
        This function calculates the individual dispersions for each
-       counting bins for a single gene. It takes as input  a 
+       counting bins for a single gene. It is used only for the old, now deprecated,
+       "big model" approach. The function takes as input  a 
        model frame generated from the function \code{\link{modelFrameForGene}}.
 	}
 \usage{
-estimateExonDispersionsForModelFrame(modelFrame, formula=NULL, mm=NULL, 
+estimateExonDispersionsForModelFrame_BM(modelFrame, formula=NULL, mm=NULL, 
                                                  muhat=NULL, initialGuess=0.01)
 }
 \arguments{
@@ -38,7 +39,7 @@ estimateExonDispersionsForModelFrame(modelFrame, formula=NULL, mm=NULL,
 \examples{
 	data("pasillaExons", package="pasilla")
 	pasillaExons <- estimateSizeFactors( pasillaExons )
-	estimateExonDispersionsForModelFrame(modelFrameForGene(pasillaExons, "FBgn0085442"))
+	estimateExonDispersionsForModelFrame_BM(modelFrameForGene(pasillaExons, "FBgn0085442"))
 }
 \seealso{
         \code{\link{estimateDispersions}}
