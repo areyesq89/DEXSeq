@@ -9,7 +9,7 @@
 \usage{
 doCompleteDEUAnalysis( ecs, 
      formula0 = ~ sample + exon, 
-     formula1 = ~ sample + condition * exon, 
+     formula1 = ~ sample + exon + condition:exon, 
      minCount = 10,
      nCores = 1, 
      path = NULL, 
