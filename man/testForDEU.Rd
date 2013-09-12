@@ -10,7 +10,7 @@
 testForDEU( ecs, 
    nCores = 1, 
    formula0 = ~ sample + exon, 
-   formula1 = ~ sample + condition * exon, 
+   formula1 = ~ sample + exon + condition : exon, 
    dispColumn="dispersion")
 }
 \arguments{

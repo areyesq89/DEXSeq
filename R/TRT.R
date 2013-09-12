@@ -47,7 +47,7 @@ estimateExonDispersion <- function( ecs, geneID, exonID, modelFrame, mm ){
 }
 
 setMethod("estimateDispersions", signature(object="ExonCountSet"),
-function( object, formula= ~ sample + condition * exon, nCores=1, minCount=10 ){
+function( object, formula= ~ sample + exon + condition : exon, nCores=1, minCount=10 ){
   stopifnot( inherits( object, "ExonCountSet" ) )
    if( all( is.na( sizeFactors( object )) ) ){
      stop("Please calculate size factors before estimating dispersions\n")
@@ -156,7 +156,7 @@ testForDEU <- function( ecs, nCores=1, formula0= ~ sample + exon,
 
 
 
-doCompleteDEUAnalysis <- function( ecs, formula0 = ~ sample + exon, formula1 = ~ sample + condition * exon, minCount=10,
+doCompleteDEUAnalysis <- function( ecs, formula0 = ~ sample + exon, formula1 = ~ sample + exon + condition : exon, minCount=10,
      nCores=1, path=NULL, FDR=0.1, fitExpToVar="condition", color=NULL, color.samples=NULL )
 {
    stopifnot(is(ecs, "ExonCountSet"))

@@ -10,7 +10,7 @@
 }
 \usage{
 \S4method{estimateDispersions}{ExonCountSet}( object,
-         formula = ~ sample + condition * exon,
+         formula = ~ sample + exon + condition : exon,
          nCores = 1,
          minCount = 10)
 }

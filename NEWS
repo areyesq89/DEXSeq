@@ -27,3 +27,9 @@
 - A parameter -r was added to the python scripts, that allow the users either to ignore the exonic bins belonging
   to several genes and treat the genes separately, or merge the genes into an aggregate gene. The equivalent R implementations
   of the python scripts were finally added.
+
+2013-09-12: version 1.7.14
+
+- Major changes to vignette to provide more of an end-to-end description of the work flow.
+- Major changes to function names to now make TRT rather than BM the default; changed vignette to reflect this.
+- Added apepndix explaining TRT to vignette.
