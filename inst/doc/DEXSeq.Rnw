@@ -10,6 +10,15 @@
 BiocStyle::latex()
 @
 
+% My changes to the Bioc style:
+\IfFileExists{inconsolata.sty}{\usepackage{inconsolata}}{\usepackage{zi4}}  % I like Inconsolata as terminal font
+\renewcommand{\familydefault}{\mddefault}  % I want serifs in my body text
+\renewcommand{\maketitlehooka}{\sffamily\bfseries} % The title should be sans-serif, though
+\renewcommand{\maketitlehookb}{\rmfamily\mdseries}  % But not the authors
+\fancyhead[LE,RO]{\sffamily\small\thepage}  % The header should not be the same font and size as the body,
+\fancyhead[LO,RE]{\sffamily\small\thetitle} % because this is confusing.
+
+
 \newcommand{\tttildemiddle}{\raise.17ex\hbox{$\scriptstyle\mathtt{\sim}$}}
 
 \usepackage[sort]{cite}
@@ -787,8 +796,10 @@ head( DEUresultTable( pasillaExons ) )
 @
 
 \appendix
-\section*{APPENDIX}
-\addcontentsline{toc}{section}{APPENDIX}
+\clearpage
+\begin{center}
+{\Large\sffamily\bfseries\color{BiocBlue} APPENDIX} \addcontentsline{toc}{section}{APPENDIX}
+\end{center}
 
 %--------------------------------------------------
 \section{Preprocessing within R}\label{sec:creatingInR}
