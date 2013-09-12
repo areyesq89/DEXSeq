@@ -242,7 +242,7 @@ testForDEU_BM <- function( ecs, formula0=NULL, formula1=NULL, nCores=1, quiet=FA
    if(nCores > 1){
       if(!quiet){
       cat(sprintf("Testing for differential exon usage using %d cores. (Progress report: one dot per 100 genes)\n", nCores), file=file, append=TRUE)}
-      toapply <- function(x){testForDEU(x, formula0=formula0, formula1=formula1, nCores=-1, file=file, quiet=quiet)}
+      toapply <- function(x){testForDEU_BM(x, formula0=formula0, formula1=formula1, nCores=-1, file=file, quiet=quiet)}
       ecs <- divideWork(ecs, funtoapply=toapply, fattr="pvalue", mc.cores=nCores, testablegenes)
    }else{
       i <- 0
