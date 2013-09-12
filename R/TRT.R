@@ -39,7 +39,8 @@ estimateExonDispersion <- function( ecs, geneID, exonID, modelFrame, mm ){
      fit <- glmnb.fit( mm, count, disp, log( modelFrame$sizeFactor ) )
      olddisp <- disp
      disp <- exp( optimize( function(logalpha)
-     profileLogLikelihood( exp(logalpha), mm, count, fitted.values(fit) ), log( c( 1e-11, 1e5 ) ), maximum=TRUE, tol=.01 )$maximum )
+        profileLogLikelihood( exp(logalpha), mm, count, fitted.values(fit) ), 
+        log( c( 1e-11, 1e5 ) ), maximum=TRUE, tol=.01 )$maximum )
      if( abs( log(disp) - log(olddisp) ) < .03 )
         break
      }
