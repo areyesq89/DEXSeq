@@ -96,7 +96,7 @@ estimateDispersions_BM <- function( object, formula=count ~ sample + condition*e
       if(nCores > 1){
          if(!quiet){
          cat(sprintf("Estimating Cox-Reid exon dispersion estimates using %d cores. (Progress report: one dot per 100 genes)\n", nCores), file=file, append=TRUE)}
-         toapply <- function(x){estimateDispersions(x, formula=formula, initialGuess=initialGuess, nCores=-1, minCount=minCount, maxExon=maxExon, file=file, quiet=quiet)}
+         toapply <- function(x){estimateDispersions_BM(x, formula=formula, initialGuess=initialGuess, nCores=-1, minCount=minCount, maxExon=maxExon, file=file, quiet=quiet)}
          cds <- divideWork(cds, funtoapply=toapply, fattr="dispBeforeSharing", mc.cores=nCores, testablegenes)
       }else{
          modelFrames <- lapply( testablegenes, function(gs) {

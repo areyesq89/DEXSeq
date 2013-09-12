@@ -11,8 +11,7 @@
 \usage{
 \S4method{estimateDispersions}{ExonCountSet}( object,
          formula = ~ sample + exon + condition : exon,
-         nCores = 1,
-         minCount = 10)
+         minCount = 10, nCores = 1 )
 }
 
 \arguments{
@@ -25,17 +24,17 @@
      columns of the ExonCountSet object, the l.h.s. will be the counts
      for each exon.
    }
-  \item{nCores}{
-     Number of cores to be used to estimate the dispersions.
-     The \code{parallel} package must be loaded in order to spread the
-     job onto several cores.
-   }
   \item{minCount}{
      Counting bins with less than \code{minCount} counts (summed over all
      samples) are skipped in the tests. This reduces computation
      time, as counting bins with very few counts cannot give
      a significant signal anyway. For skipped counting bins, the
      \code{testable} column in \code{fData} is set to \code{FALSE}.
+   }
+  \item{nCores}{
+     Number of cores to be used to estimate the dispersions.
+     The \code{parallel} package must be loaded in order to spread the
+     job onto several cores.
    }
 }
 \value{

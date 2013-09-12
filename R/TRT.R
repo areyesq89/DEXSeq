@@ -48,7 +48,7 @@ estimateExonDispersion <- function( ecs, geneID, exonID, modelFrame, mm ){
 }
 
 setMethod("estimateDispersions", signature(object="ExonCountSet"),
-function( object, formula= ~ sample + exon + condition : exon, nCores=1, minCount=10 ){
+function( object, formula= ~ sample + exon + condition : exon, minCount=10, nCores=1 ){
   stopifnot( inherits( object, "ExonCountSet" ) )
    if( all( is.na( sizeFactors( object )) ) ){
      stop("Please calculate size factors before estimating dispersions\n")
@@ -108,8 +108,8 @@ testExonForDEU <- function(ecs, geneID, exonID, modelFrame, mm0, mm1, disp){
   pchisq( deviance( fit0 ) - deviance( fit1 ), ncol( mm1 ) - ncol( mm0 ), lower.tail=FALSE )
 }
 
-testForDEU <- function( ecs, nCores=1, formula0 = ~ sample + exon, 
-    formula1 = ~ sample + exon + condition:exon, dispColumn="dispersion"){
+testForDEU <- function( ecs, formula0 = ~ sample + exon, 
+    formula1 = ~ sample + exon + condition:exon, dispColumn="dispersion", nCores=1 ){
   stopifnot( inherits( ecs, "ExonCountSet" ) )
    if( all( is.na( sizeFactors( ecs )))) {
      stop("Please calculate size factors before estimating dispersions\n")

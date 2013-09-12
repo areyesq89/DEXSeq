@@ -8,10 +8,9 @@
 }
 \usage{
 testForDEU( ecs, 
-   nCores = 1, 
    formula0 = ~ sample + exon, 
    formula1 = ~ sample + exon + condition : exon, 
-   dispColumn="dispersion")
+   dispColumn="dispersion", nCores = 1 )
 }
 \arguments{
   \item{ecs}{
@@ -23,12 +22,12 @@ testForDEU( ecs,
   \item{formula1}{
      Formula for the full model to be used in the GLM fit. 
   }
+  \item{dispColumn}{
+     Column name from the feature data frame from where to take the dispersions.
+  }
   \item{nCores}{
      Number of CPUcores to be used to calculate the $p$-values.  
      The \code{parallel} package must be loaded to use more than 1 core.
-  }
-  \item{dispColumn}{
-     Column name from the feature data frame from where to take the dispersions.
   }
 }
 \details{
