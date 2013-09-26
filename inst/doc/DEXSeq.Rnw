@@ -62,49 +62,52 @@ options(digits=2, width=80)
 %-----------------------------------------------------------
 
 The Bioconductor package \Rpackage{DEXseq} implements a method to test for differential exon usage
-in comparative RNA-Seq experiments. By ``differential exon usage'', we mean that the fraction of
-transcripts that incorporate the exon is affected by the experimental condition. The statistical 
-method used by \Rpackage{DEXSeq} is described in our paper \cite{DEXSeqPaper}. The basic concept can 
-be summarized as follows: 
+in comparative RNA-Seq experiments. By \emph{differential exon usage} (DEU), we mean changes in the relative 
+usage of exons caused by the experimental condition. The relative usage of an exon is defined as
+\begin{equation}\label{eq:reu}
+  \frac{\text{number of transcripts from the gene that contain this exon}}%
+  {\text{number of all transcripts from the gene}}.
+\end{equation}
+The statistical method used by \Rpackage{DEXSeq} was introduced in our paper \cite{DEXSeqPaper}. The basic concept can 
+be summarized as follows. For each exon (or part of an exon) and each sample, we count how many 
+reads map to this exon and how many reads map to any of the other exons of the same gene. 
+% FIXME: is this true - is the denominator the *other* exons or *all* exons?
+We consider the ratio of these two counts, and how it changes across conditions, to infer changes in 
+the relative exon usage~(\ref{eq:reu}).
+In the case of an inner exon, a change in relative exon usage is typically due to a change
+in the rate with which this exon is spliced into transcripts (alternative splicing). 
+Note, however, that DEU is a more
+general concept than alternative splicing, since it also includes 
+changes in the usage of alternative transcript start sites
+and polyadenylation sites, which can cause
+differential usage of  exons at the 5' and 3' boundary of transcripts.
 
-For each exon (or part of an exon) and each sample, we count how many 
-reads map to this exon and how many reads map to any of the other exons of the same gene. The ratio
-of these two counts can be considered as a quantification of the exons ``usage'', i.e., it is a value
-that is related to the fraction of the gene's transcripts that contain the exon. If the ratio
-differs between, say, control and treatment samples, this indicates that the treatment affects
-the exon's usage. In case of an inner exon, a change in the exon's usage is typically due to a change
-in the rate with which this exon is spliced into transcripts (alternative splicing). The purpose of a 
-DEXSeq analysis is to find such cases of ``differential exon usage'' (DEU). Note that DEU is more
-general than alternative splicing: While changes in the usage of splice sites will typically affect
-the inclusion of inner exons into transcripts, changes in the usage of alternative transcript start sites
-and polyadenylation sites are likely of equal biological importance, and these will typically cause
-differential usage of 5' and 3' boundary exons.
+Similar as with differential gene expression, we need to make sure that observed 
+differences of values of the ratio~(\ref{eq:reu}) between conditions
+are statistically significant, i.\,e., are sufficiently unlikely to be just due to random fluctuations such as those 
+seen even between samples from the same condition, i.\,e., between replicates. 
+To this end, DEXSeq assesses the strength 
+of these fluctuations (quantified by the so-called \emph{dispersion}) by comparing replicates 
+before comparing the averages between the sample groups.
 
-Similar to the case of differential gene expression, we need to make sure that the 
-difference between treatment and control is statistically significant, i.e., that an observed
-differential exon usage is sufficiently unlikely to be merely due to the random fluctuation that 
-one also sees between identically treated samples. To this end, DEXSeq assesses the strength 
-of these fluctuation (quantified by the so-called ``dispersion'') by comparing identically 
-treated samples (replicates) before comparing the averages between the sample groups.
-
-The explanation in the previous paragraphs is somewhat simplified to be accessible to users
-withou statistics knowledge, and we urge users interested in the method to read the paper 
-\cite{DEXSeqPaper} as well as Appendix \ref{changes} of the present documents, which explains the differences
-between the present implementation of DEXSeq and the original method described in the paper. 
-Two points should be made right here: Two, \emph{DEXSeq} does not work 
-on the ratios but on the raw read counts, to be able to make use of the information that is
-contained in the magnitude of count values (3000 reads versus 1000 reads is the same ratio as 3 reads
-versus 1 read, but the latter ratio can be expected to be a far less precise estimate of the
-true value, because of the low amount of data.) Second, \emph{DEXSeq} is not limited to
-simple two-group comparisons. Rather, \emph{DEXSeq} is based on so-called generalized linear models
-(GLMs) and hence any experimental design that is suitable for an ANOVA-like analysis can be
-examined.
+The preceding description is somewhat simplified (and perhaps over-simplified), and we recommend that 
+users consult the paper \cite{DEXSeqPaper} for a more complete description. Appendix~\ref{changes} of 
+this vignette lists the improvements available in
+the current implementation of DEXSeq over the original approach described in the paper. 
+We end this overview with two important remarks:
+First, \emph{DEXSeq} does not actually work on the ratios~(\ref{eq:reu}), but on the counts in the numerator
+and denominator, to be able to make use of the information that is
+contained in the magnitude of count values. (3000 reads versus 1000 reads is the same ratio as 3 reads
+versus 1 read, but the latter is a far less reliable estimate of the
+underlying true value, because of statistical sampling.) Second, \emph{DEXSeq} is not limited to
+simple two-group comparisons; rather, it uses so-called generalized linear models
+(GLMs) to permit ANOVA-like analysis of potentially complex experimental designs.
 
 \section{Preparations} \label{preps}
 
 \subsection{Example data}
 
-As an example to demonstrate the use of \emph{DEXSeq}, we use the \emph{pasilla} dataset, an
+To demonstrate the use of \emph{DEXSeq}, we use the \emph{pasilla} dataset, an
 RNA-Seq dataset generated by Brooks et al.~\cite{Brooks2010}. They investigated the effect of 
 siRNA knock-down of the gene \emph{pasilla} on the transcriptome of fly S2-DRSC cells. The 
 \emph{pasilla} protein is known to bind to mRNA in the spliceosome and is thought to be involved
@@ -114,65 +117,69 @@ down \emph{pasilla} and left 4 as untreated controls, and performed RNA-Seq on a
 deposited the raw sequencing reads with the NCBI Gene Expression Omnibus (GEO) under the accession number
 GSE18508.\footnote{\url{http://www.ncbi.nlm.nih.gov/projects/geo/query/acc.cgi?acc=GSE18508}}
 
-As in any RNA-Seq analysis, the first step is to align the reads to a reference genome. It is important
-to align them to the genome, not to the transcriptome, and to use a splice-aware aligner (i.e., a short-read
-alignment tool that can deal with reads that span across introns) such as TopHat2, GSNAP, or STAR. The explanation
-of the analysis work-flow presented here starts with the aligned reads, in the SAM format. If you
-are unfamiliar with the process of aligning reads to obtain SAM files, you can find a summary how
-we proceeded in preparing the pasilla data in the vignette for the \emph{pasilla} data package 
-\cite{pasillaVignette}and a more extensive explanation, using the same example data set, in our 
-protocol article on differential expression calling \cite{DEProt}.
-
-\emph{Note:} Usually, Bioconductor vignettes contain executable code, i.e., you can follow the vignette 
-by typing the code and it will run using data provided with the package. However, it would not have been
-practical to include the rather voluminous raw data of the pasilla dataset with DEXSeq. Therefore, the
-code in this section of the vignette is not directly executable. You may download the raw data yourself 
-from GEO and then will be able to follow the work flow given here and in the pasilla vignette 
-\cite{pasillaVignette}. From Section \ref{stdAnalysis} on, code is directly executable, as usual. 
-Therefore, we recommend that your just read this section, and try following our analysis in R only from
+\paragraph{Executability of the code.} 
+Usually, Bioconductor vignettes contain automatically executable code, i.\,e., you can follow the vignette 
+by directly running the code shown, using functionality and data provided with the package. However, it would not be
+practical to include the voluminous raw data of the pasilla experiment here. Therefore, the
+code in this section is not automatically executable. You may download the raw data yourself 
+from GEO, as well as the required extra tools, 
+and follow the work flow shown here and in the \Rpackage{pasilla} vignette~\cite{pasillaVignette}. 
+From Section~\ref{stdAnalysis} on, code is directly executable, as usual. 
+Therefore, we recommend that you just read this section, and try following our analysis in R only from
 the next section onwards. Once you work with your own data, you will want to come back and adapt the 
-work-flow from here on.
+work flow shown here to your data.
 
-\subsection{Two Python scripts}\label{PythonScripts}
-
-The first two steps in a \emph{DEXSeq} analysis are done outside R, by using Python scripts. You do not
-need to know how to use Python; however you have to install the Python package \emph{HTSeq}, following the 
-explanations given on the HTSeq web page: 
-
-\url{http://www-huber.embl.de/users/anders/HTSeq/doc/install.html}
-
-An alternative work flow, which replaces the two Python-based steps with R scripts, has recently made available
-and is shown in the \emph{parathyroidSE} vignette \cite{parathyroidSEVignette}. However, we proceed here
-with the exposition of the default approach using Python. 
-
-Once you have installed \emph{HTSeq}, you can use the two Python scripts, \verb|dexseq_prepare_annotation.py|
-and \verb|dexseq_count.py|. These two files come as part of \emph{DEXSeq}. If you have trouble 
-finding them, start R and ask for the installation directory with
-
-<<systemFile>>=
-system.file( "python_scripts", package="DEXSeq" )
-@
-
-The displayed path should contain the two files. If it does not, try to re-install \emph{DEXSeq} (as usual, with \Rfunction{biocLite}).
+\subsection{Alignment}
+The first step of the analysis is to align the reads to a reference genome. It is important
+to align them to the genome, not to the transcriptome, 
+% FIXME please add 5-6 words on why - is this because genomes are typically more "complete" than "transcriptomes"?
+and to use a splice-aware aligner (i.\,e., a short-read
+alignment tool that can deal with reads that span across introns) such as TopHat2, GSNAP, or STAR. The explanation
+of the analysis work-flow presented here starts with the aligned reads in the SAM format. If you
+are unfamiliar with the process of aligning reads to obtain SAM files, you can find a summary how
+we proceeded in preparing the pasilla data in the vignette for the \Rpackage{pasilla} data 
+package~\cite{pasillaVignette} and a more extensive explanation, using the same  data set, in our 
+protocol article on differential expression calling~\cite{DEProt}.
 
 \subsection{Preparing the annotation} \label{prepAnno}
 
-For the first step, you will need a GTF file with gene models for your species. If possible, use a GTF file
-from Ensembl, as those of other providers (such as the UCSC Table Browser) often do not adhere fully to the GTF standard, which then causes preprocessing to fail. Ensembl GTF file can be found in the ``FTP Download'' sections of
-the Ensembl web sites (i.e., Ensembl, EnsemblPlants, EnsemblFungi, etc.). Make sure that your GTF file uses a coordinate system that matches the reference genome that you have used
+This part of a \emph{DEXSeq} analysis, as well as the step described in
+Section~\ref{sec:counting} can be done outside R, by using Python scripts. You do not need
+to know how to use Python; however you have to install the Python package \emph{HTSeq},
+following the explanations given on the HTSeq web page:
+
+\url{http://www-huber.embl.de/users/anders/HTSeq/doc/install.html}
+
+An alternative work flow, which replaces the two Python-based steps with R, is also available
+and is demonstrated in the vignette of the \Rpackage{parathyroidSE} package~\cite{parathyroidSEVignette}. 
+
+Once you have installed \emph{HTSeq}, you can use the two Python scripts, \verb|dexseq_prepare_annotation.py|
+and \verb|dexseq_count.py| (for Section~\ref{sec:counting}) that come with the \Rpackage{DEXSeq} package. 
+If you have trouble finding them, start R and ask for the installation directory with
+%
+<<systemFile>>=
+system.file( "python_scripts", package="DEXSeq" )
+@
+%
+The displayed path should contain the two files. If it does not, try to re-install \Rpackage{DEXSeq} (as usual, with \Rfunction{biocLite}).
+
+You will need a GTF file with gene models for your species. In the past, we have found that GTF files
+from Ensembl tended to be the most straightforward to use, while files from other providers (e.\,g., 
+the UCSC Table Browser) often did not adhere fully to the GTF standard and caused the preprocessing to fail. 
+Ensembl GTF files can be found in the ``FTP Download'' sections of
+the Ensembl web sites (i.\,e., Ensembl, EnsemblPlants, EnsemblFungi, etc.). Make sure that your GTF file uses a coordinate system that matches the reference genome that you have used
 for aligning your reads. (The safest way to ensure this is to download the reference genome from Ensembl, too.)
-If you cannot use an Ensembl GTF file, see Appendix \ref{GTF} for advice on converting GFF files from other
-sources to make the suitable as input for the Python script.
+If you cannot use an Ensembl GTF file, see Appendix ~\ref{GTF} for advice on converting GFF files from other
+sources to make them suitable as input for the  \verb|dexseq_prepare_annotation.py| script.
 
 In a GTF file, most exon appear multiple times, namely once for each transcript that contains them. We
-need to ``collapse'' this information to define ``exon counting bins'', i.e., a list of intervals, each corresponding to one exon, or part of an exon. Counting bins for parts of exons arise when an exonic
-region appears with different boundaries in different transcripts. See Fig.~1 of the DEXSeq paper \cite{DEXSeqPaper}
+need to ``collapse'' this information to define \emph{exon counting bins}, i.\,e., a list of intervals, each corresponding to one exon or part of an exon. Counting bins for parts of exons arise when an exonic
+region appears with different boundaries in different transcripts. See Figure~1 of the DEXSeq paper~\cite{DEXSeqPaper}
 for an illustration.
 
 The Python script \verb|dexseq_prepare_annotation.py| takes an Ensembl GTF file and translates it into
-a GFF file with ``flattened'' or ``collapsed'' exon counting bins.
-
-Make sure that your current working directory contains the GTF file, then call the script 
+a GFF file with collapsed exon counting bins.
+Make sure that your current working directory contains the GTF file and call the script 
 (from the command line shell, not from within R) with
 
 \begin{verbatim}
@@ -182,17 +189,17 @@ python /path/to/library/DEXSeq/python_scripts/dexseq_prepare_annotation.py
 
 In this command, which should be entered as a single line, replace \verb|/path/to|...\verb|/python_scripts| with the correct path to the Python scripts, which you have found with the \Rfunction{system.file} function (see above). 
 \verb|Drosophila_melanogaster.BDGP5.72.gtf| is the Ensembl GTF file
-(here the one for the fruit fly, already de-compressed) and \verb|Dmel_flattenend.gff| is the file name that the script will use to write its results to.
+(here the one for the fruit fly, already de-compressed) and \verb|Dmel_flattenend.gff| is the name of the output file.
 
 In the process of forming the counting bins, the script might come across overlapping genes. If two genes on the
 same strand are found with an exon of the first gene overlapping with an exon of the second strand, the script's
 default behaviour is to combine the genes into a single ``aggregate gene'' which is subsequently referred to
 with the IDs of the individual genes, joined by a plus ('+') sign. If you do not like this behaviour, you can
-disable aggregation with the option ``\verb|-r no|''. Without aggregation, exons that overlap with other exon from
+disable aggregation with the option ``\verb|-r no|''. Without aggregation, exons that overlap with other exons from
 different genes are simply skipped.
 
 
-\subsection{Counting reads}
+\subsection{Counting reads}\label{sec:counting}
 
 For each SAM file, we next count the number of reads that overlap with each of the exon counting bins defined
 in the flattened GFF file. This is done with the script \verb|python_count.py|:
@@ -202,7 +209,7 @@ python /path/to/library/DEXSeq/python_scripts/dexseq_count.py
     Dmel_flattenend.gff untreated1.sam untreated1.counts
 \end{verbatim}
 
-This command (again, to be entered as a single line) expects two file in the current working directory, namely the GFF file produced in the previous
+This command (again, to be entered as a single line) expects two files in the current working directory, namely the GFF file produced in the previous
 step (here \verb|Dmel_flattened.py|) and a SAM file with the aligned reads from a sample (here the
 file \verb|untreated1.bam| with the aligned reads from the first control sample). The command generates an
 output file, here called \verb|untreated1.counts|, with one line for each exon counting bin defined in
@@ -212,10 +219,12 @@ they overlap with the counting bin.
 
 Use the script multiple times to produce a count file from each of your SAM files.
 
-If your data is from a \emph{paired-end} sequencing run, you need to take care of two points: First, the SAM file
-needs to be sorted by read name. (Use \verb|samtools sort -n| for this purpose, and see Refs. \cite{pasillaVignette} and
-\cite{DEProt} for further explanations, if needed.) Second, add the option ``\verb|-p yes|'' to 
-the command to call the script. (As usual, options should be placed before the file names.)
+If your data is from a \emph{paired-end} sequencing run, you need to 
+add the option ``\verb|-p yes|'' to 
+the command to call the script. (Options are placed before the file names.)
+In addition, make sure that the SAM file
+is sorted by read name. Use \verb|samtools sort -n| for this purpose, and see references \cite{pasillaVignette} and
+\cite{DEProt} for further explanations, if needed. 
 
 By default, the counting script assumes your library to be \emph{strand-specific}, i.e., reads are aligned to
 the same strand as the gene they originate from. If you have used a library preparation protocol that does
@@ -235,7 +244,7 @@ column of the SAM file). All reads with a lower quality than specified (with def
 The remainder of the analysis process it now done within R. Start R and load \Rpackage{DEXSeq}
 
 <<loadDEXSeq,resuls=hide>>=
-library( DEXSeq )
+library( "DEXSeq" )
 @
 
 Now, we need to prepare a sample table. This table should contain one row for each table, and columns for
@@ -301,14 +310,14 @@ meta-data slot (see below). The third argument is a file name again, now of the 
 that was generated with \verb|dexseq_prepare_annotation.py| and used as input to \verb|dexseq_count.py|
 when creating the count file.
 
-There are other ways to get a \emph{DEXSeq} analysis started. See Appendix \ref{sec:creatingInR} and 
+There are other ways to get a \Rpackage{DEXSeq} analysis started. See Appendix \ref{sec:creatingInR} and 
 Ref.~\cite{parathyroidSEVignette} for details.
 
 \section{Standard analysis work-flow} \label{stdAnalysis}
 
 \subsection{Loading and inspecting the example data}
 
-To demonstrate the \emph{DEXSeq} work flow with actual data, we have prepared, in the \Rpackage{pasilla}
+To demonstrate the \Rpackage{DEXSeq} work flow with actual data, we have prepared, in the \Rpackage{pasilla}
 data package, an \Robject{ExonCountSet}, similar to the one constructed in the previous section.
 However, in order to keep the run-time of the vignette small, we have subset the object to
 only a few genes.
@@ -591,7 +600,7 @@ the \Rclass{ExonCountSet} object (Section \ref{sec:readData}. Do so by means of 
 If you have a more complex experimental design, you can provide different or additional columns in the sample table. You
 then have to indicate the design by providing explicit formulas for the test.
 
-In the \emph{pasilla} dataset, some samples were sequenced in single-end and others in paired-end mode. Possibly,
+In the \Rpackage{pasilla} dataset, some samples were sequenced in single-end and others in paired-end mode. Possibly,
 this influenced counts and should hence be accounted for. We therefore use this as an example for a complex design.
 
 When we constructed the \Rclass{ExonCountSet} object in Section \ref{sec:readData}, we provided in the sample table an
@@ -946,13 +955,13 @@ considerably for genes with many exons because the many exons require very large
 which are computationally expensive to deal with. We have therefore modified our approach: when fitting
 a model for an exon, we now sum up the counts from all the other exon and use only the total, rather than
 the individual counts in the model. Now, computation time is independent of the number of exons per gene,
-which improved \emph{DEXSeq}'s scalability. While the $p$ values returned by the two approaches are not
+which improved \Rpackage{DEXSeq}'s scalability. While the $p$ values returned by the two approaches are not
 exactly equal, the differences were only very minor in the tests that we performed.
 
 For now, the function for our original approach (which we now call the ``big model'' or ``BM'' approach)
 are still included; all relevant functions, however, have been renamed to now carry the suffix \verb|_BM|
 in their name. The new approach, which is now default and is used by the work flow described in this 
-vignette, has no special name; however, in previous releases of \emph{DEXSeq}, which had included it 
+vignette, has no special name; however, in previous releases of \Rpackage{DEXSeq}, which had included it 
 first on an experimental basis, it was termed the ``TRT'' approach.
 
 In the following, we describe the current default (``TRT'') approach in detail (though the exposition assumes
