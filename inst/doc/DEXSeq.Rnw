@@ -157,8 +157,8 @@ Once you have installed \emph{HTSeq}, you can use the two Python scripts, \verb|
 and \verb|dexseq_count.py| (for Section~\ref{sec:counting}) that come with the \Rpackage{DEXSeq} package. 
 If you have trouble finding them, start R and ask for the installation directory with
 %
-<<systemFile>>=
-system.file( "python_scripts", package="DEXSeq" )
+<<systemFile,results=hide>>=
+system.file( "python_scripts", package="DEXSeq", mustWork = TRUE )
 @
 %
 The displayed path should contain the two files. If it does not, try to re-install \Rpackage{DEXSeq} (as usual, with \Rfunction{biocLite}).
@@ -172,11 +172,10 @@ for aligning your reads. (The safest way to ensure this is to download the refer
 If you cannot use an Ensembl GTF file, see Appendix ~\ref{GTF} for advice on converting GFF files from other
 sources to make them suitable as input for the  \verb|dexseq_prepare_annotation.py| script.
 
-In a GTF file, most exon appear multiple times, namely once for each transcript that contains them. We
+In a GTF file, many exons appear multiple times, once for each transcript that contains them. We
 need to ``collapse'' this information to define \emph{exon counting bins}, i.\,e., a list of intervals, each corresponding to one exon or part of an exon. Counting bins for parts of exons arise when an exonic
 region appears with different boundaries in different transcripts. See Figure~1 of the DEXSeq paper~\cite{DEXSeqPaper}
 for an illustration.
-
 The Python script \verb|dexseq_prepare_annotation.py| takes an Ensembl GTF file and translates it into
 a GFF file with collapsed exon counting bins.
 Make sure that your current working directory contains the GTF file and call the script 
@@ -187,9 +186,12 @@ python /path/to/library/DEXSeq/python_scripts/dexseq_prepare_annotation.py
     Drosophila_melanogaster.BDGP5.72.gtf Dmel_flattened.gff
 \end{verbatim}
 
-In this command, which should be entered as a single line, replace \verb|/path/to|...\verb|/python_scripts| with the correct path to the Python scripts, which you have found with the \Rfunction{system.file} function (see above). 
-\verb|Drosophila_melanogaster.BDGP5.72.gtf| is the Ensembl GTF file
-(here the one for the fruit fly, already de-compressed) and \verb|Dmel_flattenend.gff| is the name of the output file.
+In this command, which should be entered as a single line, replace
+\verb|/path/to|...\verb|/python_scripts| with the correct path to the Python scripts,
+which you have found with the call to \Rfunction{system.file} shown above.
+\verb|Drosophila_melanogaster.BDGP5.72.gtf| is the Ensembl GTF file (here the one for 
+fruit fly, already de-compressed) and \verb|Dmel_flattenend.gff| is the name of the output
+file.
 
 In the process of forming the counting bins, the script might come across overlapping genes. If two genes on the
 same strand are found with an exon of the first gene overlapping with an exon of the second strand, the script's
@@ -241,7 +243,7 @@ column of the SAM file). All reads with a lower quality than specified (with def
 
 \subsection{Reading the data in to R} \label{sec:readData}
 
-The remainder of the analysis process it now done within R. Start R and load \Rpackage{DEXSeq}
+The remainder of the analysis process is now done in R. Start R and load \Rpackage{DEXSeq}
 
 <<loadDEXSeq,resuls=hide>>=
 library( "DEXSeq" )
@@ -250,7 +252,6 @@ library( "DEXSeq" )
 Now, we need to prepare a sample table. This table should contain one row for each table, and columns for
 all relevant information such as name of the file with the read counts, experimental conditions, technical
 information and further covariates.
-
 To keep this vignette simple, we construct the table on the fly.
 <<sampleTable>>=
 sampleTable <- data.frame(
@@ -266,8 +267,8 @@ sampleTable <- data.frame(
 @
 
 While this is a simple way to prepare the table, it may be less error-prone and
-more prudent to prepare the table in a spread-sheet program such as Excel (or even better,
-take an existing table that had already been prepared when the experiments were done),
+more prudent to prepare the table in a spread-sheet program such as Excel. Even better,
+take an existing table that had already been prepared when the experiments were done,
 save it in CSV format and use the R function \Rfunction{read.csv} to load it.
 
 In any case, it is vital to check the table carefully for correctness.
@@ -280,14 +281,13 @@ Our table contains the sample names as row names, the names of the count files t
 prepared in the previous step and the two covariates that vary between samples: first
 the experimental condition (factor \texttt{condition} with levels \texttt{control} and
 \texttt{treatment}) and the library type (factor \texttt{libType}), which we included because
-the samples in this particular experiment have been sequenced partly in single-end
+the samples in this particular experiment were sequenced partly in single-end
 runs and partly in paired-end runs. 
 
-We will, however, ignore this latter information in the 
-analysis described in the next section and postpone the discussion on how to include
-such additional covariates to section \ref{sec:glm}. If you have only a single covariate and
-want to perform a simple default analysis, you the column with this factor should be
-named \emph{condition}.
+For now, we will, however, ignore this latter piece of information, and postpone the discussion of how to include
+such additional covariates to Section~\ref{sec:glm}. If you have only a single covariate and
+want to perform a simple analysis, the column with this covariate should be
+named \texttt{condition}.
 
 Now, we construct an \Robject{ExonCountSet} object from this data. This object holds all
 the input data and will be passed along the stages of the subsequent analysis.
@@ -301,7 +301,7 @@ ecs <- read.HTSeqCounts(
    "Dmel_flattenend.gff" )
 @   
 
-The function takes three argument. First, a vector with names of count files, i.e., of files
+The function takes three arguments. First, a vector with names of count files, i.e., of files
 that have been generated with the \verb|dexseq_count.py| script. The function will read these
 files and arrange the count data in a matrix, which is stored in the \Robject{ExonCountSet}
 object \Robject{ecs}. The second argument is our sample table, with one row for each of the 
@@ -317,20 +317,20 @@ Ref.~\cite{parathyroidSEVignette} for details.
 
 \subsection{Loading and inspecting the example data}
 
-To demonstrate the \Rpackage{DEXSeq} work flow with actual data, we have prepared, in the \Rpackage{pasilla}
-data package, an \Robject{ExonCountSet}, similar to the one constructed in the previous section.
-However, in order to keep the run-time of the vignette small, we have subset the object to
+To demonstrate the \Rpackage{DEXSeq} work flow, we have prepared, in the \Rpackage{pasilla}
+data package, an \Robject{ExonCountSet} similar to the one constructed in the previous section.
+However, in order to keep the run-time of this vignette small, we have subset the object to
 only a few genes.
 
-To start, we load the packages \Rpackage{DEXSeq} load the
-example data from the \Rpackage{pasilla} package with the \Rfunction{data} command.
+To start, we load the package \Rpackage{DEXSeq} and
+the example data from the \Rpackage{pasilla} package.
 
 <<start,results=hide>>=
 library( DEXSeq )
 data( "pasillaExons", package="pasilla" )
 @
 
-The object \Robject{pasillaExons} is an ExonCountSet, which has been constructed with 
+The object \Robject{pasillaExons} is an \Rclass{ExonCountSet}, which has been constructed with 
 \Rfunction{read.HTSeqCounts} as described above. For consistency, we rename it to \Robject{ecs}
 as above, and then inspect it.
 
@@ -345,15 +345,10 @@ Bioconductor's standard container class for experimental data. As
 such, it contains the usual accessor functions for sample, feature and
 assay data (including \Rfunction{pData},
 \Rfunction{fData}, \Rfunction{experimentData}), and some specific ones.
-
-%<<options,results=hide,echo=FALSE>>=
-%options(width=96)
-%@
-
-The core data in such an \Rclass{ExonCountSet} object are the counts 
-per exon. Let's have a look at the first 20 rows.
+The core data in an \Rclass{ExonCountSet} object are the counts 
+per exon. Let's have a look at the first 12 rows.
 <<seeCounts>>=
-head( counts(ecs), 20 )
+head( counts(ecs), 12 )
 @
 
 The rows are labelled with gene IDs (here Flybase IDs), followed by a colon and a \emph{counting bin}
@@ -370,9 +365,11 @@ design(ecs)
 To see details on the counting bins, we also print the first
 5 lines of the feature data annotation:
 %
+{\small
 <<fData>>=
 head( fData(pasillaExons), 5 )
 @
+}
 <<tabtab1,echo=false,results=hide>>=
 tabGeneIDsPasillaExons = table(geneIDs(ecs))
 ngenesPasillaExons = sum(tabGeneIDsPasillaExons>0)
@@ -382,12 +379,12 @@ stopifnot(tabtabGeneIDsPasillaExons["36"]==1,
 @
 %
 
-So far, these columns contains information on the annotation data, such as gene and exon IDs,
+So far, this table contains information on the annotation data, such as gene and exon IDs,
 genomic coordinates of the exon, and the list of transcripts that contain an exon. Further
-columns for intermediate and final results are already present but will be filled in only
-in the subsequent steps of the analysis.
+columns for intermediate and final results are already present (and filled with \Robject{NA}) and will be filled with results
+in subsequent steps of the analysis.
 
-In the following sections, we will update the object by calling a number of analysis function,
+In the following sections, we will update the object by calling a number of analysis functions,
 always using the idiom ``\verb| ecs <- |\textit{\texttt{someFunction}}\verb|( ecs )|'', which
 takes the \verb|ecs| object, fills in the results of the performed computation and writes the returned
 and updated object back into the variable \verb|ecs|.
@@ -397,7 +394,7 @@ and updated object back into the variable \verb|ecs|.
 %--------------------------------------------------
 Different samples might be sequenced with different depths. In order to adjust for such coverage biases,
 we estimate \emph{size factors}, which measure relative sequencing depth.  \Rpackage{DEXSeq} uses the same method
-as \Rpackage{DESeq}, which is provided in the function \Rfunction{estimateSizeFactors}.
+as \Rpackage{DESeq} and \Rpackage{DESeq2}, which is provided in the function \Rfunction{estimateSizeFactors}.
 <<sizeFactors1>>=
 ecs <- estimateSizeFactors( ecs )
 @
@@ -415,21 +412,21 @@ To test for differential expression, we need to estimate the variance of the dat
 to be able to distinguish technical and biological variation (noise) from real effects
 on exon expression due to the different conditions.
 The information on the size of the noise is inferred from the biological replicates in the data set.
-However, in RNA-Seq experiments the number of replicates is often too small to estimate
+However, in RNA-Seq experiments the number of replicates is often too small to reliably estimate
 variance or dispersion parameters individually exon by exon. Instead, variance information is shared
 across exons and genes, in an intensity dependent manner.
 
 In this section, we discuss simple one-way designs: In this setting, samples with the same experimental 
-condition, as indicated in the \emph{conditions} factor of the design table (see above), are 
+condition, as indicated in the \texttt{condition} factor of the design table (see above), are 
 considered as replicates -- and therefore, the design table needs to contain a column with the
-name \verb|condition|. In Section \ref{sec:glm}, we discuss how to treat more complicated experimental
-design which cannot be accommodated by a single ``condition'' factor.
+name \verb|condition|. In Section~\ref{sec:glm}, we discuss how to treat more complicated experimental
+designs which are not accommodated by a single \Robject{condition} factor.
 
 The first step is to get a dispersion estimate for each exon. This task is performed by
-the function \emph{estimateDispersions}, using Cox-Reid (CR)
-likelihood estimation (our method follows that of the package \Rpackage{edgeR}~\cite{edgeR_GLM}).
+the function \Rfunction{estimateDispersions}, using Cox-Reid (CR)
+likelihood estimation (our approach here follows that of the package \Rpackage{edgeR}~\cite{edgeR_GLM}).
 Before starting estimating the CR dispersion estimates, \Rfunction{estimateDispersions}
-first defines the ``testable'' exons, which fulfil the following criteria:
+first defines the ``testable'' exons, which fulfill the following criteria:
 \begin{enumerate}
   \item The exon's total sum of counts over all samples is higher than the parameter \texttt{minCount},
   \item the exon comes from a gene that has at most \texttt{maxExon} exons, and
@@ -437,22 +434,19 @@ first defines the ``testable'' exons, which fulfil the following criteria:
 \end{enumerate}
 These testable exons are marked in the column \texttt{testable} of the feature data.
 Then, a CR estimate is computed for each gene, and the obtained values are stored
-in the feature data column \emph{dispBeforeSharing}.
-
-
-The following command performs these steps.
+in the feature data column \Robject{dispBeforeSharing}. The following command performs these steps.
 <<estDisp1,cache=TRUE,results=hide>>=
 ecs <- estimateDispersions( ecs )
 @
-
-Note that for a full, genome-wide data set, execution of this function may take a while. To indicate
-progress, one dot is printed on the console whenever 100 genes have been processed. If you have a machine
+%
+Note that for a full, genome-wide data set, execution of this function can take a while. To indicate
+progress, a dot is printed on the console whenever 100 genes have been processed. If you have a machine
 with multiple cores, you may want to use the \texttt{nCores} option to instruct the function to parallelize the
 task over several CPU cores. See Section \ref{parallelization} and the function's help page for details.
 
 Afterwards, the function \Rfunction{fitDispersionFunction} needs to be called, in which a dispersion-mean
-relation $\alpha(\mu) = \alpha_0 + \alpha_1/\mu$ is fitted to the individual CR dispersion values
-(as stored in \emph{dispBeforeSharing}). The fit coefficients are stored in the slot \Robject{dispFitCoefs} and finally,
+relation $\alpha(\mu) = \alpha_0 + \alpha_1/\mu$ is fit to the individual CR dispersion values
+(as stored in \Robject{dispBeforeSharing}). The fit coefficients are stored in the slot \Robject{dispFitCoefs} and finally,
 for each exon, the maximum between the dispersion before sharing and the fitted dispersion value
 is taken as the exon's final dispersion value and stored in the \Robject{dispersion}
 slot.\footnote{Especially when the dispersion estimates are very large, this fit can be difficult,
