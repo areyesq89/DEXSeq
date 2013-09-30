@@ -63,7 +63,7 @@
      \dontrun{
         data("pasillaExons", package="pasilla")
         pasillaExons <- estimateSizeFactors( pasillaExons )
-        pasillaExons <- estimateDispersions() pasillaExons )
+        pasillaExons <- estimateDispersions( pasillaExons )
         pasillaExons <- fitDispersionFunction( pasillaExons )
         pasillaExons <- testForDEU( pasillaExons )
         pasillaExons <- estimatelog2FoldChanges( pasillaExons )

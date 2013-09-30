@@ -429,7 +429,6 @@ Before starting estimating the CR dispersion estimates, \Rfunction{estimateDispe
 first defines the ``testable'' exons, which fulfill the following criteria:
 \begin{enumerate}
   \item The exon's total sum of counts over all samples is higher than the parameter \texttt{minCount},
-  \item the exon comes from a gene that has at most \texttt{maxExon} exons, and
   \item the exon comes from a gene that has more than one ``testable'' exon.
 \end{enumerate}
 These testable exons are marked in the column \texttt{testable} of the feature data.

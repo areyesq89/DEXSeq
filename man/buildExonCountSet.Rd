@@ -32,14 +32,17 @@ buildExonCountSet( summarizedExperiment, design, exonicParts )
 \examples{
 \dontrun{
    library(GenomicFeatures)
+   library(Rsamtools)
    hse <- makeTranscriptDbFromBiomart(biomart="ensembl", dataset="hsapiens_gene_ensembl")
-   exonicParts <- prepareAnnotationForDEXSeq( hse )
+   exonicParts <- disjointExons( hse )
    
    bamDir <- system.file("extdata",package="parathyroidSE",mustWork=TRUE)
-   fls <- list.files(bamDir, pattern="bam$",full=TRUE)
-   bamlst <- BamFileList(fls)
 
-   SE <- countReadsForDEXSeq( exonicParts, bamlst )
+   fls <- list.files(bamDir, pattern="bam$",full=TRUE)
+   bamlst <- BamFileList( fls, index=character(), yieldSize=100000, obeyQname=TRUE )
+   SE <- summarizeOverlaps( exonicParts, bamlst, mode="Union", singleEnd=FALSE, 
+  	  ignore.strand=TRUE, inter.feature=FALSE, fragments=TRUE )
+
    ecs <- buildExonCountSet( SE, c("A", "A", "B"), exonicParts )
 }
 }
