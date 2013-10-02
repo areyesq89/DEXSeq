@@ -760,7 +760,7 @@ nCores.  These functions will then distribute the
 \Rclass{ExonCountSet} object into smaller objects that are processed
 in parallel on different cores.  This functionality uses the
 \Rpackage{parallel} package.
-<<para1,cache=TRUE,results=hide>>=
+<<para1,cache=TRUE,results=hide, eval=FALSE>>=
 data("pasillaExons", package="pasilla")
 library("parallel")
 pasillaExons <- estimateSizeFactors( pasillaExons )
