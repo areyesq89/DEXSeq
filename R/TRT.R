@@ -64,7 +64,7 @@ function( object, formula= ~ sample + exon + condition : exon, minCount=10, nCor
       if (!is.loaded("mc_fork", PACKAGE = "parallel")) {
           stop("Please load first parallel package or set parameter nCores to 1.")
       }else{
-          myApply <- function(X, FUN){ parallel:::mclapply( X, FUN, mc.cores=nCores ) }
+          myApply <- function(X, FUN){ parallel::mclapply( X, FUN, mc.cores=nCores ) }
       }
    }else{
      myApply <- lapply
@@ -121,7 +121,7 @@ testForDEU <- function( ecs, formula0 = ~ sample + exon,
       if (!is.loaded("mc_fork", PACKAGE = "parallel")) {
           stop("Please load first parallel package or set parameter nCores to 1...")
       }else{
-          myApply <- function(X, FUN){ parallel:::mclapply( X, FUN, mc.cores=nCores ) }
+          myApply <- function(X, FUN){ parallel::mclapply( X, FUN, mc.cores=nCores ) }
       }
    }else{
      myApply <- lapply

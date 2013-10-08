@@ -1,4 +1,4 @@
-import sys, itertools, optparse, pysam, warnings
+import sys, itertools, optparse, warnings
 
 optParser = optparse.OptionParser( 
    
@@ -8,13 +8,13 @@ optParser = optparse.OptionParser(
       "This script counts how many reads in <alignment_file> fall onto each exonic " +
       "part given in <flattened_gff_file> and outputs a list of counts in " +
       "<output_file>, for further analysis with the DEXSeq Bioconductor package. " +
-      "(Notes: The <flattened_gff_file> should be produced with the script " +
-      "dexseq_prepare_annotation.py). <alignment_file> may be '-' to indicate standard input.",
+      "Notes: Use dexseq_prepare_annotation.py to produce <flattened_gff_file>. " + 
+      "<alignment_file> may be '-' to indicate standard input.",
       
    epilog = 
-      "Written by Simon Anders (sanders@fs.tum.de), European Molecular Biology " +
-      "Laboratory (EMBL). (c) 2010. Released under the terms of the GNU General " +
-      "Public License v3. Part of the 'DEXSeq' package." )
+      "Written by Simon Anders (sanders@fs.tum.de) and Alejandro Reyes (reyes@embl.de), " +
+      "European Molecular Biology Laboratory (EMBL). (c) 2010-2013. Released under the " +
+      " terms of the GNU General Public License v3. Part of the 'DEXSeq' package." )
       
 optParser.add_option( "-p", "--paired", type="choice", dest="paired",
    choices = ( "no", "yes" ), default = "no",
@@ -35,14 +35,13 @@ optParser.add_option( "-a", "--minaqual", type="int", dest="minaqual",
 
 optParser.add_option( "-f", "--format", type="choice", dest="alignment",
    choices=("sam", "bam"), default="sam",
-   help = "'bam' or 'sam'. The formats allowed for the alignment file are either bam or " +
-      "sam files." )
+   help = "'sam' or 'bam'. Format of <alignment file> (default: sam)" )
 
 optParser.add_option( "-r", "--order", type="choice", dest="order",
-   choices=("position", "name"), default="position",
-   help = "'position' or 'name'. If your reads are paired end, indicate the order of the reads in" +
-      " your alignment file. The file should be sorted either by position or by " +
-      "read name." )
+   choices=("pos", "name"), default="name",
+   help = "'pos' or 'name'. Sorting order of <alignment_file> (default: name). Paired-end sequencing " +
+      "data must be sorted either by position or by read name, and the sorting order " +
+      "must be specified. Ignored for single-end data." )
 
    
 if len( sys.argv ) == 1:
@@ -72,6 +71,17 @@ is_PE = opts.paired == "yes"
 alignment = opts.alignment
 minaqual = opts.minaqual
 order = opts.order
+
+if alignment == "bam":
+   try:
+      import pysam
+   except ImportError:
+      sys.stderr.write( "Could not import pysam, which is needed to process BAM file (though\n" )
+      sys.stderr.write( "not to process text SAM files). Please install the 'pysam' library from\n" )
+      sys.stderr.write( "https://code.google.com/p/pysam/\n" )   
+      sys.exit(1)
+
+
 
 if sam_file == "-":
    sam_file = sys.stdin

@@ -110,7 +110,7 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
      if(!is.loaded("mc_fork", PACKAGE="parallel")){
        stop("Please load first parallel package or set parameter nCores to 1...")
      }else{
-       funapply <- function(X, FUN){ parallel:::mclapply( X, FUN, mc.cores=nCores) }
+       funapply <- function(X, FUN){ parallel::mclapply( X, FUN, mc.cores=nCores) }
      }
    }else{
        funapply <- lapply
