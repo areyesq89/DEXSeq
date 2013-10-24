@@ -7,7 +7,7 @@
 \documentclass[12pt]{article}
 
 <<style, eval=TRUE, echo=FALSE, results=tex>>=
-BiocStyle::latex()
+BiocStyle::latex(bibstyle="unsrt")
 @
 
 % My changes to the Bioc style:
@@ -1064,7 +1064,6 @@ sessionInfo()
 \begingroup
 \renewcommand{\section}[2]{}%
 \bibliography{DEXSeq}
-\bibliographystyle{unsrt}
 \endgroup
 
 
