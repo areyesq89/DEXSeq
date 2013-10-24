@@ -7,7 +7,7 @@
 \documentclass[12pt]{article}
 
 <<style, eval=TRUE, echo=FALSE, results=tex>>=
-BiocStyle::latex(bibstyle="unsrt")
+BiocStyle::latex()
 @
 
 % My changes to the Bioc style:
