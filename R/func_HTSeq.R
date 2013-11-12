@@ -1,5 +1,8 @@
 read.HTSeqCounts <- function( countfiles, design, flattenedfile=NULL )
 {
+   if( !all( sapply(countfiles, class) == 'character' ) ){
+      stop("The countfiles parameter must be a character vector")
+   }
    lf <- lapply( countfiles, function(x)
       read.table( x, header=FALSE,stringsAsFactors=FALSE ) )
    if( !all( sapply( lf[-1], function(x) all( x$V1 == lf[1]$V1 ) ) ) )

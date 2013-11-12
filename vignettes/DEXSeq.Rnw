@@ -321,7 +321,7 @@ as follows:
 %
 <<makeecs, eval=FALSE>>=
 ecs <- read.HTSeqCounts(
-   sampleTable$countFile,
+   as.character( sampleTable$countFile ),
    sampleTable,
    "Dmel_flattenend.gff" )
 @   
