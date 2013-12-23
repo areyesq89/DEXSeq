@@ -99,20 +99,22 @@ newExonCountSet <- function( countData, design, geneIDs, exonIDs, exonIntervals=
 
    if( is( design, "data.frame" ) || is( design, "AnnotatedDataFrame" ) ) {
       stopifnot( nrow( design ) == ncol( countData ) )
-      stopifnot( all( unlist( lapply(design, class) ) == "factor" ) )
+      stopifnot( all( unlist( lapply(design, class) ) %in% c("numeric", "factor") ) )
       design <- as( design, "AnnotatedDataFrame" )
       dimLabels(design) <- dimLabels(phenoData)
       rownames( pData(design) ) <- rownames( pData(phenoData) )
       phenoData <- combine( phenoData, design )
       rvft <- c( `_all` = NA_character_ )
       designColumns <- varLabels(design)
-   } else {
-      design <- factor( design, levels=unique(design))
+   } else if( class(design) %in% c("factor", "character", "numeric")) {
       stopifnot( length( design ) == ncol( countData ) )
-      phenoData$`condition` <- factor( design )
+      if( class(design) != "numeric" ){
+        design <- factor( design, levels=unique( design ) )
+      }
+      phenoData$`condition` <- design
       varMetadata( phenoData )[ "condition", "labelDescription" ] <- "experimental condition, treatment or phenotype"
       designColumns <- "condition"
-   }
+  }
    ecs <- new( "ExonCountSet",
       assayData = assayDataNew( "environment", counts=countData ),
       phenoData = phenoData,
