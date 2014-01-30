@@ -103,6 +103,7 @@ counts[ '_empty' ] = 0
 counts[ '_ambiguous' ] = 0
 counts[ '_lowaqual' ] = 0
 counts[ '_notaligned' ] = 0
+counts['_ambiguous_readpair_position'] = 0
 
 # put a zero for each feature ID
 for iv, s in features.steps():
@@ -129,10 +130,6 @@ def update_count_vector( counts, rs ):
 
 def map_read_pair(af, ar):
    rs = set()
-   if ar != None and ar.optional_field("NH") > 1:
-        return '_notunique'
-   if af != None and af.optional_field("NH") > 1:
-        return '_notunique'
    if af and ar and not af.aligned and not ar.aligned:
       return '_notaligned'
    if af and ar and not af.aQual < minaqual and ar.aQual < minaqual:
@@ -166,7 +163,7 @@ def clean_read_queue( queue, current_position ):
    clean_queue = dict( queue )
    for i in queue:
       if queue[i].mate_start.pos < current_position:
-         warnings.warn( "Read "+ i + " claims to have an aligned mate that could not be found." )
+         warnings.warn( "Read "+ i + " claims to have an aligned mate that could not be found in the same chromosome." )
          del clean_queue[i]
    return clean_queue
 
@@ -217,14 +214,15 @@ else: # paired-end
    alignments = dict()
    if order == "name":
       for af, ar in HTSeq.pair_SAM_alignments( reader( sam_file ) ):
-         if af == None and ar.mate_aligned:
+         if af == None or ar == None:
             continue
-         elif ar == None and af.mate_aligned:
+         elif ar.optional_field("NH") > 1 or af.optional_field("NH") > 1:
+            continue
+         elif af.iv.chrom != ar.iv.chrom:
+            counts['_ambiguous_readpair_position'] += 1
             continue
          else:
             rs = map_read_pair( af, ar )
-            if rs == '_notunique':
-               continue
             counts = update_count_vector( counts, rs )
             num_reads += 1
          if num_reads % 100000 == 0:
@@ -236,6 +234,8 @@ else: # paired-end
       current_chromosome=''
       current_position=''
       for a in reader( sam_file ):
+         if a.optional_field("NH") > 1:
+            continue
          if current_chromosome != a.iv.chrom:
             if current_chromosome in processed_chromosomes:
                raise SystemError, "A chromosome that had finished to be processed before was found again in the alignment file, is your alignment file properly sorted by position?"
@@ -258,19 +258,15 @@ else: # paired-end
                   ar=a
                rs = map_read_pair(af, ar)
                del alignments[ a.read.name ]
-               if rs == '_notunique':
-                  continue
                counts = update_count_vector(counts, rs)
             else:
-               alignments[ a.read.name ] = a
+               if a.mate_start.chrom != a.iv.chrom:
+                  counts['_ambiguous_readpair_position'] += 1
+                  continue
+               else:
+                  alignments[ a.read.name ] = a
          else:
-            if a.pe_which == "first":
-               rs = map_read_pair(a, None)
-            else:
-               rs = map_read_pair(None, a)
-            if rs == '_notunique':
-               continue        
-            counts = update_count_vector(counts, rs)
+            continue
          num_reads += 1
          if num_reads % 200000 == 0:
             alignments = clean_read_queue( alignments, current_position )
