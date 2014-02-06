@@ -22,6 +22,7 @@ perGeneQValue = function(ecs, p = "pvalue", method = perGeneQValueExact) {
   ## return a named vector of q-values per gene
   res        = rep(NA_real_, length(pGene))
   res        = q[match(pGene, theta)]
+  res = pmin(1, res)
   names(res) = names(geneSplit)
   stopifnot(!any(is.na(res)))
   return(res)
