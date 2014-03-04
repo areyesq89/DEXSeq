@@ -1,21 +1,23 @@
 Package: DEXSeq
-Version: 1.9.4
+Version: 1.9.5
 Title: Inference of differential exon usage in RNA-Seq
-Author: Simon Anders <sanders@fs.tum.de> and Alejandro Reyes <alejandro.reyes@embl.de>, both at EMBL Heidelberg
+Author: Simon Anders <sanders@fs.tum.de> and Alejandro Reyes
+        <alejandro.reyes@embl.de>, both at EMBL Heidelberg
 Maintainer: Alejandro Reyes <alejandro.reyes@embl.de>
-Imports: BiocGenerics (>= 0.7.5), biomaRt, hwriter, methods, stringr, GenomicRanges, Rsamtools, statmod (>= 1.4.15)
+Imports: BiocGenerics (>= 0.7.5), biomaRt, hwriter, methods, stringr,
+        GenomicRanges, Rsamtools, statmod (>= 1.4.15)
 Depends: Biobase (>= 2.13.11)
-Suggests: GenomicFeatures (>= 1.13.29), pasilla (>= 0.2.13), parathyroidSE, BiocStyle
+Suggests: GenomicFeatures (>= 1.13.29), pasilla (>= 0.2.13),
+        parathyroidSE, BiocStyle
 Enhances: parallel
-Description: The package is focused on finding differential
-   exon usage using RNA-seq exon counts between samples with
-   different experimental designs. It provides functions that
-   allows the user to make the necessary statistical tests based
-   on a model that uses the negative binomial distribution to
-   estimate the variance between biological replicates and
-   generalized linear models for testing. The package also
-   provides functions for the visualization and exploration of
-   the results.
+Description: The package is focused on finding differential exon usage
+        using RNA-seq exon counts between samples with different
+        experimental designs. It provides functions that allows the
+        user to make the necessary statistical tests based on a model
+        that uses the negative binomial distribution to estimate the
+        variance between biological replicates and generalized linear
+        models for testing. The package also provides functions for the
+        visualization and exploration of the results.
 License: GPL (>= 3)
 URL:
-biocViews: HighThroughputSequencing, RNAseq, DifferentialExpression
+biocViews: Sequencing, RNASeq, DifferentialExpression
