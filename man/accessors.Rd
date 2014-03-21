@@ -57,6 +57,8 @@
   for the information from the samples.
 }
 \examples{
-
+  data(pasillaDEXSeqDataSet, package="pasilla")
+  head( featureCounts( dxd ) )
+  head( featureIDs(dxd))
+  head( exonIDs(dxd))
 }
-

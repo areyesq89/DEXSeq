@@ -47,6 +47,8 @@
   See ?estimateDispersions,DESeqDataSet-method for details.
 }
 \examples{
-  
+  data(pasillaDEXSeqDataSet, package="pasilla")
+  dxd <- estimateSizeFactors( dxd )
+  dxd <- estimateDispersions( dxd )
 }
 

@@ -44,6 +44,10 @@
 }
 \examples{
 
+  data(pasillaDEXSeqDataSet, package="pasilla")
+  dxd <- estimateSizeFactors( dxd )
+  dxd <- estimateDispersions( dxd )
+  dxd <- testForDEU( dxd )
 
 }
 

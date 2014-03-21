@@ -38,8 +38,16 @@
 }
 
 \examples{
-     \dontrun{
-       
-     }
+  data(pasillaDEXSeqDataSet, package="pasilla")
+  dxd <- estimateSizeFactors( dxd )
+  dxd <- estimateDispersions( dxd )
+  dxd <- testForDEU( dxd )
+  dxr <- DEXSeqResults( dxd )
+
+  interestingRegion = GRanges("chr2L", IRanges(start=3872658, end=3875302))
+
+  subsetByOverlaps( query=dxr, subject=interestingRegion )
+  findOverlaps( query=dxr, subject=interestingRegion )
+
 }
 

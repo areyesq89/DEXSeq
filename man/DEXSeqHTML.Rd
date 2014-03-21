@@ -82,7 +82,9 @@
    - fitted splicing: as 'expression', but after removing overall gene-level differential expression: this is the view most relevant for the interpretation of DEXSeq results, which are about changes in relative exon usage (i.e.: relative to overall gene expression) 
 }
 \examples{
-	\dontrun{
-
-        }
+  \dontrun{
+    data(pasillaDEXSeqDataSet, package="pasilla")
+    dxr <- DEXSeq( dxd )
+    DEXSeqHTML( object=dxr )
+  }
 }

@@ -44,6 +44,10 @@
   'fitExpToVar'. These values are used by the function \code{plotDEXSeq}. 
 }
 \examples{
-
+  data(pasillaDEXSeqDataSet, package="pasilla")
+  dxd <- estimateSizeFactors( dxd )
+  dxd <- estimateDispersions( dxd )
+  dxd <- testForDEU( dxd )
+  dxd <- estimateExonFoldChanges( dxd )
 }
 

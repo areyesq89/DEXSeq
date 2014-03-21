@@ -26,5 +26,6 @@ observational unit (gene or the like), and one column for
 each sample.
 }
 \examples{
-
+  data(pasillaDEXSeqDataSet, package="pasilla")
+  head( counts( dxd ))
 }

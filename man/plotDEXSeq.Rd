@@ -67,6 +67,12 @@
 }
 \examples{
 \dontrun{
-  
+  data(pasillaDEXSeqDataSet, package="pasilla")
+  dxd <- estimateSizeFactors( dxd )
+  dxd <- estimateDispersions( dxd )
+  dxd <- testForDEU( dxd )
+  dxr <- DEXSeqResults( dxd )
+
+  plotDEXSeq( dxr, "FBgn0010909" )
 }
 }

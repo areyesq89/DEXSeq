@@ -23,5 +23,14 @@ perGeneQValue(object, p = "pvalue", method = perGeneQValueExact)
   A named numeric vector, values are per-gene q-values, names are gene.
 }
 \examples{
- ## example code
+
+  data(pasillaDEXSeqDataSet, package="pasilla")
+  dxd <- estimateSizeFactors( dxd )
+  dxd <- estimateDispersions( dxd )
+  dxd <- testForDEU( dxd )
+  dxr <- DEXSeqResults( dxd )
+
+  perGeneQValue(dxr)
+
+
 }

@@ -38,8 +38,18 @@
 }
 
 \examples{
-     \dontrun{
-       
-     }
+ \dontrun{
+    data(pasillaDEXSeqDataSet, package="pasilla")
+    dxd <- estimateSizeFactors( dxd )
+    dxd <- estimateDispersions( dxd )
+    dxd <- testForDEU( dxd )
+    dxd <- estimateExonFoldChanges( dxd )
+    dxr <- DEXSeqResults( dxd )
+
+    plotMA( dxr )
+
+    plotMA( dxd )
+    
+ }
 }
 
