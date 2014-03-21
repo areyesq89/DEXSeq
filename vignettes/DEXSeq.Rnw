@@ -381,8 +381,8 @@ such, it contains the usual accessor functions for the column data, row data,
 and some specific ones. The core data in an \Rclass{DEXSeqDataSet} 
 object are the counts per exon. Each row of the 
 \Rclass{DEXSeqDataSet} contains in each column the count data from a given 
-exon as well as the count data from the sum of the other exons 
-belonging to the same gene. This annotation, as well
+exon ('this') as well as the count data from the sum of the other exons 
+belonging to the same gene ('others'). This annotation, as well
 as all the information regarding each column of the \Rclass{DEXSeqDataSet}, is 
 specified in the colData.
 
@@ -390,19 +390,27 @@ specified in the colData.
 colData(dxd)
 @
 
-We can access the full count data (both the counts per exon and
-the sum of the other exons from the same gene) using
+We can access the first 5 rows from the count data by doing, 
 
 <<seeCounts>>=
-head( counts(dxd), 7 )
+head( counts(dxd), 5 )
 @
 
-We can also access only the count data from the exons (without
-showing the sum of counts from the rest of the exons from the same gene)
-by doing:
+Notice that the number of columns is 14, the first seven (we have seven samples) 
+corresponding to the number of reads mapping to out exonic regions and the
+last seven correspond to the sum of the counts mapping to the rest of the exons
+from the same gene on each sample.
+
+<<seeSplitted>>=
+split( seq_len(ncol(dxd)), colData(dxd)$exon )
+@
+
+We can also access only the first five rows from the count belonging to the exonic regions
+('this') (without showing the sum of counts from the rest of the exons from the same gene)
+by doing,
 
 <<seeCounts2>>=
-head( featureCounts(dxd), 7 )
+head( featureCounts(dxd), 5 )
 @
 
 
@@ -883,6 +891,22 @@ head( exonIDs(dxd) )
 @
 %
 These functions are useful for subsetting an \Rclass{DEXSeqDataSet} object.
+
+\subsection{Overlap operations}
+
+The methods \Rfunction{subsetByOverlaps} and \Rfunction{findOverlaps} have
+been implemented for the DEXSeqResults object, the \Rfunction{query} argument 
+must be a \Rclass{DEXSeqResults} object. 
+
+%
+<<grmethods>>=
+interestingRegion = GRanges("chr2L", IRanges(start=3872658, end=3875302))
+subsetByOverlaps( query=dxr, subject=interestingRegion )
+findOverlaps( query=dxr, subject=interestingRegion )
+@
+%
+This functions could be useful for further downstream analysis.
+
 
 %--------------------------------------------------
 \section{Methodological changes since publication of the paper} \label{changes}
