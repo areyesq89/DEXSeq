@@ -1,13 +1,22 @@
 %\VignetteIndexEntry{Analyzing RNA-seq data for differential exon usage with the "DEXSeq" package}
 %\VignettePackage{DEXSeq}
+%\VignetteEngine{knitr::knitr}
 
 % To compile this document
-% library('cacheSweave'); rm(list=ls()); Sweave('DEXSeq.Rnw', driver=cacheSweaveDriver())
+% library('knitr'); rm(list=ls()); knit('DEXSeq.Rnw')
 
 \documentclass[12pt]{article}
-
+\usepackage[utf8]{inputenc}
 \usepackage{titling}
-<<style, eval=TRUE, echo=FALSE, results=tex>>=
+
+<<knitr, echo=FALSE, results='hide'>>=
+library("knitr")
+opts_chunk$set(tidy=FALSE,dev="pdf",fig.show="hide",
+               fig.width=4,fig.height=4.5,
+               message=FALSE)
+@ 
+
+<<style, eval=TRUE, echo=FALSE, results='asis'>>=
 BiocStyle::latex()
 @
 
@@ -24,9 +33,6 @@ BiocStyle::latex()
 \usepackage[sort]{cite}
 \usepackage{xstring}
 \usepackage[fleqn]{amsmath}
-
-\usepackage{Sweave}
-\SweaveOpts{keep.source=TRUE, eps=FALSE, pdf=TRUE, png=FALSE, include=FALSE, width=4, height=4.5}
 
 
 \author{Alejandro Reyes, Simon Anders, Wolfgang Huber\\[1em]
@@ -51,7 +57,7 @@ BiocStyle::latex()
 % xstring package) takes out the relevant part. (To activate keyword substitution for another file, use
 % "svn propset svn:keywords Date filename.txt".)
 
-<<options,results=hide,echo=FALSE>>=
+<<options,results='hide',echo=FALSE>>=
 options(digits=2, width=80)
 @
 
@@ -85,8 +91,8 @@ Similar as with differential gene expression, we need to make sure that observed
 differences of values of the ratio~(\ref{eq:reu}) between conditions
 are statistically significant, i.\,e., are sufficiently unlikely to be just due to random fluctuations such as those 
 seen even between samples from the same condition, i.\,e., between replicates. 
-To this end, \Rpackage{DEXSeq} assesses the strength 
-of these fluctuations (quantified by the so-called \emph{dispersion}) by comparing replicates 
+To this end, \Rpackage{DEXSeq} assesses the strength of these fluctuations 
+(quantified by the so-called \emph{dispersion}) by comparing replicates 
 before comparing the averages between the sample groups.
 
 The preceding description is somewhat simplified (and perhaps over-simplified), and we recommend that 
@@ -154,10 +160,11 @@ Once you have installed \emph{HTSeq}, you can use the two Python scripts, \verb|
 come with the \Rpackage{DEXSeq} package. If you have trouble finding them, start R and ask for 
 the installation directory with
 %
-<<systemFile,results=hide>>=
-system.file( "python_scripts", package="DEXSeq" )
+<<systemFile>>=
+pythonScriptsDir = system.file( "python_scripts", package="DEXSeq" )
+list.files(pythonScriptsDir)
 @
-<<systemFileCheck,echo=FALSE,results=hide>>=
+<<systemFileCheck,echo=FALSE,results='hide'>>=
 system.file( "python_scripts", package="DEXSeq", mustWork=TRUE )
 @
 %
@@ -174,31 +181,32 @@ The Python scripts expect a GTF file with gene models for your species. We have 
 with GTF files from Ensembl and hence recommend to prefer these, as files from other providers sometimes do 
 not adhere fully to the GTF standard and cause the preprocessing to fail.
 Ensembl GTF files can be found in the ``FTP Download'' sections of
-the Ensembl web sites (i.\,e., Ensembl, EnsemblPlants, EnsemblFungi, etc.). Make sure that your GTF file uses a coordinate system that matches the reference genome that you have used
-for aligning your reads. (The safest way to ensure this is to download the reference genome from Ensembl, too.)
+the Ensembl web sites (i.\,e., Ensembl, EnsemblPlants, EnsemblFungi, etc.). Make sure that your GTF 
+file uses a coordinate system that matches the reference genome that you have used for aligning your 
+reads. (The safest way to ensure this is to download the reference genome from Ensembl, too.)
 If you cannot use an Ensembl GTF file, see Appendix~\ref{GTF} for advice on converting GFF files from other
 sources to make them suitable as input for the  \verb|dexseq_prepare_annotation.py| script.
 
 In a GTF file, many exons appear multiple times, once for each transcript that contains them. We
-need to ``collapse'' this information to define \emph{exon counting bins}, i.\,e., a list of intervals, each corresponding to one exon or part of an exon. Counting bins for parts of exons arise when an exonic
-region appears with different boundaries in different transcripts. See Figure~1 of the DEXSeq paper~\cite{DEXSeqPaper}
-for an illustration.
-The Python script \verb|dexseq_prepare_annotation.py| takes an Ensembl GTF file and translates it into
-a GFF file with collapsed exon counting bins.
+need to ``collapse'' this information to define \emph{exon counting bins}, i.\,e., a list of intervals, 
+each corresponding to one exon or part of an exon. Counting bins for parts of exons arise when 
+an exonic region appears with different boundaries in different transcripts. See Figure~1 of the 
+DEXSeq paper~\cite{DEXSeqPaper} for an illustration. The Python script \verb|dexseq_prepare_annotation.py| 
+takes an Ensembl GTF file and translates it into a GFF file with collapsed exon counting bins.
 
 Make sure that your current working directory contains the GTF file and call the script 
 (from the command line shell, not from within R) with
 
 \begin{verbatim}
 python /path/to/library/DEXSeq/python_scripts/dexseq_prepare_annotation.py 
-    Drosophila_melanogaster.BDGP5.72.gtf Dmel_flattened.gff
+    Drosophila_melanogaster.BDGP5.72.gtf Dmel.BDGP5.25.62.DEXSeq.chr.gff
 \end{verbatim}
 
 In this command, which should be entered as a single line, replace
 \verb|/path/to|...\verb|/python_scripts| with the correct path to the Python scripts,
 which you have found with the call to \Rfunction{system.file} shown above.
 \verb|Drosophila_melanogaster.BDGP5.72.gtf| is the Ensembl GTF file (here the one for 
-fruit fly, already de-compressed) and \verb|Dmel_flattenend.gff| is the name of the output
+fruit fly, already de-compressed) and \verb|Dmel.BDGP5.25.62.DEXSeq.chr.gff| is the name of the output
 file.
 
 In the process of forming the counting bins, the script might come across overlapping genes. If two genes on the
@@ -216,13 +224,13 @@ in the flattened GFF file. This is done with the script \verb|python_count.py|:
 
 \begin{verbatim}
 python /path/to/library/DEXSeq/python_scripts/dexseq_count.py 
-    Dmel_flattenend.gff untreated1.sam untreated1.counts
+    Dmel.BDGP5.25.62.DEXSeq.chr.gff untreated1.sam untreated1fb.txt
 \end{verbatim}
 
 This command (again, to be entered as a single line) expects two files in the current working directory, namely the GFF file produced in the previous
 step (here \verb|Dmel_flattened.py|) and a SAM file with the aligned reads from a sample (here the
 file \verb|untreated1.sam| with the aligned reads from the first control sample). The command generates an
-output file, here called \verb|untreated1.counts|, with one line for each exon counting bin defined in
+output file, here called \verb|untreated1fb.txt|, with one line for each exon counting bin defined in
 the flattened GFF file. The lines contain the exon counting bin IDs (which are composed of gene IDs and
 exon bin numbers), followed by a integer number which indicates the number of reads that were aligned such that
 they overlap with the counting bin.
@@ -253,7 +261,7 @@ first sequence pass is on the same strand as the gene and the read from the seco
 (``forward-reverse'' or ``fr'' order in the parlance of the Bowtie/TopHat manual) and the options \verb|-s reverse|
 specifies the opposite case.
 
-\emph{SAM and BAM files:} By default, tehs cript expects its input to be in plain-text SAM format.
+\emph{SAM and BAM files:} By default, the script expects its input to be in plain-text SAM format.
 However, it can also read BAM files, i.e., files in the the compressed binary variant of the SAM format.
 If you wish to do so, use the option ``\verb|-f bam|''. This works only if you have installed the Python
 package \software{pysam}, which can be found at \url{https://code.google.com/p/pysam/}.
@@ -268,26 +276,30 @@ options and arguments.
 
 \subsection{Reading the data in to R} \label{sec:readData}
 
-The remainder of the analysis process is now done in \R. Start \R\ and load \Rpackage{DEXSeq}
+The remainder of the analysis is now done in \R. We will use 
+the output of the python scripts for the \emph{pasilla} experiment, 
+that can be found in the package \Rpackage{pasilla}. 
+Open an \R session and type:
+
 %
-<<loadDEXSeq,resuls=hide>>=
-library( "DEXSeq" )
+<<loadDEXSeq>>=
+inDir = system.file("extdata", package="pasilla")
+countFiles = list.files(inDir, pattern="fb.txt$", full.names=TRUE)
+countFiles
+flattenedFile = list.files(inDir, pattern="gff$", full.names=TRUE)
+flattenedFile
 @
 %
 Now, we need to prepare a sample table. This table should contain one row for each library, and columns for
 all relevant information such as name of the file with the read counts, experimental conditions, technical
-information and further covariates.
-To keep this vignette simple, we construct the table on the fly.
+information and further covariates. To keep this vignette simple, we construct the table on the fly.
 %
 <<sampleTable>>=
-sampleTable <- data.frame(
-   row.names = c( "untreated1", "untreated2", "untreated3", 
-      "untreated4", "treated1", "treated2", "treated3" ),
-   countFile = c( "untreated1.counts", "untreated2.counts", 
-      "untreated3.counts", "untreated4.counts",
-      "treated1.counts", "treated2.counts","treated3.counts" ),
-   condition = c( "control", "control", "control", 
-      "control", "knockdown", "knockdown", "knockdown" ),
+sampleTable = data.frame(
+   row.names = c( "treated1", "treated2", "treated3", 
+      "untreated1", "untreated2", "untreated3", "untreated4" ),
+   condition = c("knockdown", "knockdown", "knockdown",  
+      "control", "control", "control", "control" ),
    libType = c( "single-end", "paired-end", "paired-end", 
       "single-end", "single-end", "paired-end", "paired-end" ) )
 @
@@ -303,38 +315,45 @@ In any case, it is vital to check the table carefully for correctness.
 sampleTable
 @
 %
-Our table contains the sample names as row names, the names of the count files that we
-prepared in the previous step and the two covariates that vary between samples: first
-the experimental condition (factor \texttt{condition} with levels \texttt{control} and
-\texttt{treatment}) and the library type (factor \texttt{libType}), which we included because
-the samples in this particular experiment were sequenced partly in single-end
-runs and partly in paired-end runs. 
+Our table contains the sample names as row names and the two covariates that 
+vary between samples: first the experimental condition (factor \texttt{condition} 
+with levels \texttt{control} and \texttt{treatment}) and the library type 
+(factor \texttt{libType}), which we included because the samples in this 
+particular experiment were sequenced partly in single-end runs and partly 
+in paired-end runs. 
 
-For now, we will, however, ignore this latter piece of information, and postpone the discussion of how to include
-such additional covariates to Section~\ref{sec:glm}. If you have only a single covariate and
-want to perform a simple analysis, the column with this covariate should be
-named \texttt{condition}.
+For now, we will ignore this latter piece of information, and postpone 
+the discussion of how to include such additional covariates to Section~\ref{sec:glm}. 
+If you have only a single covariate and want to perform a simple analysis, 
+the column with this covariate should be named \texttt{condition}.
 
-Now, we construct an \Rclass{ExonCountSet} object from this data. This object holds all
+Now, we construct an \Rclass{DEXSeqDataSet} object from this data. This object holds all
 the input data and will be passed along the stages of the subsequent analysis.
-We construct the object with the \Rpackage{DEXSeq} function \Rfunction{read.HTSeqCounts}, 
+We construct the object with the \Rpackage{DEXSeq} function \Rfunction{DEXSeqDataSetFromHTSeq}, 
 as follows:
 %
-<<makeecs, eval=FALSE>>=
-ecs <- read.HTSeqCounts(
-   as.character( sampleTable$countFile ),
-   sampleTable,
-   "Dmel_flattenend.gff" )
+<<makeecs, eval=TRUE>>=
+suppressPackageStartupMessages( library( "DEXSeq" ) )
+
+dxd = DEXSeqDataSetFromHTSeq(
+   countFiles,
+   sampleData=sampleTable,
+   design= ~ sample + exon + condition:exon,
+   flattenedfile=flattenedFile )
 @   
 %
-The function takes three arguments. First, a vector with names of count files, i.e., of files
+The function takes four arguments. First, a vector with names of count files, i.e., of files
 that have been generated with the \verb|dexseq_count.py| script. The function will read these
-files and arrange the count data in a matrix, which is stored in the \Rclass{ExonCountSet}
-object \Robject{ecs}. The second argument is our sample table, with one row for each of the 
+files and arrange the count data in a matrix, which is stored in the \Rclass{DEXSeqDataSet}
+object \Robject{dxd}. The second argument is our sample table, with one row for each of the 
 files listed in the first argument. This information is simply stored as is in the object's
-meta-data slot (see below). The third argument is a file name again, now of the flattened GFF file
-that was generated with \verb|dexseq_prepare_annotation.py| and used as input to \verb|dexseq_count.py|
-when creating the count file.
+meta-data slot (see below). The third argument is a formula of the form 
+``~ sample + exon + condition:exon'' that specifies the contrast with of a variable from the 
+sample table columns and the `exon' variable. Using this formula, we are 
+interested in differences in exon usage due to the `condition' variable changes. Later in this vignette,
+we will how to add additional variables for complex designs.  The fourth argument is a file 
+name, now of the flattened GFF file that was generated with \verb|dexseq_prepare_annotation.py| 
+and used as input to \verb|dexseq_count.py| when creating the count file.
 
 There are other ways to get a \Rpackage{DEXSeq} analysis started. See Appendix \ref{sec:creatingInR} and 
 Ref.~\cite{parathyroidSEVignette} for details.
@@ -343,42 +362,55 @@ Ref.~\cite{parathyroidSEVignette} for details.
 
 \subsection{Loading and inspecting the example data}
 
-To demonstrate the \Rpackage{DEXSeq} work flow, we have prepared, in the \Rpackage{pasilla}
-data package, an \Rclass{ExonCountSet} similar to the one constructed in the previous section.
-However, in order to keep the run-time of this vignette small, we have subset the object to
-only a few genes.
+To demonstrate the \Rpackage{DEXSeq} work flow, we will use the \Robject{DEXSeqDataSet} constructed 
+in the previous section. However, in order to keep the run-time of this vignette small, we will 
+subset the object to only a few genes.
 
-To start, we load the package \Rpackage{DEXSeq} and
-the example data from the \Rpackage{pasilla} package.
 %
-<<start,results=hide>>=
-library( DEXSeq )
-data( "pasillaExons", package="pasilla" )
+<<start>>=
+genesForSubset = read.table( 
+  file.path(inDir, "geneIDsinsubset.txt"), 
+  stringsAsFactors=FALSE)[[1]]
+
+dxd = dxd[geneIDs( dxd ) %in% genesForSubset,]
 @
 %
-The object \Robject{pasillaExons} is an \Rclass{ExonCountSet}, which has been constructed with 
-\Rfunction{read.HTSeqCounts} as described above. For consistency, we rename it to \Robject{ecs}
-as above, and then inspect it.
-%
-<<renameEcs>>=
-ecs <- pasillaExons
-ecs
+
+The \Rclass{DEXSeqDataSet} class is derived from the \Rclass{DESeqDataSet}. As
+such, it contains the usual accessor functions for the column data, row data, 
+and some specific ones. The core data in an \Rclass{DEXSeqDataSet} 
+object are the counts per exon. Each row of the 
+\Rclass{DEXSeqDataSet} contains in each column the count data from a given 
+exon as well as the count data from the sum of the other exons 
+belonging to the same gene. This annotation, as well
+as all the information regarding each column of the \Rclass{DEXSeqDataSet}, is 
+specified in the colData.
+
+<<seeColData>>=
+colData(dxd)
 @
-%
-The \Rclass{ExonCountSet} class is derived from \Rclass{eSet},
-Bioconductor's standard container class for experimental data \cite{ExpressionSet}. As
-such, it contains the usual accessor functions for sample, feature and
-assay data (including \Rfunction{pData},
-\Rfunction{fData}, \Rfunction{experimentData}), and some specific ones.
-The core data in an \Rclass{ExonCountSet} object are the counts 
-per exon. Let's have a look at the first 7 rows.
+
+We can access the full count data (both the counts per exon and
+the sum of the other exons from the same gene) using
+
 <<seeCounts>>=
-head( counts(ecs), 7 )
+head( counts(dxd), 7 )
 @
+
+We can also access only the count data from the exons (without
+showing the sum of counts from the rest of the exons from the same gene)
+by doing:
+
+<<seeCounts2>>=
+head( featureCounts(dxd), 7 )
+@
+
+
 %
-The rows are labelled with gene IDs (here Flybase IDs), followed by a colon and the counting bin
-number. (As a counting bin corresponds to an exon or part of an exon, this ID is called the \emph{exon ID}
-within \Rpackage{DEXSeq}.) The table content indicates the
+In both cases, the rows are labelled with gene IDs (here Flybase IDs), 
+followed by a colon and the counting bin number. (As a counting bin 
+corresponds to an exon or part of an exon, this ID is called the \emph{feature ID} 
+or \emph{exon ID} within \Rpackage{DEXSeq}.) The table content indicates the
 number of reads that have been mapped to each counting bin in the respective sample.
 
 To see details on the counting bins, we also print the first
@@ -386,27 +418,25 @@ To see details on the counting bins, we also print the first
 %
 {\small
 <<fData>>=
-head( fData(pasillaExons), 3 )
+head( rowData(dxd), 3 )
 @
 }
 %
 So far, this table contains information on the annotation data, such as gene and exon IDs,
-genomic coordinates of the exon, and the list of transcripts that contain an exon. Further
-columns for intermediate and final results are already present (and filled with \Robject{NA}) and will be filled with results
-in subsequent steps of the analysis.
+genomic coordinates of the exon, and the list of transcripts that contain an exon. 
 
-The accessor function \Rfunction{design} shows the design table with the sample annotation
-(which was passed as the second argument to \Rfunction{read.HTSeqCounts}):
+The accessor function \Rfunction{annotationData} shows the design table with the sample 
+annotation (which was passed as the second argument to \Rfunction{DEXSeqDataSetFromHTSeq}):
 %
 <<pData>>=
-design(ecs)
+sampleAnnotation( dxd )
 @
 %
 
 In the following sections, we will update the object by calling a number of analysis functions,
-always using the idiom ``\verb| ecs <- |\textit{\texttt{someFunction}}\verb|( ecs )|'', which
-takes the \verb|ecs| object, fills in the results of the performed computation and writes the returned
-and updated object back into the variable \verb|ecs|.
+always using the idiom ``\verb| dxd = |\textit{\texttt{someFunction}}\verb|( dxd )|'', which
+takes the \verb|dxd| object, fills in the results of the performed computation and writes the returned
+and updated object back into the variable \verb|dxd|.
 
  %--------------------------------------------------
 \subsection{Normalisation}\label{sec:norm}
@@ -416,21 +446,17 @@ we estimate \emph{size factors}, which measure relative sequencing depth.  \Rpac
 as \Rpackage{DESeq} and \Rpackage{DESeq2}, which is provided in the function \Rfunction{estimateSizeFactors}.
 %
 <<sizeFactors1>>=
-ecs <- estimateSizeFactors( ecs )
+dxd = estimateSizeFactors( dxd )
 @
 %
-You may want to inspect the estimated size factors
-<<inspectSizeFactors>>=
-sizeFactors(ecs)
-@
 
 
 %--------------------------------------------------
 \subsection{Dispersion estimation}\label{sec:dispest}
 %--------------------------------------------------
-To test for differential expression, we need to estimate the variability of the data. This is necessary
+To test for differential exon usage, we need to estimate the variability of the data. This is necessary
 to be able to distinguish technical and biological variation (noise) from real effects
-on exon expression due to the different conditions.
+on exon usage due to the different conditions.
 The information on the strength of the noise is inferred from the biological replicates in the data set
 and characterized by the so-called \emph{dispersion}. In RNA-Seq experiments the number of replicates is 
 typically too small to reliably estimate variance or dispersion parameters individually exon by exon, 
@@ -442,71 +468,31 @@ considered as replicates -- and therefore, the design table needs to contain a c
 name \verb|condition|. In Section~\ref{sec:glm}, we discuss how to treat more complicated experimental
 designs which are not accommodated by a single \Robject{condition} factor.
 
-The first step is to get a dispersion estimate for each exon. This task is performed by
-the function \Rfunction{estimateDispersions}, using Cox-Reid (CR)
-likelihood estimation (our approach here follows that of the package \Rpackage{edgeR}~\cite{edgeR_GLM}).
-Before starting estimating the CR dispersion estimates, \Rfunction{estimateDispersions}
-first defines the ``testable'' counting bins. In this step, all bins are excluded with less
-that \Robject{minCount} reads. By default, \Robject{minCount=10}, i.e., the bin must have at least 10
-reads, \emph{summed up} across all samples, but other values can be specified when calling 
-\Rfunction{estimateDispersion}. If a gene has only one testable counting bin, then this counting bin
-is then considered as not testable, either, because it's usage cannot be compared to any other counting 
-bins. The testable bins are marked in the column \texttt{testable} of the feature data.
+To estimate the dispersion estimates, \Rpackage{DEXSeq} uses the approach of the package \Rpackage{DESeq2}.
+Internally, the functions from DESeq2 are called, adapting the parameters of the functions for the specific 
+case of the DEXSeq model. Briefly, per-exon dispersions are calculated using a Cox-Reid adjusted
+profile likelihood estimation, then a dispersion-mean relation is fitted to this individual dispersion values and
+finally, the fitted values are taken as a prior in order to shrink the per-exon estimates towards the fitted
+values. See the \Rpackage{DESeq2} paper for the rational behind the shrinkage approach \cite{deseq2}.
 
-Then, a dispersion estimate is computed for each bin, and the obtained values are stored
-in the feature data column \Robject{dispBeforeSharing}. The following command performs these steps.
-<<estDisp1,cache=TRUE,results=hide>>=
-ecs <- estimateDispersions( ecs )
+<<estDisp1>>=
+dxd = estimateDispersions( dxd )
 @
 %
-Note that for a full, genome-wide data set, execution of this function can take a while. To indicate
-progress, a dot is printed on the console whenever 100 genes have been processed. If you have a machine
-with multiple cores, you may want to use the \texttt{nCores} option to instruct the function to parallelize the
-task over several CPU cores. See Section \ref{parallelization} and the function's help page for details.
 
-Afterwards, the function \Rfunction{fitDispersionFunction} needs to be called, in which a dispersion-mean
-relation $\alpha(\mu) = \alpha_0 + \alpha_1/\mu$ is fitted to the individual CR dispersion values
-(as stored in \Robject{dispBeforeSharing}). The fit coefficients are stored in the slot \Robject{dispFitCoefs} and finally,
-for each exon, the maximum between the dispersion before sharing and the fitted dispersion value
-is taken as the exon's final dispersion value and stored in the \Robject{dispersion}
-slot.\footnote{Especially when the dispersion estimates are very large, this fit can be difficult,
-  and has occasionally caused the function to fail. In these rare cases please contact the developers.}
-See our paper~\cite{DEXSeqPaper} for the rationale behind this ``sharing'' scheme.
-%
-<<fitDisp1>>=
-ecs <- fitDispersionFunction( ecs )
-@
-%
-We can have a look at the results of the CR estimation, the coefficients from the fit, and the
-fitted values:
-%
-<<fitDisp2>>=
-head( fData(ecs)$dispBeforeSharing )
-ecs@dispFitCoefs
-head( fData(ecs)$dispFitted )
-@
-%
-As a fit diagnostic, we plot the per-exon dispersion estimates versus the mean normalised count.
-%
-<<fitdiagnostics, fig=TRUE>>=
-plotDispEsts( ecs )
-@
-%
-\incfig{DEXSeq-fitdiagnostics}{.5\textwidth}{Fit Diagnostics.}{Per-gene dispersion estimates 
-  (shown by points) and the fitted mean-dispersion function (red line).}
-%
-The plot (Figure~\ref{DEXSeq-fitdiagnostics}) shows the estimates for all exons as dots and the fit as red
-line. The red line follows the trend of the dots in the upper cluster of dots. The lower cluster
-stems from exons for which the sample noise happens to fall below shot noise, i.e., their sample estimates
-of the dispersion is zero or close to zero and hence form another cluster at the bottom. The fact that these
-two clusters look so well separated is to a large extent an artefact of the logarithmic $y$-axis scaling.
-Inspect the fit and make sure that
-the regression line follows the trend of the points within the upper cluster.
+As a shrinkage diagnostic, the \Rclass{DEXSeqDataSet} inherits the method \Rfunction{plotDispEsts} that allows us
+to plot the per-exon dispersion estimates versus the mean normalised count, the resulting fitted values
+and the \emph{a posteriori} (shrinked) dispersion estimates (Figure~\ref{figure/fitdiagnostics}).
 
-The intercept coefficient of the dispersion fit (see above), which is the horizontal asymptote of the red
-line, can be understood as the square of the coefficient of variation of highly expressed exons, and
-is a good rough estimate of the overall noise in the data set and hence of the available power to infer
-differential exon usage,
+%
+<<fitdiagnostics, dev='png', resolution=220>>=
+plotDispEsts( dxd )
+@
+%
+\incfig{figure/fitdiagnostics}{.5\textwidth}{Fit Diagnostics.}{The initial per-exon dispersion estimates 
+  (shown by black points), the fitted mean-dispersion values function (red line), and the shrinked values
+  in blue.}
+%
 
 
 %--------------------------------------------------
@@ -524,12 +510,13 @@ and compare it to the smaller model (the null model)
 In these formulae (which use the standard notation for linear model formulae in \R; consult a text book
 on \R\ if you are unfamiliar with it), \verb|sample| is a factor with different levels for each sample,
 \verb|condition| is the factor of experimental conditions that we defined when constructing the
-\Rclass{ExonCountSet} object at the beginning of the analysis, and \verb|exon| is a factor with
-two levels, \verb|this| and \verb|others|. The two models described by these formulae are fit for
-each counting bin, where the data supplied to the fit comprise \emph{two} read count values for each sample, 
-corresponding to the two levels of the \Robject{exon} factor: the number of reads mapping to the bin in 
-question (level \Robject{this}), and the sum of the read counts from all other bins
-of the same gene (level \Robject{others}). Note that this approach differs from the approach described in 
+\Rclass{DEXSeqDataSet} object at the beginning of the analysis, and \verb|exon| is a factor with
+two levels, \verb|this| and \verb|others|, that were specified when we generated our \Rclass{DEXSeqDataSet}
+object. The two models described by these formulae are fit for each counting bin, where the data 
+supplied to the fit comprise \emph{two} read count values for each sample, corresponding to the 
+two levels of the \Robject{exon} factor: the number of reads mapping to the bin in question 
+(level \Robject{this}), and the sum of the read counts from all other bins of the same gene 
+(level \Robject{others}). Note that this approach differs from the approach described in 
 the paper~\cite{DEXSeqPaper} and used in older versions of \Rpackage{DEXSeq}; see Appendix~\ref{changes} 
 for further discussion.
 
@@ -549,46 +536,61 @@ between the experimental conditions.
 
 The function \Rfunction{testForDEU} performs these tests for each exon in each gene.
 %
-<<testForDEU1,cache=TRUE,results=hide>>=
-ecs <- testForDEU( ecs )
+<<testForDEU1,cache=TRUE>>=
+dxd = testForDEU( dxd )
 @
+
+The resulting \Rclass{DEXSeqDataSet} object contains slots with information
+regarding the test.  
+
 %
-The function stores its results in the \Robject{pvalue} and \Robject{padjust} columns of the \Robject{featureData} slots
-of the \Rclass{ExonCountSet} object with the results. Here, \Robject{pvalue} contains
-the p values from the $\chi^2$ likelihood-ratio test, and \Robject{padjust} is the result of
-performing Benjamini-Hochberg adjustment for multiple testing on \Robject{pvalue}:
-%
-<<testForDEU2>>=
-head( fData(ecs)[, c( "pvalue", "padjust" ) ] )
-@
-%
-For some usages, we may also want to estimate fold changes. To this end, we call
-\Rfunction{estimatelog2FoldChanges}:
+
+For some uses, we may also want to estimate relative exon fold changes. To this end, 
+we call \Rfunction{estimateExonFoldChanges}. Exon usage fold changes are 
+calculated by fitting for each gene, a GLM from the joint data of all its 
+exons.  The model frame can be found in the slot object@modelFrameBM of a 
+\Rclass{DEXSeqDataSet} object. The model "~ sample + fitExpToVar * exon" is fitted.  
+The resulted coefficients are arranged and reformatted in order to remove gene
+expression effects (absorbed by the 'sample' variable in the formula), leaving 
+only exon usage effects for each individual exon in each level of the parameter 
+"fitExpToVar".
+
 %
 <<estFC,cache=TRUE>>=
-ecs <- estimatelog2FoldChanges( ecs )
+dxd = estimateExonFoldChanges( dxd, fitExpToVar="condition")
 @
 %
-This function stores its results in the feature data table, too.
 
-A convenient way to extract all relevant columns of the feature data table is
-offered by the function \Rfunction{DEUresultTable}:
-%
-<<DEUresults>>=
-res1 <- DEUresultTable(ecs)
-head( res1 )
+So far in the pipeline, the intermediate and final results have been 
+stored in the meta data of a \Rclass{DEXSeqDataSet} object, they can 
+be accessed using the function \Rfunction{mcol}. In order to summarize
+the results without showing the values from intermediate steps, we call the 
+function \Rfunction{DEXSeqResults}. The result is a \Rclass{DEXSeqResults}
+object, which is a subclass of a \Rclass{DataFrame} object. 
+
+<<results1,cache=TRUE>>=
+dxr1 = DEXSeqResults( dxd )
+dxr1
 @
-%
-Controlling false discovery rate (FDR) at 0.1 (10\%), we can now ask
-how many counting bins show evidence of differential exon usage:
+
+The description of each of the column of the object \Rclass{DEXSeqResults} 
+can be found in the element meta data.
+
+<<results2,cache=TRUE>>=
+elementMetadata(dxr1)$description
+@
+
+From this object, we can ask how many genes are significant with a false
+discovery rate of 10\%:
+
 %
 <<tallyExons>>=
-table ( res1$padjust < 0.1 )
+table ( dxr1$padj < 0.1 )
 @
 %
 We may also ask how many genes are affected
 <<tallyGenes>>=
-table ( tapply( res1$padjust < 0.1, geneIDs(pasillaExons), any ) )
+table ( tapply( dxr1$padj < 0.1, dxr1$groupID, any ) )
 @
 %
 Remember that our example data set contains only a selection of genes. We have chosen these to
@@ -598,13 +600,13 @@ here is not typical.
 To see how the power to detect differential exon usage depends on the number of reads that
 map to an exon, a so-called MA plot is useful, which plots the logarithm of fold change versus average
 normalized count per exon and marks by red colour the exons which are considered significant; here,
-the exons with an adjusted $p$ values of less than 0.1 (Figure \ref{DEXSeq-MvsA}).
+the exons with an adjusted $p$ values of less than 0.1 (Figure \ref{figure/MvsA}).
 There is of course nothing special about the number 0.1, and you can specify other thresholds in the call to \Rfunction{plotMA}.
 %
-<<MvsA, fig=TRUE, pdf=FALSE, png=TRUE, resolution=180>>=
-plotMA( ecs, FDR=0.1, ylim=c(-4,4), cex=0.8 )
+<<MvsA, dev='png', resolution=200>>=
+plotMA( dxr1, cex=0.8 )
 @
-\incfig{DEXSeq-MvsA}{.5\textwidth}{MA plot.}{
+\incfig{figure/MvsA}{.5\textwidth}{MA plot.}{
 Mean expression versus $\log_2$ fold change plot. Significant hits (at \Robject{padj}<0.1) are coloured in red.
 }
 
@@ -615,7 +617,7 @@ Mean expression versus $\log_2$ fold change plot. Significant hits (at \Robject{
 In the previous section we performed a simple analysis of differential exon usage, in which each sample was assigned
 to one of two experimental conditions. If your experiment is of this type, you can use the work flow shown above. All
 you have to make sure is that you indicate which sample belongs to which experimental condition when you construct
-the \Rclass{ExonCountSet} object (Section \ref{sec:readData}. Do so by means of a column called \verb|condition| in the sample table.
+the \Rclass{DEXSeqDataSet} object (Section \ref{sec:readData}. Do so by means of a column called \verb|condition| in the sample table.
 
 If you have a more complex experimental design, you can provide different or additional columns in the sample table. You
 then have to indicate the design by providing explicit formulae for the test.
@@ -623,132 +625,111 @@ then have to indicate the design by providing explicit formulae for the test.
 In the \Rpackage{pasilla} dataset, some samples were sequenced in single-end and others in paired-end mode. Possibly,
 this influenced counts and should hence be accounted for. We therefore use this as an example for a complex design.
 
-When we constructed the \Rclass{ExonCountSet} object in Section \ref{sec:readData}, we provided in the sample table an
-additional column called \verb|type|, which has been stored in the object:
+When we constructed the \Rclass{DEXSeqDataSet} object in Section \ref{sec:readData}, we provided in the sample table an
+additional column called \verb|libType|, which has been stored in the object:
 %
 <<design>>=
-design(pasillaExons)
+sampleAnnotation(dxd)
 @
 %
 We specify two design formulae, which indicate that the \verb|libType| \Rclass{factor} should be treated
 as a blocking factor:
 %
 <<formulas2>>=
-formulaFullModel    <-  ~ sample + exon + type:exon + condition:exon
-formulaReducedModel <-  ~ sample + exon + type:exon 
+formulaFullModel    =  ~ sample + exon + libType:exon + condition:exon
+formulaReducedModel =  ~ sample + exon + libType:exon 
 @
 %
 Compare these formulae with the default formulae (\ref{eq:altmodel}, \ref{eq:nullmodel}) 
 given in Section \ref{sec:deu}. We have added, in both 
-the full model and the reduced model, the term \verb|type:exon|. Therefore, any dependence of exon
+the full model and the reduced model, the term \verb|libType:exon|. Therefore, any dependence of exon
 usage on library type will be absorbed by this term and accounted for equally in the full
 and a reduced model, and the likelihood ratio test comparing them will only detect differences
 in exon usage that can be attributed to \verb|condition|, independent of \verb|type|.
 
-To start a fresh analysis, now using these formulae instead of the default ones, we copy the example 
-data into a new object.
-%
-<<new_ecs>>=
-ecs2 <- pasillaExons
-@
-%
-As before, we first estimate the size factors
-<<sf_again>>=
-ecs2 <- estimateSizeFactors( ecs2 )
-@
-%
 Next, we estimate the dispersions. This time, we need to inform the \Rfunction{estimateDispersions} function
 about our design by providing the full model's formula, which should be used instead of the default 
 formula (\ref{eq:altmodel}).
 %
-<<estDisps_again, cache=true, results=hide >>=
-ecs2 <- estimateDispersions( ecs2, formula = formulaFullModel )
+<<estDisps_again, cache=TRUE, results='hide'>>=
+dxd = estimateDispersions( dxd, formula = formulaFullModel )
 @
-%
-The fit is performed as before.
-%
-<<fit_again>>=
-ecs2 <- fitDispersionFunction( ecs2 )
-@
+
 %
 The test function now needs to be informed about both formulae
-<<test_again, cache=true >>=
-ecs2 <- testForDEU( ecs2, 
-	formula0 = formulaReducedModel, formula1 = formulaFullModel )
+<<test_again, cache=TRUE >>=
+dxd = testForDEU( dxd, 
+	reducedModel = formulaReducedModel, 
+        fullModel = formulaFullModel )
 @
 %
 Finally, we get a summary table, as before.
 <<res_again>>=
-res2 <- DEUresultTable( ecs2 )
-head(res2)
+dxr2 = DEXSeqResults( dxd )
 @
 %
 How many significant DEU cases have we got this time?
 <<table2>>=
-table( res2$padjust < 0.1 )
+table( dxr2$padj < 0.1 )
 @
 %
 We can now compare with the previous result:
 <<table3>>=
-table( before = res1$padjust < 0.1, now = res2$padjust < 0.1 )
+table( before = dxr1$padj < 0.1, now = dxr2$padj < 0.1 )
 @
-<<oneMore,echo=false,results=hide>>=
-stopifnot( sum( res2$padjust<.1, na.rm=TRUE ) == sum( res1$padjust<.1, na.rm=TRUE ) + 1 )
-@
-%
-Accounting for the library type has allowed us to find one more hit. (With so few genes, this could be
-coincidence, of course. However, performing the analysis on the full pasilla data confirms that
-accounting for the covariate improves power.)
+
+Accounting for the library type has allowed us to find six more hits, which
+confirms that accounting for the covariate improves power.
 
 %--------------------------------------------------
 \section{Visualization}
 %--------------------------------------------------
 The \Rfunction{plotDEXSeq} provides a means  to visualize the results of an analysis.
 %
-<<plot1, fig=TRUE, height=8, width=12>>=
-plotDEXSeq( ecs2, "FBgn0010909", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+<<plot1, fig.height=8, fig.width=12>>=
+plotDEXSeq( dxr2, "FBgn0010909", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 @
 %
-\incfig{DEXSeq-plot1}{\textwidth}{Fitted expression.}{
+\incfig{figure/plot1}{\textwidth}{Fitted expression.}{
 The plot represents the expression estimates from a call to \texttt{testForDEU}.
 Shown in red is the exon that showed significant differential exon usage.
 }
 %
 <<checkClaim,echo=FALSE>>=
-wh = (fData(ecs2)$geneID=="FBgn0010909")
-stopifnot(sum(fData(ecs2)$padjust[wh] < formals(plotDEXSeq)$FDR)==1)
+wh = (dxr2$groupID=="FBgn0010909")
+stopifnot(sum(dxr2$padj[wh] < formals(plotDEXSeq)$FDR)==1)
 @
 %
-The result is shown in Figure~\ref{DEXSeq-plot1}. This plot shows the fitted expression values of each of the exons
+The result is shown in Figure~\ref{figure/plot1}. This plot shows the fitted expression values of each of the exons
 of gene FBgn0010909, for each of the two conditions, treated and untreated.
-The function \Rfunction{plotDEXSeq} expects at least two arguments, the \Rclass{ExonCountSet} object and the gene ID.
+The function \Rfunction{plotDEXSeq} expects at least two arguments, the \Rclass{DEXSeqDataSet} object and the gene ID.
 The option \texttt{legend=TRUE} causes a legend to be included. The three remaining
 arguments in the code chunk above are ordinary plotting parameters which are simply handed over to \R's standard
 plotting functions. They are not strictly needed and included here to improve appearance of
 the plot. See the help page for \Rfunction{par} for details.
 
-Optionally, one can also visualize the transcript models (Figure~\ref{DEXSeq-plot2}), which can be
+Optionally, one can also visualize the transcript models (Figure~\ref{figure/plot2}), which can be
 useful for putting differential exon usage results into the context of isoform regulation.
 %
-<<plot2, fig=TRUE, height=8, width=12>>=
-plotDEXSeq( ecs2, "FBgn0010909", displayTranscripts=TRUE, legend=TRUE,
+<<plot2, fig.height=8, fig.width=12>>=
+plotDEXSeq( dxr2, "FBgn0010909", displayTranscripts=TRUE, legend=TRUE,
    cex.axis=1.2, cex=1.3, lwd=2 )
 @
 %
-\incfig{DEXSeq-plot2}{\textwidth}{Transcripts.}{
-As in Figure~\ref{DEXSeq-plot1}, but including the annotated transcript models.}
+\incfig{figure/plot2}{\textwidth}{Transcripts.}{
+As in Figure~\ref{figure/plot1}, but including the annotated transcript models.}
 %
 Other useful options are to look at the count values from the individual samples, rather than at the
 model effect estimates. For this display (option \texttt{norCounts=TRUE}), the counts are normalized by 
-dividing them by the size factors (Figure~\ref{DEXSeq-plot3}).
+dividing them by the size factors (Figure~\ref{figure/plot3}).
 %
-<<plot3, fig=TRUE, height=8, width=12>>=
-plotDEXSeq( ecs2, "FBgn0010909", expression=FALSE, norCounts=TRUE,
+<<plot3, fig.height=8, fig.width=12>>=
+plotDEXSeq( dxr2, "FBgn0010909", expression=FALSE, norCounts=TRUE,
    legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 @
 %
-\incfig{DEXSeq-plot3}{\textwidth}{Normalized counts.}{
-As in Figure~\ref{DEXSeq-plot1}, with normalized count values of each exon in each of the samples.}
+\incfig{figure/plot3}{\textwidth}{Normalized counts.}{
+As in Figure~\ref{figure/plot1}, with normalized count values of each exon in each of the samples.}
 %
 As explained in Section~\ref{sec:praeludium}, \Rpackage{DEXSeq} is designed to find
 changes in relative exon usage, i.\,e., changes in the expression of individual exons that are
@@ -756,13 +737,13 @@ not simply the consequence of overall up- or down-regulation of the gene. To vis
 sometimes advantageous to remove overall changes in expression from the
 plots. Use the (somewhat misnamed) option \texttt{splicing=TRUE} for this purpose.
 %
-<<plot4, fig=TRUE, height=8, width=12>>=
-plotDEXSeq( ecs2, "FBgn0010909", expression=FALSE, splicing=TRUE,
+<<plot4, fig.height=8, fig.width=12>>=
+plotDEXSeq( dxr2, "FBgn0010909", expression=FALSE, splicing=TRUE,
    legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 @
 %
-\incfig{DEXSeq-plot4}{\textwidth}{Fitted splicing.}{
-The plot represents the estimated effects, as in Figure~\ref{DEXSeq-plot1},
+\incfig{figure/plot4}{\textwidth}{Fitted splicing.}{
+The plot represents the estimated effects, as in Figure~\ref{figure/plot1},
 but after subtraction of overall changes in gene expression.}
 %
 To generate an easily browsable, detailed overview over all analysis results,
@@ -771,7 +752,7 @@ This function uses the package \Rpackage{hwriter} \cite{hwriter} to create a res
 significant results, allowing a more detailed exploration of the results. 
 %
 <<DEXSeqHTML,cache=TRUE, eval=FALSE>>=
-DEXSeqHTML( pasillaExons, FDR=0.1, color=c("#FF000080", "#0000FF80") )
+DEXSeqHTML( dxr2, FDR=0.1, color=c("#FF000080", "#0000FF80") )
 @
 
 %--------------------------------------------------
@@ -779,22 +760,18 @@ DEXSeqHTML( pasillaExons, FDR=0.1, color=c("#FF000080", "#0000FF80") )
 %--------------------------------------------------
 DEXSeq analyses can be computationally heavy, especially with data
 sets that comprise a large number of samples, or with genomes
-containing genes with large numbers of exons.  While some steps of the
-analysis work on the whole data set, the two parts that are most time
-consuming -- the functions \Rfunction{estimateDispersions} and
-\Rfunction{testForDEU} -- can be parallelized by setting the two functions'
-parameter \Rfunction{nCores} to the number of CPU cores to be used. 
-These functions will then distribute the
-\Rclass{ExonCountSet} object into smaller objects that are processed
-in parallel on different cores.  This functionality uses the
-\Rpackage{parallel} package, which hence has to be loaded first.
-<<para1,cache=TRUE,results=hide, eval=FALSE>>=
-data("pasillaExons", package="pasilla")
-library("parallel")
-pasillaExons <- estimateSizeFactors( pasillaExons )
-pasillaExons <- estimateDispersions( pasillaExons, nCores=16)
-pasillaExons <- fitDispersionFunction( pasillaExons )
-pasillaExons <- testForDEU( pasillaExons, nCores=16)
+containing genes with large numbers of exons.  While some steps 
+of the analysis work on the whole data set, the computational load
+can be parallelized for some steps. We use the package \Rpackage{BiocParallel},  
+and implemented the \Rfunction{BPPARAM} parameter of the functions 
+\Rfunction{estimateDispersions},  \Rfunction{testForDEU} and \Rfunction{estimateExonFoldChanges}:
+
+<<para1,cache=TRUE,results='hide', eval=FALSE>>=
+BPPARAM = MultiCoreParam(workers=4)
+dxd = estimateSizeFactors( dxd )
+dxd = estimateDispersions( dxd, BPPARAM=BPPARAM)
+dxd = testForDEU( dxd, BPPARAM=BPPARAM)
+dxd = estimateExonFoldChanges(dxd, BPPARAM=BPPARAM)
 @
 
 
@@ -804,27 +781,20 @@ pasillaExons <- testForDEU( pasillaExons, nCores=16)
 In the previous sections, we went through the analysis step by step.
 Once you are sufficiently confident about the work flow for your data,
 its invocation can be streamlined by the wrapper function
-\Rfunction{doCompleteDEUAnalysis}, which runs the analysis shown
+\Rfunction{DEXseq}, which runs the analysis shown
 above through a single function call. 
 
-In the simplest case, construct the \Robject{ExonCountSet} as shown in Section \ref{preps}
-or in Appendix \ref{sec:creatingInR}, then run \Rfunction{doCompleteDEUAnalysis} passing the
-\Robject{ExonCountSet} as only argument, and finally inspect the result with 
-\Rfunction{DEUresultTable}. In the following, we also specify design formulae
-to account for library type as described in Section \ref{sec:glm} and the \Robject{nCores}
-argument for parallelization (Section \ref{parallelization}).
+In the simplest case, construct the \Robject{DEXSeqDataSet} as shown in Section \ref{preps}
+or in Appendix \ref{sec:creatingInR}, then run \Rfunction{DEXSeq} passing the
+\Robject{DEXSeqDataSet} as only argument, this function will output
+a \Rclass{DEXSeqResults} object.
 %
-<<alldeu, cache=TRUE, results=hide>>=
-data( "pasillaExons", package="pasilla" )
-pasillaExons <- doCompleteDEUAnalysis(
-   pasillaExons,
-   formula0 =  ~ sample + exon + type:exon,
-   formula1 =  ~ sample + exon + type:exon + condition:exon,
-   nCores = 1 )
+
+<<alldeu, cache=TRUE>>=
+dxr = DEXSeq(dxd)
+class(dxr)
 @
-<<alldeuout>>=
-head( DEUresultTable( pasillaExons ) )
-@
+
 
 \appendix
 \clearpage
@@ -837,7 +807,7 @@ head( DEUresultTable( pasillaExons ) )
 %--------------------------------------------------
 
 As an alternative to the approach described in Section \ref{preps}, users can also create  
-\Rclass{ExonCountSet} objects from other \Rpackage{Bioconductor} data objects.
+\Rclass{DEXSeqDataSeq} objects from other \Rpackage{Bioconductor} data objects.
 The code for implementationg these functions was kindly contributed by Michael I.\ Love. For details, see the
 \Rpackage{parathyroidSE} package vignette \cite{parathyroidSEVignette}. The work flow is similar to the one 
 using the \Rpackage{HTSeq} python scripts.
@@ -847,9 +817,9 @@ have long run time. Therefore, no output is given.
 
 We use functionality from the following Bioconductor packages
 <<buildExonCountSetLoadPacks,cache=TRUE, eval=FALSE>>=
-library("GenomicFeatures")
-library("GenomicRanges")
-library("Rsamtools")
+library(GenomicRanges)
+library(GenomicFeatures)
+library(GenomicAlignments)
 @
 %
 We demonstrate the workflow briefly (for more details, see \cite{parathyroidSEVignette}) on the data set
@@ -859,14 +829,14 @@ of Haglund et al.\ \cite{parathyroidPaper}, which is provided as example data in
 First, we download the current human gene model annotation from Ensembl via Biomart and create
 a transcript data base from these. Note that this step takes some time.
 <<buildExonCountSetDownloadAnno,cache=TRUE, eval=FALSE>>=
-hse <- makeTranscriptDbFromBiomart( biomart="ensembl", 
+hse = makeTranscriptDbFromBiomart( biomart="ensembl", 
    dataset="hsapiens_gene_ensembl" )
 @
 %
 Next, we collapse the gene models into counting bins, analogous to Section~\ref{prepAnno}.
 %
 <<buildExonCountSetDisjoin,cache=TRUE, eval=FALSE>>=
-exonicParts <- disjointExons( hse, aggregateGenes=TRUE )
+exonicParts = disjointExons( hse, aggregateGenes=FALSE )
 @
 %
 As before, we have to choose how to handle genes with overlapping exons. The \verb|aggregateGenes| option
@@ -874,84 +844,32 @@ here plays the same role as the \verb|-r| option to \verb|dexseq_prepare_anotati
 end of Section \ref{prepAnno}.
 The \Robject{exonicParts} object contains a GRanges object with our counting bins. We use it to
 count the number of read fragments that overlap with the bins by means of the function 
-\Rfunction{countReadsForDEXSeq}. To demonstrate this, we first determine the paths to the
+\Rfunction{summarizeOverlaps}. To demonstrate this, we first determine the paths to the
 example BAM files in the \Rpackage{parathyroidSE} data package.
 %
 <<buildExonCountSet2FindBAMs,cache=TRUE, eval=FALSE>>=
-bamDir <- system.file( "extdata", package="parathyroidSE", mustWork=TRUE )
-fls <- list.files( bamDir, pattern="bam$", full=TRUE )
+bamDir = system.file( "extdata", package="parathyroidSE", mustWork=TRUE )
+fls = list.files( bamDir, pattern="bam$", full=TRUE )
 @
 %
 Then, use the following code to count the reads overlapping the bins.
 %
-<<buildExonCountSet2FindBAMs,cache=TRUE, eval=FALSE>>=
-bamlst <- BamFileList( fls, index=character(), yieldSize=100000, obeyQname=TRUE )
-SE <- summarizeOverlaps( exonicParts, bamlst, mode="Union", singleEnd=FALSE, 
+<<buildExonCountSet2FindBAMs2,cache=TRUE, eval=FALSE>>=
+bamlst = BamFileList( fls, index=character(), yieldSize=100000, obeyQname=TRUE )
+SE = summarizeOverlaps( exonicParts, bamlst, mode="Union", singleEnd=FALSE, 
    ignore.strand=TRUE, inter.feature=FALSE, fragments=TRUE )
 @
 %
-We can now call the function \Rfunction{buildExonCountSet}
-to build an \Robject{ExonCountSet} object. The middle argument in
-the following call is the design, indicating that the first two BAM files form
-one experimental condition and the third one the other. Generally, you will want
-to pass a \Rclass{data.frame} with a sample table as in Section~\ref{sec:readData}.
+We can now call the function \Rfunction{DEXSeqDataSetFromSE}
+to build an \Robject{DEXSeqDataSet} object. We modify the \Rfunction{colData}
+slot in order to specify the sample annotation, indicating that the first two BAM files form
+one experimental condition and the third one the other. Then
+we create our \Robject{DEXSeqDataSet} object.
+
 %     
 <<buildExonCountSet3,cache=TRUE, eval=FALSE>>=
-ecs <- buildExonCountSet( SE, c("A", "A", "B"), exonicParts )
-@
-
-%--------------------------------------------------
-\section{Lower-level functions}
-%--------------------------------------------------
-
-The following functions are not needed in a standard analysis work-flow, but may be useful for special purposes.
-We list them here briefly; see the help pages of these function for further options (e.\,g., to specify formulae).
-
-\subsection{Count tables}
-
-While the function \Rfunction{counts} returns the whole read count table, the function \Rfunction{countTableForGene}
-returns the count table for a single gene:
-<<countTableForGene, results=hide>>=
-countTableForGene( pasillaExons, "FBgn0010909" ) 
-@
-%
-Like the function \Rfunction{counts}, the function \Rfunction{countTableForGene} can also return normalized counts (i.e.,
-counts divided by the size factors). Use the option \texttt{normalized=TRUE}.
-<<countTableForGeneNorm>>=
-head( countTableForGene( pasillaExons, "FBgn0010909", normalized=TRUE ) )
-@
-%
-The function \Rfunction{geneCountTable} computes a table of \emph{gene counts}, which are obtained by summing
-the counts from all exons with the same geneID.  This might be useful for the detection of differential expression
-of genes, where the table can be used as input e.\,g.\ for the packages \Rpackage{DESeq} or \Rpackage{edgeR}.
-This kind of table can also be produced with the package \Rpackage{GenomicRanges}, e.\,g.\ 
-with the function \Rfunction{summarizeOverlaps}.
-%
-<<gct>>=
-head( geneCountTable( pasillaExons ) )
-@
-%
-Note that a read that mapped to several exons of a gene is counted for each of these
-exons by the \texttt{dexseq\_count.py} script. The table returned \Rfunction{geneCountTable}
-will hence count the read several time for the gene, which may skew downstream analyses in
-subtle ways. Hence, we recommend to use \Rfunction{geneCountTable} with care and use more
-sophisticated counting schemes where appropriate.
-
-\subsection{Model frames}
-
-The function \Rfunction{constructModelFrame} returns the model frame
-used for the dispersion fits and the model fits involved in the likelihood ratio test. The terms used
-in the formulae passed to \Rfunction{estimateDispersions} and \Rfunction{testForDEU} refer 
-to this model frame and hence must appear as column names.
-<<modelFrame>>=
-constructModelFrame( pasillaExons )
-@
-%
-For the visualization with \Rfunction{plotDEXSeq}, a GLM is fitted over the joint data from all exons of a gene. The function 
-\Rfunction{modelFrameForGene} returns the model frame used for this fit for a single gene.
-<<modelFrame>>=
-mf <- modelFrameForGene( pasillaExons, "FBgn0010909" )
-head( mf )
+colData(SE)$condition = c("A", "A", "B")
+DEXSeqDataSetFromSE( SE, design= ~ sample + exon + condition:exon )
 @
 
 \subsection{Further accessors}
@@ -960,11 +878,11 @@ The function \Rfunction{geneIDs} returns the gene ID column of the feature data 
 vector, and the function \Rfunction{exonIDs} return the exon ID column as a \Rclass{factor}.
 %
 <<acc>>=
-head( geneIDs(pasillaExons) )
-head( exonIDs(pasillaExons) )
+head( geneIDs(dxd) )
+head( exonIDs(dxd) )
 @
 %
-These functions are useful for subsetting an \Rclass{ExonCountSet} object.
+These functions are useful for subsetting an \Rclass{DEXSeqDataSet} object.
 
 %--------------------------------------------------
 \section{Methodological changes since publication of the paper} \label{changes}

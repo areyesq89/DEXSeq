@@ -2,47 +2,48 @@
 \alias{testForDEU}
 \title{Test for Differential Exon Usage.}
 \description{
-      This function tests for differential exon usage for each of 
-      the exons in the object. It stores the results in the fields 
-      \code{fData(ecs)$pvalue} and \code{fData(ecs)$padjust}.
+  This will perform a likelihood ratio test for differential 
+  exon usage. Internally, it calls the DESeq2 function 
+  \code{nbinomLRT}. 
 }
 \usage{
-testForDEU( ecs, 
-   formula0 = ~ sample + exon, 
-   formula1 = ~ sample + exon + condition : exon, 
-   dispColumn="dispersion", nCores = 1 )
+
+  testForDEU( object, 
+     fullModel = design(object), 
+     reducedModel = ~ sample + exon, 
+     BPPARAM=MulticoreParam(workers=1) )
+
 }
 \arguments{
-  \item{ecs}{
-     An ExonCountSet object.
+  \item{object}{
+     A DEXSeqDataSet object.
   }
-  \item{formula0}{
-     Formula for the null model to be used in the GLM fit. 
+  \item{fullModel}{
+     The full model formula
   }
-  \item{formula1}{
-     Formula for the full model to be used in the GLM fit. 
+  \item{reducedModel}{
+     Null model formula.
   }
-  \item{dispColumn}{
-     Column name from the feature data frame from where to take the dispersions.
-  }
-  \item{nCores}{
-     Number of CPUcores to be used to calculate the $p$-values.  
-     The \code{parallel} package must be loaded to use more than 1 core.
+  \item{BPPARAM}{
+     A "BiocParallelParam" instance. 
+     See \code{?bplapply} for details.
   }
 }
 \details{
-   The terms in the formulas must be columns of \code{design(ecs)}.
+
+   The information of the variables of the formulas 
+   should be present in the \code{colData} of the 
+   \code{DEXSeqDataSet} object.
+
 }
 \value{
-     An ExonCountSet object with \code{fData(ecs)$pvalue} and 
-     \code{fData(ecs)$padjust} data slots filled.
+
+   A \code{DEXSeqDataSet} with slots filled with information
+   about the test.
+
 }
 \examples{
-     \dontrun{
-        data("pasillaExons", package="pasilla")
-        pasillaExons <- estimateSizeFactors( pasillaExons )
-        pasillaExons <- estimateDispersions( pasillaExons )
-        pasillaExons <- fitDispersionFunction( pasillaExons )
-        pasillaExons <- testForDEU( pasillaExons )
-     }
+
+
 }
+

@@ -99,14 +99,19 @@ balanceExons <- function( coefs, dispersions ) {
     } )
 }         
 
-
-fitAndArrangeCoefs <- function( ecs, geneID, frm = count ~ condition * exon, balanceExons = TRUE )
+fitAndArrangeCoefs <- function( frm = count ~ condition * exon, balanceExons = TRUE, mf)
 {
-   mf <- modelFrameForGene( ecs, geneID )
    if( length(levels(mf$exon)) <= 1 )
       return( NULL )
    mm <- model.matrix( frm, mf )
-   fit <- try( glmnb.fit(mm, mf$count, dispersion=mf$dispersion, offset=log(mf$sizeFactor)), silent=TRUE)
+   fit <- try(
+              glmnb.fit(mm,
+                        mf$count,
+                        dispersion=mf$dispersion,
+                        offset=log(mf$sizeFactor),
+                        tol=0.1),
+              silent=TRUE)
+   
    if( is( fit, "try-error" ) )
       return( NULL )
    coefs <- arrangeCoefs( frm, mf, mm, fit )
@@ -145,17 +150,3 @@ getEffectsForPlotting <- function( coefs, groupingVar = "condition", averageOutE
    }
    fittedValues
 }
-
-# Tesing code:
-
-#load( "Graveley_unstranded_fd.rda" )
-#frm <- count ~ ( condition + libType ) * exon
-#i <- 0
-#coefs <- new.env( hash=TRUE )
-#for( geneID in unique(geneIDs(ecs)) ) {
-#   coefs[[ geneID ]] <- fitAndArrangeCoefs( ecs, frm )
-#   i <- i + 1
-#   if( i %% 100 == 0 )
-#      cat(sprintf( "%d genes processed.\n", i ))
-#}
-

@@ -1,21 +1,55 @@
-import(Biobase, BiocGenerics, hwriter, methods, stringr, statmod, biomaRt, GenomicRanges, Rsamtools)
+import(
+  Biobase,
+  BiocGenerics, 
+  hwriter, 
+  methods, 
+  stringr, 
+  statmod, 
+  biomaRt, 
+  GenomicRanges,
+  IRanges, 
+  Rsamtools,
+  DESeq2,
+  BiocParallel,
+  geneplotter
+)
 
-exportClasses( "ExonCountSet" )
+exportClasses( 
+  "ExonCountSet",
+  "DEXSeqDataSet",
+  "DEXSeqResults"
+)
 
 exportMethods(
-  counts, "counts<-", "[",
-  sizeFactors, "sizeFactors<-",
-  design, "design<-",
-  estimateSizeFactors,
   estimateDispersions,
-  plotDispEsts,
-  plotMA
+  plotMA,
+  counts,
+  estimateSizeFactors,
+  subsetByOverlaps,
+  findOverlaps,
+### TO DEPRECATE
+  plotDispEsts
 )
 
 export(
-  newExonCountSet,
   geneIDs, "geneIDs<-",
+  groupIDs, "groupIDs<-",
   exonIDs, "exonIDs<-",
+  featureIDs, "featureIDs<-",
+  DEXSeqHTML,
+  plotDEXSeq,
+  testForDEU,
+  featureCounts,
+  perGeneQValue,
+### NEW FUNCTIONS
+  DEXSeqDataSet,
+  DEXSeqDataSetFromHTSeq,
+  DEXSeqResults,
+  estimateExonFoldChanges,
+  DEXSeq,
+  sampleAnnotation,
+### DEPRECATE
+  newExonCountSet,
   subsetByGenes,
   geneCountTable,
   countTableForGene,
@@ -23,21 +57,17 @@ export(
   estimateExonDispersionsForModelFrame_BM,
   fitDispersionFunction,
   read.HTSeqCounts,
-  DEXSeqHTML,
   DEUresultTable,
-  plotDEXSeq,
   estimatelog2FoldChanges,
   doCompleteDEUAnalysis,
   makeCompleteDEUAnalysis_BM,
   constructModelFrame,
-  estimateDispersions,
-  testForDEU,
   estimateDispersions_BM,
   testGeneForDEU_BM,
   testForDEU_BM,
-  perGeneQValue,
-  countReadsForDEXSeq,
   buildExonCountSet,
+### DEFUNCT
+  countReadsForDEXSeq,
   prepareAnnotationForDEXSeq
 )
 

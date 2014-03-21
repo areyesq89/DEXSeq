@@ -8,22 +8,20 @@
   associated false disovery rate?
 }
 \usage{
-perGeneQValue(ecs, p = "pvalue", method = perGeneQValueExact)
+perGeneQValue(object, p = "pvalue", method = perGeneQValueExact)
 }
 \arguments{
-\item{ecs}{An \code{ExonCountSet} object. \code{fData(ecs)} is required
-  to have columns \code{testable} and \code{geneID}.}
-\item{p}{A character string indicating the name of the slot in
-  \code{fData(ecs)} from which to take the per-exon p-values.}
-\item{method}{Use the default value. This is for debugging only.}
-}
-\details{Details
-}
+  \item{object}{
+    An \code{DEXSeqResults} object.
+  }
+  \item{p}{A character string indicating the name of the columns in
+    \code{DEXSeqResults} from which to take the per-exon p-values.}
+  \item{method}{Use the default value. This is for debugging only.}
+  }
+\details{Details}
 \value{
   A named numeric vector, values are per-gene q-values, names are gene.
 }
 \examples{
  ## example code
-}
-\seealso{See also
 }

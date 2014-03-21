@@ -1,32 +1,44 @@
-\name{estimateSizeFactors}
 \docType{methods}
-\alias{estimateSizeFactors,ExonCountSet-method}
+\name{estimateSizeFactors}
 \alias{estimateSizeFactors}
-\title{
-   Estimate the size factors for an ExonCountSet
-}
-\description{
-   This function takes the count data from an ExonCountSet object (object), and estimates the size factors 
-   as follows: Each column (sample) is divided by the geometric means of the rows. The median
-   of these ratios (skipping the genes with a geometric mean of zero) is used as the
-   size factor for this column.
-}
+\alias{estimateSizeFactors,DEXSeqDataSet-method}
+\alias{estimateSizeFactors,ExonCountSet-method}
+\alias{estimateSizeFactors,ExonCountSet-method,deprecated}
+\title{Estimate the size factors for a DEXSeqDataSet}
 \usage{
-\S4method{estimateSizeFactors}{ExonCountSet}(object)
+  \S4method{estimateSizeFactors}{DEXSeqDataSet}(object,locfunc=median,geoMeans)
 }
 \arguments{
-  \item{object}{
-     An ExonCountSet object
-  }
+  \item{object}{a DEXSeqDataSet}
+
+  \item{locfunc}{a function to compute a location for a
+  sample. By default, the median is used. However,
+  especially for low counts, the
+  \code{\link[genefilter]{shorth}} function from the
+  genefilter package may give better results.}
+
+  \item{geoMeans}{by default this is not provided and the
+  geometric means of the counts are calculated within the
+  function. A vector of geometric means from another count
+  matrix can be provided for a "frozen" size factor
+  calculation}
 }
 \value{
-   The ExonCountSet passed as parameters, with the size factors filled in.
+  The DEXSeqDataSet passed as parameters, with the size
+  factors filled in.
 }
-\author{
-   Simon Anders, sanders@fs.tum.de
+\description{
+  Estimate the size factors for a DEXSeqDataSet
 }
-\examples{
-	data("pasillaExons", package="pasilla")
-	pasillaExons <- estimateSizeFactors( pasillaExons )
-        sizeFactors( pasillaExons )
+\details{
+  This function calls the method estimateSizeFactors
+  for the DESeqDataSet object, and adapts it to the
+  specific use to the DEXSeqDataSet.
 }
+\references{
+  \itemize{ \item Simon Anders, Wolfgang Huber: Differential
+  expression analysis for sequence count data. Genome Biology
+  11 (2010) R106,
+  \url{http://dx.doi.org/10.1186/gb-2010-11-10-r106} }
+}
+

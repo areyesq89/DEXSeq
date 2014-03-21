@@ -1,26 +1,30 @@
-\name{counts}
 \docType{methods}
-\alias{counts,ExonCountSet-method}
-\alias{counts<-,ExonCountSet,matrix-method}
+\name{counts}
 \alias{counts}
-\title{
-   Accessors for the 'counts' slot of a ExonCountSet object.
-}
-\description{
-   The counts slot holds the count data as a matrix of non-negative integer
-   count values, one row for each observational unit (a counting bin, i.e., an exon or part of an exon), and
-   one column for each sample.
-}
+\alias{counts,DEXSeqResults-method}
+\alias{counts,ExonCountSet-method}
+\alias{counts,ExonCountSet-method,deprecated}
+\title{Accessors for the 'counts' slot of a DEXSeqResults object.}
 \usage{
-\S4method{counts}{ExonCountSet}(object, normalized=FALSE)
-\S4method{counts}{ExonCountSet,matrix}(object) <- value
+\S4method{counts}{DEXSeqResults}(object,normalized=FALSE)
 }
 \arguments{
-  \item{object}{An ExonCountSet object.}
-  \item{normalized}{If TRUE, the counts will be normalized by the size factors.}
-  \item{value}{An integer matrix of counts, each row corresponding to an exon and each column corresponding to a sample.}
+  \item{object}{a \code{DEXSeqResults} object.}
+
+  \item{normalized}{logical indicating whether or not to
+  divide the counts by the size factors or normalization
+  factors before returning (normalization factors always
+  preempt size factors)}
+}
+\value{
+  an integer matrix
+}
+\description{
+The counts slot holds the count data as a matrix of
+non-negative integer count values, one row for each
+observational unit (gene or the like), and one column for
+each sample.
 }
 \examples{
-   data("pasillaExons", package="pasilla")
-   head( counts( pasillaExons ) )
-}   
+
+}

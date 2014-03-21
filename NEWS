@@ -33,3 +33,12 @@
 - Major changes to vignette to provide more of an end-to-end description of the work flow.
 - Major changes to function names to now make TRT rather than BM the default; changed vignette to reflect this.
 - Added apepndix explaining TRT to vignette.
+
+2014-03-21: version 1.9.7
+
+- Major changes to the package, the ExonCountSet object was deprecated and subsituted by the DEXSeqDataSet object,
+  a subclass of the DESeqDataSet object.
+- DEXseq now uses the DESeq2 package as internal machinery and backbone for all the analysis
+- All the functions and methods for the ExonCountSet object were replaced by new functions
+- DEXSeq has more integration with other Bioconductor packages
+- We now use knitr to build the vignette

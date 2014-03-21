@@ -1,59 +1,65 @@
-DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.html", fitExpToVar="condition", FDR=0.1, color=NULL, color.samples=NULL, mart="", filter="", attributes="", extraCols=NULL, nCores=1)
+DEXSeqHTML <- function(object, genes=NULL, path="DEXSeqReport", file="testForDEU.html", fitExpToVar="condition", FDR=0.1, color=NULL, color.samples=NULL, mart="", filter="", attributes="", extraCols=NULL, BPPARAM=MulticoreParam(workers=1) )
 {
-   stopifnot(is(ecs, "ExonCountSet"))
-   if(any(is.na(sizeFactors(ecs)))){
-      stop("Please estimate sizeFactors first\n")}
-   if(!fitExpToVar %in% ecs@designColumns){
-      stop("fitExpToVar parameter is not in the design columns, double check ecs@designColumns")}
-   if(sum(is.na(featureData(ecs)$dispersion))==nrow(counts(ecs))){
-      stop("No dispersion parameters found, first call function fitDispersionFunction...\n")}
-
+   stopifnot( is( object, "DEXSeqResults" ) )
    ######## GET THE RESULT TABLE READY ##########
-   results<-DEUresultTable(ecs)
-   results[,c("dispersion", "pvalue", "padjust")] <- round(results[,c("dispersion", "pvalue", "padjust")], 3)
-   if(!is.null(results$log2change)){
-      results$log2change <- round(results$log2change, 3)
+   genomicData <- as.data.frame( object$genomicData )
+   results <- data.frame( object[, c( "groupID", "featureID", "exonBaseMean", "dispersion", "pvalue", "padj" )], stringsAsFactors=TRUE)
+   results <- cbind( results, genomicData )
+   
+   results[,c("dispersion", "pvalue", "padj")] <- round(results[,c("dispersion", "pvalue", "padj")], 3)
+
+   dexseqR <- elementMetadata( object )$type == "DEXSeq results"
+
+   if(sum(dexseqR, na.rm=TRUE) > 0){
+      results <-
+          cbind(
+              results,
+              round(
+                  as.data.frame( object[,which(dexseqR)] ), 3
+                  )
+              )
    }
-   results[is.na(results$pvalue), c("pvalue","padjust")]=1
+
    rownames(results) <- NULL
-   numcond <- length(unique(design(ecs, drop=FALSE)[[fitExpToVar]]))
-#	sortabletag <- hmakeTag(tag="script", src=(system.file(package="DEXSeq"), "/sorttable.js", sep=''))
+   sampleData <- object@sampleData
+   
+   numcond <- length(unique(sampleData[[fitExpToVar]]))
    if(is.null(color)){
       color<-rgb(colorRamp(c("#D7191C", "#FFFFBF", "#2B83BA"))(seq(0, 1, length.out=numcond)), maxColorValue=255, alpha=175)
    }
-   names(color) <- sort(levels(design(ecs, drop=FALSE)[[fitExpToVar]]))
-   ### MAKING THE MAIN DIRECTORY AND files DIRECTORY
+   names(color) <- sort(levels(sampleData[[fitExpToVar]]))
    dir.create(file.path(path, "files"), recursive=TRUE)
-   ### SPECIFY THE GENES TO PUT IN THE REPORT ###
 
-   if(is.null(geneIDs)){
-      gns <- as.character(unique(results$geneID[which(results$padjust < FDR)]))
+   if(is.null(genes)){
+      gns <- as.character(unique(results$groupID[which(results$padj < FDR)]))
    }else{
-      gns <- geneIDs
+      gns <- genes
    }
 
-   if(!all(gns %in% levels(geneIDs(ecs)))){
+   
+   if(!all(gns %in% object$groupID)){
       stop("The geneIDs provided are not in the ecs object")}
    if(length(gns)==0){ 
       stop("There are no significant results in the test... nothing to report")}
 
    p<-openPage(file.path(path, file))
-#   hwrite(sortabletag, p)
    hwrite('DEXSeq differential exon usage test', p, heading=1)
    hwrite('Experimental design', p, heading=2)
-   cond<-as.matrix(cbind(rownames(design(ecs, drop=FALSE)), design(ecs, drop=FALSE)))
+   cond<-as.matrix( as.data.frame( sampleData[,!colnames(sampleData) %in% "sizeFactor"] ) )
    rownames(cond) <- NULL
-   colnames(cond)<-c("sample", ecs@designColumns)
-#####
    condcolor <- matrix(rep("white", nrow(cond)*ncol(cond)), nrow(cond))
-   condcolor[,which(colnames(cond) %in% fitExpToVar)] <- color[as.character(design(ecs, drop=FALSE)[[fitExpToVar]])]
-#####
+   condcolor[,which(colnames(cond) %in% fitExpToVar)] <- color[as.character(sampleData[[fitExpToVar]])]
    if(!is.null(color.samples)){
       condcolor[,1] <- color.samples}
    hwrite(cond, bgcolor=condcolor, p)
-   hwrite(paste("\n\nformulaDispersion = ", ecs@formulas[["formulaDispersion"]], sep=""), p, heading=3)
-   hwrite(paste("\nformula0 = ", ecs@formulas[["formula0"]], sep=""), p, heading=3)
-   hwrite(paste("\nformula1 = ", ecs@formulas[["formula1"]], sep=""), p, heading=3)
+
+   formulas <- elementMetadata(object)[colnames(object) == "pvalue","description"]
+   formulas <- sapply( strsplit(formulas, "vs|p-value:" ), "[", c(2, 3))
+   formulas <- as.vector( gsub("'", "", formulas) )
+   
+   hwrite(paste("\n\nformulaDispersion = ", formulas[1], sep=""), p, heading=3)
+   hwrite(paste("\nformula0 = ", formulas[2], sep=""), p, heading=3)
+   hwrite(paste("\nformula1 = ", formulas[1], sep=""), p, heading=3)
    hwrite('testForDEU result table', p, heading=2)
    ptowrite <- file.path(path, "files/")
    ######### prepare colors for table results
@@ -68,12 +74,12 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
    }
    legend <- hwrite(c("<= 0.01", "<= 0.05", "<= 0.1", "<= 0.25", "> 0.25"), bgcolor=m2col)
 
-
   makePagesForGene <- function(gene){
+      print( gene )
       back <- hwrite("back", link=file.path("..", file))
       nameforlinks <- sapply(strsplit(gene, "\\+"), "[[", 1)
       otherlinks <- hwrite(c("counts", "expression", "splicing", "transcripts", "results"), link=c(paste(nameforlinks, "counts.html", sep=""), paste(nameforlinks, "expression.html", sep=""), paste(nameforlinks, "splicing.html", sep=""), paste(nameforlinks, "transcripts.html", sep=""), paste(nameforlinks, "results.html", sep="")), table=FALSE)
-      loc <- as.character(results$geneID) %in% as.character(gene)
+      loc <- as.character(results$groupID) %in% as.character(gene)
       ### this makes the page where to explore the pvalues ###
       subres <- results[loc,]
       submatcol <- matcol[loc,]
@@ -83,60 +89,40 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
       hwrite(legend, page=genpage)
       hwrite(as.matrix(subres), bgcolor=submatcol, table.class="sortable", style='margin:16px; border:0px solid black; border-width:0px; width:200px', table=TRUE, page=genpage)
       close(genpage, splash=TRUE)
-
-		
       ### MAKE THE PLOT HTML PAGES FOR expression, counts and splicing
-      makePlotPage(ecs=ecs, ptowrite=ptowrite, gene=gene, whichtag="expression", links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=700, h=7)
-      makePlotPage(ecs=ecs, ptowrite=ptowrite, gene=gene, whichtag="counts", links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=700, h=7)
-      makePlotPage(ecs=ecs, ptowrite=ptowrite, gene=gene, whichtag="splicing", links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=700, h=7)
+      makePlotPage( object, ptowrite=ptowrite, gene=gene, whichtag="expression", links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=700, h=7)
+      makePlotPage( object, ptowrite=ptowrite, gene=gene, whichtag="counts", links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=700, h=7)
+      makePlotPage( object, ptowrite=ptowrite, gene=gene, whichtag="splicing", links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=700, h=7)
 
-      if(!is.null(featureData(ecs)$transcripts)){
-         transcripts <- sapply(featureData(ecs)$transcripts[featureData(ecs)$geneID %in% gene], function(x){strsplit(x, ";")})
+      transcripts <- object$transcripts[loc]
+      if(length( unlist( transcripts ) ) > 0 ) {
          trans <- Reduce(union, transcripts)
          h <- ifelse(length(trans) > 10, 7+(length(trans)*0.3), 7)
       if(sum(loc) > 30){   ############# if there are more than 30 exons, increase the size of the plotting region
          h <- h + (sum(loc)*0.1)
       }
-      r <- try(
-         makePlotPage(ecs=ecs, ptowrite=ptowrite, gene=gene, whichtag=c("expression", "transcripts"), links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=h*100, h=h)
-           , silent=TRUE)
+      makePlotPage( object, ptowrite=ptowrite, gene=gene, whichtag=c("expression", "transcripts"), links=c(back, otherlinks), color=color, color.samples=color.samples, FDR=FDR, fitExpToVar=fitExpToVar, width=1200, height=h*100, h=h)
       }
       return()
    }
 
 
+   bplapply( gns, makePagesForGene, BPPARAM=BPPARAM )
+   
+   results <- results[as.character(results$groupID) %in% gns,]
 
-   if( nCores > 1 ){
-     if(!is.loaded("mc_fork", PACKAGE="parallel")){
-       stop("Please load first parallel package or set parameter nCores to 1...")
-     }else{
-       funapply <- function(X, FUN){ parallel::mclapply( X, FUN, mc.cores=nCores) }
-     }
-   }else{
-       funapply <- lapply
-   }
-
-
-   funapply(gns, makePagesForGene)
-
-#   for( gene in gns)
-
-
-#   }
-	
-	
-   results <- results[as.character(results$geneID) %in% gns,]
-   genetable <- cbind( 
-      geneID=unique(as.character(results$geneID)),
-      do.call(rbind, 
-         lapply(unique(as.character(results$geneID)), function(gene){
-            vec <- as.character(geneIDs(ecs)) %in% gene 
-            data.frame(chr=unique(featureData(ecs)$chr[vec]), start=min(featureData(ecs)$start[vec]), end=max(featureData(ecs)$end[vec]))
-         })
-      ),
-      total_exons = rle(as.character(results$geneID))$lengths,
-      exon_changes = sapply(unique(as.character(results$geneID)), function(gene){vec <- as.character(results$geneID) %in% gene; sum(results$padjust[vec] < FDR)})
-   )
+   splitCols <- split( seq_len(nrow( results ) ), results$groupID )
+   
+   genetable <- lapply( splitCols, function(x){
+       data.frame(
+           chr=unique( results$seqnames[x] ),
+           start=min( results$start[x] ),
+           end=max( results$end[x] ),
+           total_exons = length(x),
+           exon_changes = sum( results$padj[x] < FDR, na.rm=TRUE) )
+   })
+   genetable <- do.call(rbind, genetable)
+   genetable <- cbind( geneID=rownames(genetable), genetable )
 
    if(class(mart) == "Mart"){
       if(attributes(mart)$dataset != ""){
@@ -182,8 +168,8 @@ DEXSeqHTML <- function(ecs, geneIDs=NULL, path="DEXSeqReport", file="testForDEU.
    close(p, splash=TRUE)
 }
 
-makePlotPage <- function(ecs, ptowrite, gene, whichtag, links, color, color.samples, FDR, fitExpToVar, width, height, h)
-{
+
+makePlotPage <- function(object, ptowrite, gene, whichtag, links, color, color.samples, FDR, fitExpToVar, width, height, h){
    allopts <- c("expression", "splicing", "counts", "transcripts")
    opts <- allopts %in% whichtag
    onlytag <- allopts[max(which(opts))]
@@ -191,8 +177,9 @@ makePlotPage <- function(ecs, ptowrite, gene, whichtag, links, color, color.samp
    genpage <- openPage(paste(ptowrite, pagename, onlytag, ".html", sep=""))
    hwrite(links, table=TRUE, border=0, genpage)
    svg(paste(ptowrite, pagename, onlytag, ".svg", sep=""), height=h, width=12, pointsize=14)
-   plotDEXSeq(ecs, geneID=gene, FDR=FDR, lwd=2, expression=opts[1], splicing=opts[2], norCounts=opts[3], displayTranscripts=opts[4], fitExpToVar=fitExpToVar, legend=TRUE, color=color, color.samples=color.samples, cex.axis=1.5)
+   plotDEXSeq(object, geneID=gene, FDR=FDR, lwd=2, expression=opts[1], splicing=opts[2], norCounts=opts[3], displayTranscripts=opts[4], fitExpToVar=fitExpToVar, legend=TRUE, color=color, color.samples=color.samples, cex.axis=1.5)
    dev.off()
-   hwrite(hmakeTag("iframe", src=paste(pagename, onlytag, ".svg", sep=""), width=width, height=height, border=0), page=genpage)
+   hwrite(hmakeTag("iframe", src=paste(pagename, onlytag, ".svg", sep=""), width=width, height=height, border=0), page=genpage )
    close(genpage, splash=TRUE)
 }
+     

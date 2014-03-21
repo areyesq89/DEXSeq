@@ -1,12 +1,14 @@
 ##--------------------------------------------------
 ## get q-value for each gene
 ##--------------------------------------------------
-perGeneQValue = function(ecs, p = "pvalue", method = perGeneQValueExact) {
-  wTest     = which(fData(ecs)$testable)
+
+perGeneQValue = function(object, p = "pvalue", method = perGeneQValueExact) {
+  stopifnot( is(object, "DEXSeqResults"))
+  wTest <- which( !is.na( object$padj ) )
   ## use only those exons that were testable
-  pvals     = fData(ecs)[[p]][wTest]
+  pvals     = object[[p]][wTest]
   ## 'factor' removes ununsed levels
-  geneID    = factor(fData(ecs)$geneID[wTest])
+  geneID    = factor(object[["groupID"]][wTest])
   geneSplit = split(seq(along=geneID), geneID)
 
   ## summarise p-values of exons for one gene: take the minimum
@@ -80,4 +82,3 @@ perGeneQValueExact = function(pGene, theta, geneSplit) {
 
   return(numerator/denom)
 }
-
