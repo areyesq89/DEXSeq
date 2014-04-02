@@ -40,6 +40,8 @@ DEXSeqDataSet <- function( countData, sampleData, design= ~ sample + exon + cond
   names(assays(se))[1] = "counts"
   mcols( se )$featureID <- featureID
   mcols( se )$groupID <- groupID
+  mcols( se )$exonBaseMean <- rowMeans( countData )
+  mcols( se )$exonBaseVar <- rowVars( countData )
   
   if( !is.null(transcripts) ){
     mcols(se)$transcripts <- transcripts

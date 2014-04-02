@@ -84,6 +84,7 @@ estimateExonFoldChanges <- function( object,
     features <- featureIDs(object)
     exonCounts <- featureCounts( object )
     disps <- dispersions(object)
+    disps[is.na( disps )] <- 1e-8
     maxMf <- object@modelFrameBM
     rowsPerSample <- split(seq_len(nrow(maxMf)), maxMf$sample)
     geteffects <- function(geneID) {
@@ -144,7 +145,7 @@ estimateExonFoldChanges <- function( object,
 
 DEXSeqResults <- function( object ){
   stopifnot( is(object, "DEXSeqDataSet"))
-  LRTresults <- results(object)
+  LRTresults <- results(object, filter=rowMeans( featureCounts(object) ) )
   LRTresults$exonBaseMean <- rowMeans(featureCounts(object))
   LRTresults$featureID <- mcols(object)$featureID
   LRTresults$groupID <- mcols(object)$groupID

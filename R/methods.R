@@ -44,6 +44,12 @@ estimateDispersions.DEXSeqDataSet <-
   mergeObject <- do.call( rbind, splitObject )
   mcols(object) <- mcols( mergeObject )
   assays(object) <- assays(mergeObject)
+
+  mcols(object)$baseMean <- mcols(object)$exonBaseMean
+#  library(genefilter)
+  mcols(object)$baseVar <- mcols(object)$exonBaseVar
+  mcols(object)$allZero <- unname( rowSums( featureCounts(object)) == 0)
+
   object <- estimateDispersionsFit(object, fitType=fitType, quiet=quiet)
   splitObject <- split( object, splitParts )
   
@@ -57,12 +63,30 @@ estimateDispersions.DEXSeqDataSet <-
     BPPARAM=BPPARAM )
 
   mcols(object) <- mcols( do.call( rbind, splitObject ) )
+  mcols(object)$baseMean <- unname( rowMeans( counts(object) ) )
+  mcols(object)$baseVar <- unname( rowVars( counts(object) ) )
   object
 
 }
 
-setMethod("estimateDispersions", signature(object="DEXSeqDataSet"),
-          estimateDispersions.DEXSeqDataSet)
+setMethod( "estimateDispersions", signature(object="DEXSeqDataSet"),
+          estimateDispersions.DEXSeqDataSet )
+
+plotDispEsts.DEXSeqDataSet <- function(object, ymin,
+       genecol = "black", fitcol = "red", finalcol = "dodgerblue",
+       legend=TRUE, xlab, ylab, log = "xy", cex = 0.45, ...)
+{
+  stopifnot(is(object, "DEXSeqDataSet"))
+  mcols(object)$baseMean <- 
+    mcols(object)$exonBaseMean
+  mcols(object)$baseVar <- 
+    mcols(object)$exonBaseVar
+  plotDispEsts( as(object, "DESeqDataSet"), genecol=genecol, fitcol=fitcol,
+    finalcol=finalcol, legend=legend, log=log, cex=cex, ...)
+}
+
+setMethod( "plotDispEsts", signature(object="DEXSeqDataSet"),
+  plotDispEsts.DEXSeqDataSet )
 
 
 plotMA.DEXSeqDataSet <- function( object, alpha=0.1, ylim=c(-2, 2), foldChangeColumn=NULL, ...){

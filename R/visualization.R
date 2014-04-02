@@ -86,6 +86,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
    mf <- mf[as.vector( sapply( split( seq_len(nrow(mf)), mf$sample ), "[", seq_len( numexons ) ) ),]
    mf <- droplevels(mf)
    mf$dispersion <- rep( object$dispersion[rt], nrow(sampleData))
+   mf$dispersion[is.na( mf$dispersion )] <- 1e-8
    mf$count <- as.vector( object$countData[rt,] )
 
    if(expression){

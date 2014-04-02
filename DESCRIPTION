@@ -1,11 +1,11 @@
 Package: DEXSeq
-Version: 1.9.8
+Version: 1.9.9
 Title: Inference of differential exon usage in RNA-Seq
 Author: Simon Anders <sanders@fs.tum.de> and Alejandro Reyes
         <alejandro.reyes@embl.de>, both at EMBL Heidelberg
 Maintainer: Alejandro Reyes <alejandro.reyes@embl.de>
 Imports: BiocGenerics, biomaRt, hwriter, methods, stringr, Rsamtools,
-        statmod, geneplotter
+        statmod, geneplotter, genefilter
 Depends: Biobase, GenomicRanges, IRanges, DESeq2, BiocParallel
 Suggests: GenomicFeatures (>= 1.13.29), pasilla (>= 0.2.21),
         parathyroidSE, BiocStyle, knitr
