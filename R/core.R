@@ -10,13 +10,13 @@ rmDepCols <- function(m)
 #BPPARAM <- MulticoreParam(workers=1)
 #fullModel <- design(object)
 #reducedModel <- ~ sample + exon
-vst <- function(x,  object ){
-  if( is( object, "DEXSeqDataSet") ){
-     coefs <- attr(dispersionFunction(object), "coefficients")
+vst <- function( x,  object ){
+  if( attr(object@dispersionFunction, "fitType") != "parametric" ){
+    warnings("The dispersion function is not parametric, the DEXSeq vst won't be applied to the data\n")
+    return( x )
   }
-  if( is( object, "DEXSeqResults" ) ){
-     coefs <- object@coefs
-  }
+  coefs <- attr(object@dispersionFunction, "coefficients")
+
     (2/(sqrt(coefs["asymptDisp"]))) * log(2 * coefs["asymptDisp"] * 
       sqrt(x) + 2 * sqrt(coefs["asymptDisp"] * (coefs["extraPois"] + 
         1 + coefs["asymptDisp"] * x))) - (2/(sqrt(coefs["asymptDisp"]))) * 
@@ -37,6 +37,12 @@ testForDEU <-
     stop("first call estimateDispersions")
   }
 
+  fullModelMatrix <- 
+    rmDepCols( model.matrix( fullModel, as.data.frame(colData(object)) ) )
+
+  reducedModelMatrix <- 
+    rmDepCols( model.matrix( reducedModel, as.data.frame(colData(object)) ) )
+
   splitParts <- sort(
     rep(seq_len(BPPARAM$workers), 
     length.out=nrow(object) ) )
@@ -44,7 +50,7 @@ testForDEU <-
 
   splitObject <- bplapply( splitObject,
     function(x){
-      x <- nbinomLRT( x, reduced = reducedModel, full=fullModel )
+      x <- nbinomLRT( x, reduced = reducedModelMatrix, full=fullModelMatrix )
     }, BPPARAM=BPPARAM )
 
   mcols( object ) <- mcols( do.call(rbind, splitObject) )
@@ -173,7 +179,7 @@ DEXSeqResults <- function( object ){
           LRTresults,
           modelFrameBM=object@modelFrameBM,
           sampleData = sampleAnnotation(object),
-          coefs = attr(dispersionFunction(object), "coefficients") )
+          dispersionFunction = object@dispersionFunction )
 
   dxr
 }

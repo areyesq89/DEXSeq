@@ -86,7 +86,7 @@ setValidity( "DEXSeqDataSet", function( object ) {
 
 setClass("DEXSeqResults",
    contains = "DataFrame",
-         representation = representation( modelFrameBM = "data.frame", sampleData="DataFrame", coefs="numeric") )
+         representation = representation( modelFrameBM = "data.frame", sampleData="DataFrame", dispersionFunction = "function") )
 
 
 setValidity( "DEXSeqResults", function( object ){
