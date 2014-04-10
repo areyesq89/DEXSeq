@@ -103,6 +103,8 @@ fitAndArrangeCoefs <- function( frm = count ~ condition * exon, balanceExons = T
 {
    if( length(levels(mf$exon)) <= 1 )
       return( NULL )
+   if( nrow(mf) > 3000 )
+      return( NULL )
    mm <- model.matrix( frm, mf )
    fit <- try(
               glmnb.fit(mm,

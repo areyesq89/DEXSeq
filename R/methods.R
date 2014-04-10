@@ -65,6 +65,8 @@ estimateDispersions.DEXSeqDataSet <-
   mcols(object) <- mcols( do.call( rbind, splitObject ) )
   mcols(object)$baseMean <- unname( rowMeans( counts(object) ) )
   mcols(object)$baseVar <- unname( rowVars( counts(object) ) )
+  mcols(object)$dispersion <- pmin( mcols(object)$dispersion, ncol(object) )
+
   object
 
 }
