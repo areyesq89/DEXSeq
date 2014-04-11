@@ -1,3 +1,17 @@
+#load("/g/huber/users/reyes/plot_bioc/canditate1/dxdFull.RData")
+#object <- dxr
+#geneID <- "ENSMUSG00000002985"
+#FDR <- 0.01 
+#fitExpToVar <- "condition"
+#norCounts <- FALSE
+#expression <- FALSE
+#splicing <- TRUE
+#displayTranscripts <- TRUE
+#names <- FALSE
+#legend <- FALSE
+#color <- NULL
+#color.samples <- NULL
+#library(DEXSeq)
 
 plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCounts=FALSE, expression=TRUE, splicing=FALSE, displayTranscripts=FALSE, names=FALSE, legend=FALSE, color=NULL, color.samples=NULL, ...)
 {
@@ -150,7 +164,9 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
          if(displayTranscripts){
             for(i in seq_len(min(length(trans), 40))) {
                logicexons <- sapply(transcripts, function(x){length(which(x==trans[i]))})
-               tr<-data.frame(sub$start[logicexons==1], sub$end[logicexons==1])
+               tr <- 
+                 as.data.frame( reduce( 
+                   IRanges( sub$start[logicexons == 1], sub$end[logicexons==1] ) ) )[,c("start", "end")]
                drawGene(min(sub$start), max(sub$end), tr=tr, rango, exoncol=NULL, names, trName=trans[i], cex=0.8)
             }
          }
