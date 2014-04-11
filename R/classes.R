@@ -25,9 +25,10 @@ DEXSeqDataSet <- function( countData, sampleData, design= ~ sample + exon + cond
   forCycle <- split( 1:nrow( countData ), as.character( groupID ) )
   others <- lapply( forCycle, function(i){
     sct <- countData[i, , drop = FALSE]
-    t(sapply(1:nrow(sct), function(r) colSums(sct[-r, , drop = FALSE])))
+    rs <- t(sapply(1:nrow(sct), function(r) colSums(sct[-r, , drop = FALSE])))
+    rownames(rs) <- rownames(sct)
+    rs
   })
-    
 
 #  others <- tapply(1:nrow(countData), as.character(groupID), function(i) {
 #    sct <- countData[i, , drop = FALSE]
@@ -35,6 +36,8 @@ DEXSeqDataSet <- function( countData, sampleData, design= ~ sample + exon + cond
 #  })
 
   others <- do.call(rbind, others)
+  stopifnot( all( rownames(countData) %in% rownames(others) ) )
+  others <- others[rownames(countData),]
   nCountData <- cbind( countData, others ) 
 
   if( !is.null(featureRanges) ){ 
