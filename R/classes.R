@@ -21,11 +21,18 @@ DEXSeqDataSet <- function( countData, sampleData, design= ~ sample + exon + cond
   if( !"exon" %in% all.vars( design ) ){
     stop("The formula does not specify a contrast with the variable 'exon'")
   }
-
-  others <- tapply(1:nrow(countData), as.character(groupID), function(i) {
+  
+  forCycle <- split( 1:nrow( countData ), as.character( groupID ) )
+  others <- lapply( forCycle, function(i){
     sct <- countData[i, , drop = FALSE]
     t(sapply(1:nrow(sct), function(r) colSums(sct[-r, , drop = FALSE])))
   })
+    
+
+#  others <- tapply(1:nrow(countData), as.character(groupID), function(i) {
+#    sct <- countData[i, , drop = FALSE]
+#    t(sapply(1:nrow(sct), function(r) colSums(sct[-r, , drop = FALSE])))
+#  })
 
   others <- do.call(rbind, others)
   nCountData <- cbind( countData, others ) 
