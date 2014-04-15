@@ -98,10 +98,12 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
    
    mf <- object@modelFrameBM
    mf <- mf[as.vector( sapply( split( seq_len(nrow(mf)), mf$sample ), "[", seq_len( numexons ) ) ),]
-   mf <- droplevels(mf)
    mf$dispersion <- rep( object$dispersion[rt], nrow(sampleData))
    mf$dispersion[is.na( mf$dispersion )] <- 1e-8
    mf$count <- as.vector( object$countData[rt,] )
+   featuresInGene <- object$featureID[rt]
+   mf$exon <- factor( rep( featuresInGene, nrow(sampleData) ) )
+   mf <- droplevels( mf )
 
    if(expression){
     
@@ -116,7 +118,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
       }
       coeff <-
           as.matrix( t(
-              getEffectsForPlotting(es, averageOutExpression=FALSE, groupingVar=fitExpToVar) ) )
+              getEffectsForPlotting(es, averageOutExpression=FALSE, groupingVar=fitExpToVar) )[featuresInGene,] )
       coeff <- exp(coeff)
       ylimn <- c(0, max(coeff, na.rm=TRUE))
       coeff <- vst( coeff, object )
@@ -134,7 +136,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
           warning(sprintf("glm fit failed for gene %s", geneID))
           return()
       }
-      coeff <- as.matrix( t( getEffectsForPlotting(es, averageOutExpression=TRUE, groupingVar=fitExpToVar) ) )
+      coeff <- as.matrix( t( getEffectsForPlotting(es, averageOutExpression=TRUE, groupingVar=fitExpToVar) )[featuresInGene,] )
       coeff <- exp(coeff)
       ylimn <- c(0, max(coeff, na.rm=TRUE))
       coeff <- vst( coeff, object )

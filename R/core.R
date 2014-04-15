@@ -98,9 +98,10 @@ estimateExonFoldChanges <- function( object,
         rows <- groups %in% geneID
         numExons <- sum(rows)
         newMf <- maxMf[as.vector( sapply(rowsPerSample, "[", seq_len(numExons)) ),]
-        newMf <- droplevels( newMf )
         newMf$count <- as.vector( exonCounts[rows,] )
         newMf$dispersion <- rep( disps[rows], ncol(exonCounts) )
+        newMf$exon <- factor( rep( features[rows], ncol(exonCounts) ) )
+        newMf <- droplevels( newMf )
         coefficients <- fitAndArrangeCoefs( frm, balanceExons = TRUE, mf=newMf)
         if (is.null(coefficients)) {
             return(coefficients)
