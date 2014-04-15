@@ -125,6 +125,7 @@ featureIDs <- function(object){
 `featureIDs<-` <- function( object, value ) {
    stopifnot( is( object, "DEXSeqDataSet" ) )
    mcols(object)$featureID <- value
+   rownames(object) <- paste( mcols(object)$groupID, mcols(object)$featureID, sep=":" )
    validObject(object)
    object
 }
@@ -147,6 +148,7 @@ groupIDs <- function( object ){
 `groupIDs<-` <- function( object, value ) {
    stopifnot( is( object, "DEXSeqDataSet" ) )
    mcols( object )$groupID <- value
+   rownames(object) <- paste( mcols(object)$groupID, mcols(object)$featureID, sep=":" )
    validObject( object )
    object
 }
