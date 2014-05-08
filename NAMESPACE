@@ -12,7 +12,8 @@ import(
   DESeq2,
   BiocParallel,
   geneplotter,
-  genefilter
+  genefilter,
+  RColorBrewer
 )
 
 exportClasses( 

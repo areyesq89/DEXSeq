@@ -234,6 +234,8 @@ else: # paired-end
       current_chromosome=''
       current_position=''
       for a in reader( sam_file ):
+         if not a.aligned:
+            continue
          if a.optional_field("NH") > 1:
             continue
          if current_chromosome != a.iv.chrom:

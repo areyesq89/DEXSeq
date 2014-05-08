@@ -1,17 +1,4 @@
-#load("/g/huber/users/reyes/plot_bioc/canditate1/dxdFull.RData")
-#object <- dxr
-#geneID <- "ENSMUSG00000002985"
-#FDR <- 0.01 
-#fitExpToVar <- "condition"
-#norCounts <- FALSE
-#expression <- FALSE
-#splicing <- TRUE
-#displayTranscripts <- TRUE
-#names <- FALSE
-#legend <- FALSE
-#color <- NULL
-#color.samples <- NULL
-#library(DEXSeq)
+
 
 plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCounts=FALSE, expression=TRUE, splicing=FALSE, displayTranscripts=FALSE, names=FALSE, legend=FALSE, color=NULL, color.samples=NULL, ...)
 {
@@ -87,15 +74,19 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
    ####### DETERMINE COLORS, IF THE USER DOES NOT PROVIDE ONE PER SAMPLE THE COUNT WILL OBTAIN THEM CORRESPONDING TO THEIR DESIGN ####
    ##### determine colors if not provided by user ######
    if(is.null(color)){
+      if( numcond < 10 ){
+         color <- suppressWarnings( brewer.pal(numcond, "Set1")[seq_len(numcond)] )
+      }else{
       color<-
           rgb(
-              colorRamp(c("#D7191C", "#FFFFBF", "#2B83BA"))(seq(0, 1, length.out=numcond)),
+              colorRamp(brewer.pal(5, "Set1"))(seq(0, 1, length.out=numcond)),
               maxColorValue=255,
               alpha=175)
-   }
+     }
+  }
    
    names(color) <- sort(levels(sampleData[[fitExpToVar]]))
-   
+
    mf <- object@modelFrameBM
    mf <- mf[as.vector( sapply( split( seq_len(nrow(mf)), mf$sample ), "[", seq_len( numexons ) ) ),]
    mf$dispersion <- rep( object$dispersion[rt], nrow(sampleData))
@@ -125,7 +116,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
       drawPlot(matr=coeff,
                ylimn, object, intervals,
                rango, textAxis="Expression",
-               rt=rt, color=rep(color[sort(levels(sampleData[[fitExpToVar]]))], each=numexons),
+               rt=rt, color=rep( color[colnames(coeff)], each=numexons),
                colorlines=colorlines, ...)
    
    }
@@ -140,7 +131,8 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
       coeff <- exp(coeff)
       ylimn <- c(0, max(coeff, na.rm=TRUE))
       coeff <- vst( coeff, object )
-      drawPlot(matr=coeff, ylimn, object, intervals, rango, textAxis="Exon usage", rt=rt, color=rep(color[sort(levels(sampleData[[fitExpToVar]]))], each=numexons), colorlines=colorlines, ...)
+      drawPlot(matr=coeff, ylimn, object, intervals, rango, textAxis="Exon usage", rt=rt, color=rep( color[colnames(coeff)], each=numexons),
+               colorlines=colorlines, ...)
        
    }
 
@@ -148,7 +140,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
       ylimn <- c(0, max(count, na.rm=TRUE))
       count <- vst( count, object )
       if(is.null(color.samples)){
-         colorcounts <- rep(color[as.character(sampleData[[fitExpToVar]])], each=numexons)
+         colorcounts <- rep( color[as.character(sampleData[[fitExpToVar]])], each=numexons)
       }else{
          colorcounts <- rep(color.samples, each=numexons)
       }
