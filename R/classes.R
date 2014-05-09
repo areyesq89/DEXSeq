@@ -10,6 +10,9 @@ DEXSeqDataSet <- function( countData, sampleData, design= ~ sample + exon + cond
   stopifnot( class( featureID ) %in% c("character", "factor"))
   stopifnot( class( groupID ) %in% c("character", "factor"))
   stopifnot( class( sampleData ) %in% c("data.frame"))
+  stopifnot( length(groupID) == nrow( countData ) )
+  stopifnot( length(featureID) == length( groupID ) )
+  stopifnot( nrow( sampleData ) == ncol( countData ) )
 
   modelFrame <- cbind(
     sample = rownames(sampleData), sampleData )
@@ -21,6 +24,8 @@ DEXSeqDataSet <- function( countData, sampleData, design= ~ sample + exon + cond
   if( !"exon" %in% all.vars( design ) ){
     stop("The formula does not specify a contrast with the variable 'exon'")
   }
+
+  rownames( countData ) <- paste( groupID, featureID, sep=":" )
   
   forCycle <- split( 1:nrow( countData ), as.character( groupID ) )
   others <- lapply( forCycle, function(i){
