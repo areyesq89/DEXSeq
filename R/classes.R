@@ -199,6 +199,7 @@ DEXSeqDataSetFromHTSeq <- function( countfiles, sampleData, design= ~ sample + e
    if(!is.null(flattenedfile)){
       aggregates<-read.delim(flattenedfile, stringsAsFactors=FALSE, header=FALSE)
       colnames(aggregates)<-c("chr", "source", "class", "start", "end", "ex", "strand", "ex2", "attr")
+      aggregates$strand <- gsub( ".", "*", aggregates$strand )
       aggregates<-aggregates[which(aggregates$class =="exonic_part"),]
       aggregates$attr <- gsub("\"|=|;", "", aggregates$attr)
       aggregates$gene_id <- sub(".*gene_id\\s(\\S+).*", "\\1", aggregates$attr)
