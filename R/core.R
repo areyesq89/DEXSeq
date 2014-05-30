@@ -91,16 +91,26 @@ estimateExonFoldChanges <- function( object,
     exonCounts <- featureCounts( object )
     disps <- dispersions(object)
     disps[is.na( disps )] <- 1e-8
-    maxMf <- object@modelFrameBM
-    rowsPerSample <- split(seq_len(nrow(maxMf)), maxMf$sample)
-    geteffects <- function(geneID) {
+    mf <- object@modelFrameBM
+    rowsPerSample <- split(seq_len(nrow(mf)), mf$sample)
+    numsamples <- nrow( sampleAnnotation(object) )
+    features <- featureIDs(object)
+    countsAll <- featureCounts(object)
+    geteffects <- function(geneID){
 #        print( geneID )
-        rows <- groups %in% geneID
-        numExons <- sum(rows)
-        newMf <- maxMf[as.vector( sapply(rowsPerSample, "[", seq_len(numExons)) ),]
-        newMf$count <- as.vector( exonCounts[rows,] )
-        newMf$dispersion <- rep( disps[rows], ncol(exonCounts) )
-        newMf$exon <- factor( rep( features[rows], ncol(exonCounts) ) )
+        rt <- groups %in% geneID
+        numexons <- sum(rt)
+        newMf <- mf[as.vector( sapply( split( seq_len(nrow(mf)), mf$sample ), "[", seq_len( numexons ) ) ),]
+        featuresInGene <- features[rt]
+        newMf$exon <- factor( rep( featuresInGene, numsamples ) )
+        countsThis <- countsAll[rt,]
+        rownames(countsThis) <- gsub("\\S+:", "", rownames(countsThis))
+        dispsThis <- disps[rt]
+        names(dispsThis) <- features[rt]
+        for( i in seq_len(nrow(newMf))){
+           newMf[i,"dispersion"] <- dispsThis[as.character(newMf[i,"exon"])]
+           newMf[i,"count"] <- countsThis[as.character(newMf[i,"exon"]), as.character(newMf[i,"sample"])]
+        }
         newMf <- droplevels( newMf )
         coefficients <- fitAndArrangeCoefs( frm, balanceExons = TRUE, mf=newMf)
         if (is.null(coefficients)) {

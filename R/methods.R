@@ -48,7 +48,8 @@ estimateDispersions.DEXSeqDataSet <-
   mcols(object)$baseMean <- mcols(object)$exonBaseMean
 #  library(genefilter)
   mcols(object)$baseVar <- mcols(object)$exonBaseVar
-  mcols(object)$allZero <- unname( rowSums( featureCounts(object)) == 0)
+  mcols(object)$allZero <- unname( rowSums( featureCounts(object)) == 0 |
+      rowSums(counts(object, normalized = TRUE)[, colData(object)$exon == "others"]) ==0 )
 
   object <- estimateDispersionsFit(object, fitType=fitType, quiet=quiet)
   splitObject <- split( object, splitParts )

@@ -89,11 +89,17 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
 
    mf <- object@modelFrameBM
    mf <- mf[as.vector( sapply( split( seq_len(nrow(mf)), mf$sample ), "[", seq_len( numexons ) ) ),]
-   mf$dispersion <- rep( object$dispersion[rt], nrow(sampleData))
-   mf$dispersion[is.na( mf$dispersion )] <- 1e-8
-   mf$count <- as.vector( object$countData[rt,] )
    featuresInGene <- object$featureID[rt]
    mf$exon <- factor( rep( featuresInGene, nrow(sampleData) ) )
+   counts <- object$countData[rt,]
+   rownames(counts) <- gsub("\\S+:", "", rownames(counts))
+   dispersions <- object$dispersion[rt]
+   dispersions[is.na( dispersions )] <- 1e-8
+   names(dispersions) <- object$featureID[rt]
+   for( i in seq_len(nrow(mf))){
+      mf[i,"dispersion"] <- dispersions[as.character(mf[i,"exon"])]
+      mf[i,"count"] <- counts[as.character(mf[i,"exon"]), as.character(mf[i,"sample"])]
+   }
    mf <- droplevels( mf )
 
    if(expression){
