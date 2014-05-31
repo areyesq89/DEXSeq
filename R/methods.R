@@ -42,11 +42,11 @@ estimateDispersions.DEXSeqDataSet <-
     BPPARAM=BPPARAM )
 
   mergeObject <- do.call( rbind, splitObject )
-  mcols(object) <- mcols( mergeObject )
-  assays(object) <- assays(mergeObject)
+  matchedNames <- match( rownames(object), rownames(mergeObject))  
+  mcols(object) <- mcols( mergeObject )[matchedNames,]
+  assays(object) <- assays(mergeObject[matchedNames,])
 
   mcols(object)$baseMean <- mcols(object)$exonBaseMean
-#  library(genefilter)
   mcols(object)$baseVar <- mcols(object)$exonBaseVar
   mcols(object)$allZero <- unname( rowSums( featureCounts(object)) == 0 |
       rowSums(counts(object, normalized = TRUE)[, colData(object)$exon == "others"]) ==0 )
@@ -63,7 +63,9 @@ estimateDispersions.DEXSeqDataSet <-
       }, 
     BPPARAM=BPPARAM )
 
-  mcols(object) <- mcols( do.call( rbind, splitObject ) )
+  mergeObject <- do.call( rbind, splitObject ) 
+  matchedNames <- match( rownames(object), rownames(mergeObject) ) 
+  mcols(object) <- mcols( mergeObject )[matchedNames,]
   mcols(object)$baseMean <- unname( rowMeans( counts(object) ) )
   mcols(object)$baseVar <- unname( rowVars( counts(object) ) )
   mcols(object)$dispersion <- pmin( mcols(object)$dispersion, ncol(object) )

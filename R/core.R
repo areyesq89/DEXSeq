@@ -53,8 +53,10 @@ testForDEU <-
       x <- nbinomLRT( x, reduced = reducedModelMatrix, full=fullModelMatrix )
     }, BPPARAM=BPPARAM )
 
-  mcols( object ) <- mcols( do.call(rbind, splitObject) )
-  assays( object ) <- assays( do.call(rbind, splitObject) )
+  mergeObject <- do.call(rbind, splitObject)
+  matchedNames <- match( rownames(object), rownames(mergeObject))  
+  mcols(object) <- mcols( mergeObject )[matchedNames,]
+  assays(object) <- assays(mergeObject[matchedNames,])
 
   extraAttributes <- setdiff( names( attributes(splitObject[[1]]) ),  names( attributes(object) ) )
 
