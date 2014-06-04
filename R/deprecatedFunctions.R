@@ -12,134 +12,134 @@ setClass( "ExonCountSet",
 
 setMethod( "plotDispEsts", signature(object="ExonCountSet"),
   function( object, ... ){
-    .Deprecated("plotDispEsts", msg="The method plotDispEsts for ExonCountSet objects has been deprecated, use the method for the DEXSeqDataSet object")
+    .Defunct("plotDispEsts", msg="The method plotDispEsts for ExonCountSet objects has been deprecated, use the method for the DEXSeqDataSet object")
   }
 )
 
 setMethod( "plotMA", signature( object="ExonCountSet" ),
   function( object, ... ){
-    .Deprecated("plotMA", msg="The method plotMA for ExonCountSet objects has been deprecated, use the method for the DEXSeqDataSet or the DEXSeqResults object")
+    .Defunct("plotMA", msg="The method plotMA for ExonCountSet objects has been deprecated, use the method for the DEXSeqDataSet or the DEXSeqResults object")
   }
 )
 
 setMethod("counts", signature(object="ExonCountSet"),
   function( object, ... ) {
-    .Deprecated("counts")
+    .Defunct("counts")
   }
 )
 
 setMethod("sizeFactors",  signature(object="ExonCountSet"),
   function( object, ... ) {
-    .Deprecated("counts")
+    .Defunct("counts")
   }
 )
 
 setMethod("design", signature(object="ExonCountSet"),
   function( object, ... ) {
-    .Deprecated("")
+    .Defunct("")
   }
 )
 
 setReplaceMethod("design", signature(object="ExonCountSet"),
   function( object, ... ) {
-    .Deprecated("")
+    .Defunct("")
   }
 )
 
 newExonCountSet <- function( ... ){
-  .Deprecated("DEXSeqDataSet")
+  .Defunct("DEXSeqDataSet")
 }
 
 
 DEUresultTable <- function( ... )
 {
-  .Deprecated("DEXSeqResults")
+  .Defunct("DEXSeqResults")
 }
 
 subsetByGenes <- function( ... ) {
-  .Deprecated("")
+  .Defunct("")
 }
 
 geneCountTable <- function( ... ) {
-  .Deprecated("")
+  .Defunct("")
 }
 
 
 estimateExonDispersionsForModelFrame_BM <- function( ... )
 {
-  .Deprecated("estimateDispersions for DEXSeqDataSet")
+  .Defunct("estimateDispersions for DEXSeqDataSet")
 }
 
 
 estimateDispersions_BM <- function( ... )
 {
-  .Deprecated("estimateDispersions for DEXSeqDataSet")
+  .Defunct("estimateDispersions for DEXSeqDataSet")
 }
 
 
 testGeneForDEU_BM <- function ( ... )
 {
-  .Deprecated("testForDEU")
+  .Defunct("testForDEU")
 }
 
 
 testForDEU_BM <- function( ... )
 {
-  .Deprecated("testForDEU")
+  .Defunct("testForDEU")
 }
 
 makeCompleteDEUAnalysis_BM <- function( ... )
 {
-  .Deprecated("DEXSeq")
+  .Defunct("DEXSeq")
 }
 
 read.HTSeqCounts <- function( ... )
 {
-  .Deprecated("DEXSeqDataSetFromHTSeq")
+  .Defunct("DEXSeqDataSetFromHTSeq")
 }
 
 setMethod("estimateSizeFactors", signature(object="ExonCountSet"),
    function( object, ... ){
-     .Deprecated("estimateSizeFactors for DEXSeqDataSet")
+     .Defunct("estimateSizeFactors for DEXSeqDataSet")
    }
 )
 
 countTableForGene <- function( ... ) {
-   .Deprecated("")
+   .Defunct("")
 }
 
 fitDispersionFunction <- function( ... )
 {
-  .Deprecated("estimateDispersions")
+  .Defunct("estimateDispersions")
 }
 
 estimatelog2FoldChanges <- function( ... )
 {
-  .Deprecated("estimateExonFoldChanges")   
+  .Defunct("estimateExonFoldChanges")   
 }
 
 modelFrameForGene <- function( ... ) {
-  .Deprecated("")
+  .Defunct("")
 }
 
 buildExonCountSet <- function( ... ){
-  .Deprecated("DEXSeqDataSetFromSE")
+  .Defunct("DEXSeqDataSetFromSE")
 }
 
 constructModelFrame <- function( ... ){
-  .Deprecated("")
+  .Defunct("")
 }
 
 getCountVector <- function( ... ) {
-  .Deprecated("")
+  .Defunct("")
 }
 
 estimateExonDispersion <- function( ... ){
-  .Deprecated("estimateDispersionsGeneEst", package="DESeq2")
+  .Defunct("estimateDispersionsGeneEst", package="DESeq2")
 }
 
 testExonForDEU <- function( ... ){
-  .Deprecated("testForDEU")
+  .Defunct("testForDEU")
 }
 
 setMethod("estimateDispersions", signature(object="ExonCountSet"),
@@ -150,7 +150,7 @@ setMethod("estimateDispersions", signature(object="ExonCountSet"),
 
 doCompleteDEUAnalysis <- function( ... )
 {
-  .Deprecated("DEXSeq")
+  .Defunct("DEXSeq")
 }
 
 

@@ -107,15 +107,15 @@ plotMA.DEXSeqDataSet <- function( object, alpha=0.1, ylim=c(-2, 2), foldChangeCo
     y <- dexseqResults[,foldChangeColumn]
   }
   x <- rowMeans( featureCounts(object, normalized=TRUE) )
-  df <- data.frame( x, y, results(object)$padj < 0.1 )
-  ylim=c(-2, 2)
+  df <- data.frame( x, y, results(object)$padj < alpha )
+#  ylim=c(-2, 2)
   plotMA(df, ylim, ... )
 }
 
 setMethod("plotMA", signature(object="DEXSeqDataSet"),
           plotMA.DEXSeqDataSet)
 
-plotMA.DEXSeqResults <- function(object, alpha=0.1, ylim=c(-2, 2), foldChangeColumn=NULL, ...){
+plotMA.DEXSeqResults <- function(object, alpha=0.1, ylim=c(-2,2), foldChangeColumn=NULL, ...){
   stopifnot( is(object, "DEXSeqResults") )
   x <- rowMeans( counts(object, normalized=TRUE) )
   dexseqResults <- object[,which( elementMetadata( object )$type == "DEXSeq results" )]
@@ -124,8 +124,8 @@ plotMA.DEXSeqResults <- function(object, alpha=0.1, ylim=c(-2, 2), foldChangeCol
   }else{
     y <- dexseqResults[,foldChangeColumn]
   }
-  df <- data.frame( x, y, object$padj < 0.1 )
-  ylim=c(-2, 2)
+  df <- data.frame( x, y, object$padj < alpha )
+#  ylim=c(-2, 2)
   plotMA(df, ylim, ... )
 }
 
