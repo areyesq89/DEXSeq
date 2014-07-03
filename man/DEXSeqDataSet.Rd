@@ -138,6 +138,8 @@
     fls, index=character(), 
     yieldSize=100000, obeyQname=TRUE )
 
+  exonicParts <- disjointExons( hse, aggregateGenes=FALSE )
+
   SE <- summarizeOverlaps( exonicParts, bamlst, 
     mode="Union", singleEnd=FALSE,
     ignore.strand=TRUE, inter.feature=FALSE, fragments=TRUE )

@@ -45,6 +45,7 @@ export(
   perGeneQValue,
 ### NEW FUNCTIONS
   DEXSeqDataSet,
+  DEXSeqDataSetFromSE,
   DEXSeqDataSetFromHTSeq,
   DEXSeqResults,
   estimateExonFoldChanges,
