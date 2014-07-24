@@ -29,11 +29,11 @@ DEXSeqDataSet <- function( countData, sampleData, design= ~ sample + exon + cond
   if( any(!allVars %in% colnames( colData )) ){
      notPresent <- allVars[!allVars %in% colnames( colData ) ]
      notPresent <- paste(notPresent, collapse=",")
-     stop(sprintf("the variables %s of the parameter 'reducedModel' are not specified in the columns of the sampleData", notPresent ) )
+     stop(sprintf("the variables '%s' of the parameter 'reducedModel' are not specified in the columns of the sampleData", notPresent ) )
   }
 
   if( any( grepl(" ", groupID ) | grepl(" ", featureID) ) ) {
-     warning("empty spaces were found in either your groupIDs or your featureIDs, they will be remove")
+     warning("empty spaces were found in either your groupIDs or your featureIDs, they will be removed")
      groupID <- gsub(" ", "", groupID)
      featureID <- gsub(" ", "", featureID)
   }
