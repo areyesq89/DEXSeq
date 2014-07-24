@@ -25,6 +25,13 @@ estimateDispersions.DEXSeqDataSet <-
   stopifnot(length(maxit)==1)
   fitType <- match.arg(fitType, choices=c("parametric","local","mean"))
 
+  allVars <- all.vars(formula)
+  if( any(!allVars %in% colnames( colData(object) )) ){
+     notPresent <- allVars[!allVars %in% colnames( colData(object) )]
+     notPresent <- paste(notPresent, collapse=",")
+     stop(sprintf("the variables %s of the parameter 'reducedModel' are not specified in the columns of the colData", notPresent ) )
+  }
+
   splitParts <- sort(
     rep(seq_len(BPPARAM$workers), 
     length.out=nrow(object) ) )

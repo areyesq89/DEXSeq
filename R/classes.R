@@ -25,6 +25,19 @@ DEXSeqDataSet <- function( countData, sampleData, design= ~ sample + exon + cond
     stop("The formula does not specify a contrast with the variable 'exon'")
   }
 
+  allVars <- all.vars(design)
+  if( any(!allVars %in% colnames( colData )) ){
+     notPresent <- allVars[!allVars %in% colnames( colData ) ]
+     notPresent <- paste(notPresent, collapse=",")
+     stop(sprintf("the variables %s of the parameter 'reducedModel' are not specified in the columns of the sampleData", notPresent ) )
+  }
+
+  if( any( grepl(" ", groupID ) | grepl(" ", featureID) ) ) {
+     warning("empty spaces were found in either your groupIDs or your featureIDs, they will be remove")
+     groupID <- gsub(" ", "", groupID)
+     featureID <- gsub(" ", "", featureID)
+  }
+
   rownames( countData ) <- paste( groupID, featureID, sep=":" )
   
   forCycle <- split( 1:nrow( countData ), as.character( groupID ) )

@@ -159,10 +159,10 @@
       condition=rep( c("untreated", "treated"), each=5 ) )
   design <- formula( ~ sample + exon + condition:exon )
   groupID <- rep(
-      sprintf("gene%d", 1:10),
+      paste0("gene", 1:10),
       each= 100 )
   featureID <- rep(
-      sprintf("exon%d", 1:10),
+      paste0("exon", 1:10),
       times= 100 )
   DEXSeqDataSet( countData, sampleData, design,
               featureID, groupID )

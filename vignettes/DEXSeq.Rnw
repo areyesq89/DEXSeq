@@ -21,12 +21,12 @@ BiocStyle::latex()
 @
 
 % My changes to the Bioc style:
-\IfFileExists{inconsolata.sty}{\usepackage{inconsolata}}{\usepackage{zi4}}  % I like Inconsolata as terminal font
-\renewcommand{\familydefault}{\rmdefault}  % I want serifs in my body text
-\renewcommand{\maketitlehooka}{\sffamily\bfseries} % The title should be sans-serif, though
-\renewcommand{\maketitlehookb}{\rmfamily\mdseries}  % But not the authors
-\fancyhead[R]{\sffamily\small\thepage}  % The header should not be the same font and size as the body,
-\fancyhead[L]{\sffamily\small\thetitle} % to set the two visually apart.
+%\IfFileExists{inconsolata.sty}{\usepackage{inconsolata}}{\usepackage{zi4}}  % I like Inconsolata as terminal font
+%\renewcommand{\familydefault}{\rmdefault}  % I want serifs in my body text
+%\renewcommand{\maketitlehooka}{\sffamily\bfseries} % The title should be sans-serif, though
+%\renewcommand{\maketitlehookb}{\rmfamily\mdseries}  % But not the authors
+%\fancyhead[R]{\sffamily\small\thepage}  % The header should not be the same font and size as the body,
+%\fancyhead[L]{\sffamily\small\thetitle} % to set the two visually apart.
 
 \newcommand{\tttildemiddle}{\raise.17ex\hbox{$\scriptstyle\mathtt{\sim}$}}
 
@@ -58,7 +58,7 @@ BiocStyle::latex()
 % "svn propset svn:keywords Date filename.txt".)
 
 <<options,results='hide',echo=FALSE>>=
-options(digits=2, width=80)
+options(digits=2, width=80, prompt=" ", continue=" ")
 @
 
 \tableofcontents
