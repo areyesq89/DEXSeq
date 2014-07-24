@@ -33,7 +33,7 @@ DEXSeqDataSet <- function( countData, sampleData, design= ~ sample + exon + cond
   }
 
   if( any( grepl(" ", groupID ) | grepl(" ", featureID) ) ) {
-     warning("empty spaces were found in either your groupIDs or your featureIDs, they will be removed")
+     warning("empty spaces were found in either your groupIDs or your featureIDs, the empty spaces will be removed from the identifiers")
      groupID <- gsub(" ", "", groupID)
      featureID <- gsub(" ", "", featureID)
   }
