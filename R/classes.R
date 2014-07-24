@@ -29,7 +29,7 @@ DEXSeqDataSet <- function( countData, sampleData, design= ~ sample + exon + cond
   if( any(!allVars %in% colnames( colData )) ){
      notPresent <- allVars[!allVars %in% colnames( colData ) ]
      notPresent <- paste(notPresent, collapse=",")
-     stop(sprintf("the variables '%s' of the parameter 'reducedModel' are not specified in the columns of the sampleData", notPresent ) )
+     stop(sprintf("the variables '%s' of the parameter 'design' are not specified in the columns of the sampleData", notPresent ) )
   }
 
   if( any( grepl(" ", groupID ) | grepl(" ", featureID) ) ) {
