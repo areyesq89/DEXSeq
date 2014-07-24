@@ -92,7 +92,7 @@ estimateExonFoldChanges <- function( object,
       stop("Please estimate sizeFactors first\n")
     }
     if (!fitExpToVar %in% colnames(sampleAnnotation(object))) {
-      stop(sprintf("The parameter fitExpToVar, %s, is not a column of colData", fitExpToVar))
+      stop(sprintf("The value of the parameter fitExpToVar,'%s', is not a column name of colData", fitExpToVar))
     }
     if ( is.null( dispersions(object) ) ){
       stop("please call estimateDispersions first")
@@ -113,7 +113,7 @@ estimateExonFoldChanges <- function( object,
     features <- featureIDs(object)
     countsAll <- featureCounts(object)
     geteffects <- function(geneID){
-        print( geneID )
+#        print( geneID )
         rt <- groups %in% geneID
         numexons <- sum(rt)
         newMf <- mf[as.vector( sapply( split( seq_len(nrow(mf)), mf$sample ), "[", seq_len( numexons ) ) ),]
