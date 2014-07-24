@@ -48,7 +48,7 @@ testForDEU <-
   if( any(!allVars %in% colnames( colData(object) )) ){
      notPresent <- allVars[!allVars %in% colnames( colData(object) )]
      notPresent <- paste(notPresent, collapse=",")
-     stop(sprintf("the variables '%s' of the parameter 'reducedModel' are not specified in the columns of colData", notPresent ) )
+     stop(sprintf("the variables '%s' of the parameter 'fullModel' are not specified in the columns of colData", notPresent ) )
   }
 
   fullModelMatrix <- 
