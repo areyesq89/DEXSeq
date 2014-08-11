@@ -32,10 +32,10 @@ DEXSeqDataSet <- function( countData, sampleData, design= ~ sample + exon + cond
      stop(sprintf("the variables '%s' of the parameter 'design' are not specified in the columns of the sampleData", notPresent ) )
   }
 
-  if( any( grepl(" ", groupID ) | grepl(" ", featureID) ) ) {
-     warning("empty spaces were found in either your groupIDs or your featureIDs, the empty spaces will be removed from the identifiers")
-     groupID <- gsub(" ", "", groupID)
-     featureID <- gsub(" ", "", featureID)
+  if( any( grepl(" |:", groupID ) | grepl(" |:", featureID) ) ) {
+     warning("empty spaces or ':' characters were found either in your groupIDs or in your featureIDs, these will be removed from the identifiers")
+     groupID <- gsub(" |:", "", groupID)
+     featureID <- gsub(" |:", "", featureID)
   }
 
   rownames( countData ) <- paste( groupID, featureID, sep=":" )
