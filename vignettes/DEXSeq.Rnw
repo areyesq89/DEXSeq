@@ -947,7 +947,8 @@ now with the model specified in Equation (\ref{eq:altmodel}), which we write out
 This model is fit separately for each counting bin $i$. The coefficient $\beta^\text{S}_{ij}$ accounts for
 the sample-specific contribution (factor \verb|sample| in Equation (\ref{eq:altmodel})), the term $\beta^\text{E}_{i}$
 is only included if $l=1$ and hence estimates the logarithm of the ratio $K_{ij1}/K_{ij0}$ between the counts for all
-other exons and the counts for the tested exon. As this coefficient is estimated from data from all samples, it can be considered as a measure of ``average exon usage''. In the R model formula, it is represented by the term \verb|exon|
+other exons and the counts for the tested exon. As this coefficient is estimated from data from all samples, it can 
+be considered as a measure of ``average exon usage''. In the R model formula, it is represented by the term \verb|exon|
 with its two levels \verb|this| ($l=0$) and \verb|others| ($l=1$). Finally, the last term, 
 $\beta^\text{EC}_{i,\rho_j}$, captures the interaction \verb|condition:exon|, i.e., the change in exon usage
 if sample $j$ is from experimental condition group $\rho(j)$. Here, the first condition, $\rho=0$,
@@ -955,9 +956,11 @@ is absorbed in the sample coefficients, i.e., $\beta^\text{EC}_{i0}$ is fixed to
 in the model matrix.
 
 For the dispersion estimation, one dispersion value $\alpha_i$ is estimated with Cox-Reid-adjusted maximum likelihood
-using the full model given above. For the likelihood ratio test, this full model is fit and compared with the fit
-of the reduced model, which lacks the interaction term $\beta^\text{EC}_{i\rho_j}$. As described in Section~\ref{sec:glm},
-alternative model formulae can be specified.
+using the full model given above. A mean-variance relation is fitted using the individual dispersion values. Finally, 
+the individual values are shrinked towards the fitted values. For more details about this shrinkage approach look at
+the \Rpackage{DESeq2} vignette and/or its manuscript~\cite{deseq2}. For the likelihood ratio test, this full model 
+is fit and compared with the fit of the reduced model, which lacks the interaction term $\beta^\text{EC}_{i\rho_j}$. 
+As described in Section~\ref{sec:glm}, alternative model formulae can be specified.
 
 %--------------------------------------------------
 \section{Requirements on GTF files} \label{GTF}
