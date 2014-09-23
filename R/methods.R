@@ -59,6 +59,9 @@ estimateDispersions.DEXSeqDataSet <-
       rowSums(counts(object, normalized = TRUE)[, colData(object)$exon == "others"]) ==0 )
 
   object <- estimateDispersionsFit(object, fitType=fitType, quiet=quiet)
+
+  dispPriorVar <- estimateDispersionsPriorVar(object, modelMatrix=modelMatrix)
+  
   splitObject <- split( object, splitParts )
   
   splitObject <- bplapply( splitObject, 
@@ -66,7 +69,8 @@ estimateDispersions.DEXSeqDataSet <-
         estimateDispersionsMAP(x, 
           maxit=maxit, 
           quiet=quiet, 
-          modelMatrix=modelMatrix)
+          modelMatrix=modelMatrix, 
+          dispPriorVar=dispPriorVar)
       }, 
     BPPARAM=BPPARAM )
 
