@@ -497,7 +497,7 @@ and the \emph{a posteriori} (shrinked) dispersion estimates (Figure~\ref{figure/
 plotDispEsts( dxd )
 @
 %
-\incfig{figure/fitdiagnostics}{.5\textwidth}{Fit Diagnostics.}{The initial per-exon dispersion estimates 
+\incfig{figure/fitdiagnostics-1}{.5\textwidth}{Fit Diagnostics.}{The initial per-exon dispersion estimates 
   (shown by black points), the fitted mean-dispersion values function (red line), and the shrinked values
   in blue.}
 %
@@ -614,7 +614,7 @@ There is of course nothing special about the number 0.1, and you can specify oth
 <<MvsA, dev='png', resolution=200>>=
 plotMA( dxr1, cex=0.8 )
 @
-\incfig{figure/MvsA}{.5\textwidth}{MA plot.}{
+\incfig{figure/MvsA-1}{.5\textwidth}{MA plot.}{
 Mean expression versus $\log_2$ fold change plot. Significant hits (at \Robject{padj}<0.1) are coloured in red.
 }
 
@@ -698,7 +698,7 @@ The \Rfunction{plotDEXSeq} provides a means  to visualize the results of an anal
 plotDEXSeq( dxr2, "FBgn0010909", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 @
 %
-\incfig{figure/plot1}{\textwidth}{Fitted expression.}{
+\incfig{figure/plot1-1}{\textwidth}{Fitted expression.}{
 The plot represents the expression estimates from a call to \texttt{testForDEU}.
 Shown in red is the exon that showed significant differential exon usage.
 }
@@ -724,7 +724,7 @@ plotDEXSeq( dxr2, "FBgn0010909", displayTranscripts=TRUE, legend=TRUE,
    cex.axis=1.2, cex=1.3, lwd=2 )
 @
 %
-\incfig{figure/plot2}{\textwidth}{Transcripts.}{
+\incfig{figure/plot2-1}{\textwidth}{Transcripts.}{
 As in Figure~\ref{figure/plot1}, but including the annotated transcript models.}
 %
 Other useful options are to look at the count values from the individual samples, rather than at the
@@ -736,7 +736,7 @@ plotDEXSeq( dxr2, "FBgn0010909", expression=FALSE, norCounts=TRUE,
    legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 @
 %
-\incfig{figure/plot3}{\textwidth}{Normalized counts.}{
+\incfig{figure/plot3-1}{\textwidth}{Normalized counts.}{
 As in Figure~\ref{figure/plot1}, with normalized count values of each exon in each of the samples.}
 %
 As explained in Section~\ref{sec:praeludium}, \Rpackage{DEXSeq} is designed to find
@@ -750,7 +750,7 @@ plotDEXSeq( dxr2, "FBgn0010909", expression=FALSE, splicing=TRUE,
    legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 @
 %
-\incfig{figure/plot4}{\textwidth}{Fitted splicing.}{
+\incfig{figure/plot4-1}{\textwidth}{Fitted splicing.}{
 The plot represents the estimated effects, as in Figure~\ref{figure/plot1},
 but after subtraction of overall changes in gene expression.}
 %
