@@ -99,11 +99,11 @@ balanceExons <- function( coefs, dispersions ) {
     } )
 }         
 
-fitAndArrangeCoefs <- function( frm = count ~ condition * exon, balanceExons = TRUE, mf)
+fitAndArrangeCoefs <- function( frm = count ~ condition * exon, balanceExons = TRUE, mf, maxRowsMF=3000 )
 {
    if( length(levels(mf$exon)) <= 1 )
       return( NULL )
-   if( nrow(mf) > 3000 )
+   if( nrow(mf) > maxRowsMF )
       return( NULL )
    mm <- model.matrix( frm, mf )
    fit <- try(

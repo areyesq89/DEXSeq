@@ -85,7 +85,8 @@ testForDEU <-
 estimateExonFoldChanges <- function( object,
                                     fitExpToVar = "condition",
                                     denominator = "",
-                                    BPPARAM=MulticoreParam(workers=1) )
+                                    BPPARAM=MulticoreParam(workers=1), 
+                                    maxRowsMF=3000)
 {
     stopifnot(is(object, "DEXSeqDataSet"))
     if (any(is.na(sizeFactors(object)))) {
@@ -128,7 +129,7 @@ estimateExonFoldChanges <- function( object,
            newMf[i,"count"] <- countsThis[as.character(newMf[i,"exon"]), as.character(newMf[i,"sample"])]
         }
         newMf <- droplevels( newMf )
-        coefficients <- fitAndArrangeCoefs( frm, balanceExons = TRUE, mf=newMf)
+        coefficients <- fitAndArrangeCoefs( frm, balanceExons = TRUE, mf=newMf, maxRowsMF=maxRowsMF)
         if (is.null(coefficients)) {
             return(coefficients)
         }

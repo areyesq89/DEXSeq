@@ -9,7 +9,7 @@
 
   estimateExonFoldChanges( object, 
      fitExpToVar = "condition", denominator = "",
-     BPPARAM=MulticoreParam(workers=1))
+     BPPARAM=MulticoreParam(workers=1), maxRowsMF=3000)
 
 }
 \arguments{
@@ -29,6 +29,16 @@
   \item{BPPARAM}{
      A "BiocParallelParam" instance. 
      See \code{?bplapply} for details.
+  }
+  \item{maxRowsMF}{
+     For the fold change estimation, the size of the model matrix 
+     for the fitted glm increases with the number of samples and 
+     the number of exons for a specific gene (see the DEXSeq paper
+     for details). Since the glm fit for big models can be slow, 
+     the maxRowsMF parameter allows to set a threshold on the number
+     of rows from the model frame (this will be number of samples x number
+     of exons from a gene).  For the genes passing this threshold 
+     the exon fold changes won't be calculated.
   }
 }
 \details{
