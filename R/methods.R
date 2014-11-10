@@ -180,11 +180,14 @@ setMethod("subsetByOverlaps", signature(query="DEXSeqResults", subject="GenomicR
 
 findOverlaps.DEXSeqResults <- function( query, subject, maxgap = 0L, minoverlap = 1L,
          type = c("any", "start", "end", "within", "equal"),
+         algorithm = c("intervaltree", "nclist"),
          ignore.strand = FALSE ){
   stopifnot( is( query, "DEXSeqResults") )
   genomicData <- query$genomicData
   overlaps <- findOverlaps( query=genomicData, subject=subject, maxgap=maxgap,
-    minoverlap=minoverlap, type=type, ignore.strand=ignore.strand)
+    minoverlap=minoverlap, type=type,
+    algorithm=algorithm,
+    ignore.strand=ignore.strand)
   overlaps
 }
 
