@@ -13,10 +13,12 @@
 \usage{
 
   \S4method{subsetByOverlaps}{DEXSeqResults,GenomicRanges}( query, subject, maxgap = 0L, 
-    minoverlap = 1L, type = c("any", "start", "end", "within", "equal"), ignore.strand = FALSE )
+    minoverlap = 1L, type = c("any", "start", "end", "within", "equal"),
+    algorithm = c("nclist", "intervaltree"), ignore.strand = FALSE )
 
   \S4method{findOverlaps}{DEXSeqResults,GenomicRanges}( query, subject, maxgap = 0L, 
-    minoverlap = 1L, type = c("any", "start", "end", "within", "equal"), ignore.strand = FALSE )
+    minoverlap = 1L, type = c("any", "start", "end", "within", "equal"),
+    algorithm = c("nclist", "intervaltree"), ignore.strand = FALSE )
 
 }
 \arguments{
@@ -26,7 +28,7 @@
   \item{subject}{
       A GRanges or GRangesList object.
   }
-  \item{maxgap, minoverlap, type}{
+  \item{maxgap, minoverlap, type, algorithm}{
     See \code{\link[IRanges]{findOverlaps}} in the IRanges package for
     a description of these arguments.
   }
