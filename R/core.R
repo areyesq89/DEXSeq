@@ -179,8 +179,8 @@ estimateExonFoldChanges <- function( object,
 
 DEXSeqResults <- function( object ){
   stopifnot( is(object, "DEXSeqDataSet"))
-  LRTresults <- results(object, filter=rowMeans( featureCounts(object) ) )
-  LRTresults$exonBaseMean <- rowMeans(featureCounts(object))
+  LRTresults <- results(object, filter=rowMeans( featureCounts(object, normalized=TRUE) ) )
+  LRTresults$exonBaseMean <- rowMeans(featureCounts(object, normalized=TRUE))
   LRTresults$featureID <- mcols(object)$featureID
   LRTresults$groupID <- mcols(object)$groupID
   LRTresults$dispersion <- mcols(object)$dispersion
