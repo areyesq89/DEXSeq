@@ -102,7 +102,9 @@ estimateExonFoldChanges <- function( object,
       stop("please call testForDEU first")
     }
     frm <- as.formula(paste("count ~", fitExpToVar, "* exon"))
-    testablegenes <- as.character( unique( groupIDs(object)[!is.na( results(object)$padj )] ) )
+    notNAs <- !is.na( results(object, 
+       filter=rowMeans( featureCounts(object, normalized=TRUE) ))$padj )
+    testablegenes <- unique(groupIDs(object)[notNAs])
     groups <- groupIDs(object)
     features <- featureIDs(object)
     exonCounts <- featureCounts( object )
