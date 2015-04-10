@@ -195,7 +195,7 @@ DEXSeqResults <- function( object ){
   elementMetadata( LRTresults )[colnames(LRTresults) %in% "dispersion","description"] <- "exon dispersion estimate"
   toadd <- mcols(object)[,elementMetadata( mcols(object ) )$type == "DEXSeq results", drop=FALSE]
   LRTresults <- cbind( LRTresults, toadd )
-  genomicData <- rowData(object)
+  genomicData <- rowRanges(object)
   mcols(genomicData) <- NULL
   LRTresults$genomicData <- genomicData
   LRTresults$countData <- featureCounts(object)
