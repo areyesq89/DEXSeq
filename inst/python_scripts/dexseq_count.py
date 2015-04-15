@@ -214,6 +214,10 @@ else: # paired-end
    alignments = dict()
    if order == "name":
       for af, ar in HTSeq.pair_SAM_alignments( reader( sam_file ) ):
+         if not ar.aligned:
+            continue
+         if not af.aligned:
+            continue
          if af == None or ar == None:
             continue
          elif ar.optional_field("NH") > 1 or af.optional_field("NH") > 1:
