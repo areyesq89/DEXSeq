@@ -2,8 +2,6 @@
 \name{counts}
 \alias{counts}
 \alias{counts,DEXSeqResults-method}
-\alias{counts,ExonCountSet-method}
-\alias{counts,ExonCountSet-method,deprecated}
 \title{Accessors for the 'counts' slot of a DEXSeqResults object.}
 \usage{
 \S4method{counts}{DEXSeqResults}(object,normalized=FALSE)

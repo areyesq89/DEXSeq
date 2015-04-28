@@ -4,8 +4,6 @@
 \alias{plotMA-methods}
 \alias{plotMA,DEXSeqDataSet-method}
 \alias{plotMA,DEXSeqResults-method}
-\alias{plotMA,ExonCountSet-method}
-\alias{plotMA,ExonCountSet-method,deprecated}
 \title{Generate an MA plot}
 \description{
   This function generates an MA plot.

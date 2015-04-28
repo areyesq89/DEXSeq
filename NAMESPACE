@@ -17,7 +17,6 @@ import(
 )
 
 exportClasses( 
-  "ExonCountSet",
   "DEXSeqDataSet",
   "DEXSeqResults"
 )
@@ -28,9 +27,7 @@ exportMethods(
   counts,
   estimateSizeFactors,
   subsetByOverlaps,
-  findOverlaps,
-### TO DEPRECATE
-  plotDispEsts
+  findOverlaps
 )
 
 export(
@@ -50,28 +47,7 @@ export(
   DEXSeqResults,
   estimateExonFoldChanges,
   DEXSeq,
-  sampleAnnotation,
-### DEPRECATE
-  newExonCountSet,
-  subsetByGenes,
-  geneCountTable,
-  countTableForGene,
-  modelFrameForGene,
-  estimateExonDispersionsForModelFrame_BM,
-  fitDispersionFunction,
-  read.HTSeqCounts,
-  DEUresultTable,
-  estimatelog2FoldChanges,
-  doCompleteDEUAnalysis,
-  makeCompleteDEUAnalysis_BM,
-  constructModelFrame,
-  estimateDispersions_BM,
-  testGeneForDEU_BM,
-  testForDEU_BM,
-  buildExonCountSet,
-### DEFUNCT
-  countReadsForDEXSeq,
-  prepareAnnotationForDEXSeq
+  sampleAnnotation
 )
 
 

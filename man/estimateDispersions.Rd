@@ -2,8 +2,6 @@
 \name{estimateDispersions}
 \alias{estimateDispersions}
 \alias{estimateDispersions,DEXSeqDataSet-method}
-\alias{estimateDispersions,ExonCountSet-method}
-\alias{estimateDispersions,ExonCountSet-method-deprecated}
 \title{Estimate the dispersions for a DEXSeqDataSet}
 \usage{
 

@@ -2,8 +2,6 @@
 \name{estimateSizeFactors}
 \alias{estimateSizeFactors}
 \alias{estimateSizeFactors,DEXSeqDataSet-method}
-\alias{estimateSizeFactors,ExonCountSet-method}
-\alias{estimateSizeFactors,ExonCountSet-method,deprecated}
 \title{Estimate the size factors for a DEXSeqDataSet}
 \usage{
   \S4method{estimateSizeFactors}{DEXSeqDataSet}(object,locfunc=median,geoMeans)

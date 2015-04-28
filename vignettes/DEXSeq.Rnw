@@ -426,7 +426,7 @@ To see details on the counting bins, we also print the first
 %
 {\small
 <<fData>>=
-head( rowData(dxd), 3 )
+head( rowRanges(dxd), 3 )
 @
 }
 %
