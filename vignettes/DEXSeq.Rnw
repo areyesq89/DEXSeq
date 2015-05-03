@@ -837,8 +837,7 @@ of Haglund et al.\ \cite{parathyroidPaper}, which is provided as example data in
 First, we download the current human gene model annotation from Ensembl via Biomart and create
 a transcript data base from these. Note that this step takes some time.
 <<buildExonCountSetDownloadAnno,cache=TRUE, eval=FALSE>>=
-hse = makeTranscriptDbFromBiomart( biomart="ensembl", 
-   dataset="hsapiens_gene_ensembl" )
+hse = makeTxDbFromBiomart( biomart="ensembl", dataset="hsapiens_gene_ensembl" )
 @
 %
 Next, we collapse the gene models into counting bins, analogous to Section~\ref{prepAnno}.

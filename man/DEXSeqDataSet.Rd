@@ -127,8 +127,8 @@
   library(GenomicFeatures)
   library(GenomicAlignments)
 
-  hse <- makeTranscriptDbFromBiomart( 
-    biomart="ensembl", dataset="hsapiens_gene_ensembl" )
+  hse <- makeTxDbFromBiomart( biomart="ensembl",
+                              dataset="hsapiens_gene_ensembl" )
 
   bamDir <- system.file( 
     "extdata", package="parathyroidSE", mustWork=TRUE )
