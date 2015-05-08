@@ -2,6 +2,7 @@
 \name{DEXSeqDataSet-class}
 \alias{DEXSeqDataSet}
 \alias{DEXSeqDataSet-class}
+\alias{updateObject,DEXSeqDataSet-method}
 \alias{DEXSeqDataSetFromHTSeq}
 \alias{DEXSeqDataSetFromSE}
 \title{DEXSeqDataSet object and constructors}

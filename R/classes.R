@@ -112,6 +112,19 @@ setValidity( "DEXSeqDataSet", function( object ) {
   TRUE
 } )
 
+setMethod("updateObject", "DEXSeqDataSet",
+    function(object, ..., verbose=FALSE)
+    {
+        new(class(object), metadata=as.list(object@exptData),
+                           rowRanges=object@rowData,
+                           colData=object@colData,
+                           assays=object@assays,
+                           design=object@design,
+                           dispersionFunction=object@dispersionFunction,
+                           modelFrameBM=object@modelFrameBM)
+    }
+)
+
 setClass("DEXSeqResults",
    contains = "DataFrame",
          representation = representation( modelFrameBM = "data.frame", sampleData="DataFrame", dispersionFunction = "function") )
@@ -129,6 +142,11 @@ setValidity( "DEXSeqResults", function( object ){
 
 
 featureCounts <- function( object, normalized=FALSE ){
+  # Temporary hack for backward compatibility with "old" DEXSeqDataSet
+  # objects. Remove once all serialized DEXSeqDataSet objects around have
+  # been updated.
+  if (!.hasSlot(object, "rowRanges"))
+      object <- updateObject(object)
   validObject(object)
   res <- counts(object, normalized=normalized)[,colData(object)$exon == "this"]
   colnames( res ) <- sampleAnnotation(object)$sample
@@ -136,12 +154,22 @@ featureCounts <- function( object, normalized=FALSE ){
 }
 
 featureIDs <- function(object){
+  # Temporary hack for backward compatibility with "old" DEXSeqDataSet
+  # objects. Remove once all serialized DEXSeqDataSet objects around have
+  # been updated.
+  if (!.hasSlot(object, "rowRanges"))
+      object <- updateObject(object)
   validObject(object)
   mcols(object)$featureID
 }
 
 `featureIDs<-` <- function( object, value ) {
    stopifnot( is( object, "DEXSeqDataSet" ) )
+   # Temporary hack for backward compatibility with "old" DEXSeqDataSet
+   # objects. Remove once all serialized DEXSeqDataSet objects around have
+   # been updated.
+   if (!.hasSlot(object, "rowRanges"))
+       object <- updateObject(object)
    mcols(object)$featureID <- value
    rownames(object) <- paste( mcols(object)$groupID, mcols(object)$featureID, sep=":" )
    validObject(object)
@@ -149,22 +177,42 @@ featureIDs <- function(object){
 }
 
 exonIDs <- function(object){
+  # Temporary hack for backward compatibility with "old" DEXSeqDataSet
+  # objects. Remove once all serialized DEXSeqDataSet objects around have
+  # been updated.
+  if (!.hasSlot(object, "rowRanges"))
+      object <- updateObject(object)
   validObject(object)
   featureIDs(object)
 }
 
 `exonIDs<-` <- function( object, value ) {
+  # Temporary hack for backward compatibility with "old" DEXSeqDataSet
+  # objects. Remove once all serialized DEXSeqDataSet objects around have
+  # been updated.
+  if (!.hasSlot(object, "rowRanges"))
+      object <- updateObject(object)
   object <- `featureIDs<-`( object, value )
   object
 }
 
 groupIDs <- function( object ){
+  # Temporary hack for backward compatibility with "old" DEXSeqDataSet
+  # objects. Remove once all serialized DEXSeqDataSet objects around have
+  # been updated.
+  if (!.hasSlot(object, "rowRanges"))
+      object <- updateObject(object)
   validObject( object )
   mcols( object )$groupID
 }
 
 `groupIDs<-` <- function( object, value ) {
    stopifnot( is( object, "DEXSeqDataSet" ) )
+   # Temporary hack for backward compatibility with "old" DEXSeqDataSet
+   # objects. Remove once all serialized DEXSeqDataSet objects around have
+   # been updated.
+   if (!.hasSlot(object, "rowRanges"))
+       object <- updateObject(object)
    mcols( object )$groupID <- value
    rownames(object) <- paste( mcols(object)$groupID, mcols(object)$featureID, sep=":" )
    validObject( object )
@@ -172,17 +220,32 @@ groupIDs <- function( object ){
 }
 
 geneIDs <- function( object ){
+  # Temporary hack for backward compatibility with "old" DEXSeqDataSet
+  # objects. Remove once all serialized DEXSeqDataSet objects around have
+  # been updated.
+  if (!.hasSlot(object, "rowRanges"))
+      object <- updateObject(object)
   validObject( object )
   groupIDs( object )
 }
 
 `geneIDs<-` <- function( object, value ) {
+  # Temporary hack for backward compatibility with "old" DEXSeqDataSet
+  # objects. Remove once all serialized DEXSeqDataSet objects around have
+  # been updated.
+  if (!.hasSlot(object, "rowRanges"))
+      object <- updateObject(object)
   object <- `groupIDs<-`(object, value)
   object
 }
 
 
 sampleAnnotation <- function( object ){
+  # Temporary hack for backward compatibility with "old" DEXSeqDataSet
+  # objects. Remove once all serialized DEXSeqDataSet objects around have
+  # been updated.
+  if (!.hasSlot(object, "rowRanges"))
+      object <- updateObject(object)
   validObject( object )
   colData( object )[colData( object )$exon == "this",!colnames(colData( object )) %in% "exon"]
 }

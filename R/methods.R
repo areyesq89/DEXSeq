@@ -1,5 +1,10 @@
 
 estimateSizeFactors.DEXSeqDataSet <- function(object, locfunc=median, geoMeans) {
+  # Temporary hack for backward compatibility with "old" DEXSeqDataSet
+  # objects. Remove once all serialized DEXSeqDataSet objects around have
+  # been updated.
+  if (!.hasSlot(object, "rowRanges"))
+      object <- updateObject(object)
   normFactors <- estimateSizeFactorsForMatrix(featureCounts(object), locfunc, geoMeans=geoMeans)
   sizeFactors(object) <- rep(normFactors, 2)
   maxExons <- length( unique( object@modelFrameBM$exon ) )
@@ -15,6 +20,11 @@ estimateDispersions.DEXSeqDataSet <-
   function( object, fitType=c("parametric","local","mean"),
     maxit=100, quiet=FALSE, formula=design(object), BPPARAM=MulticoreParam(workers=1))
 {
+  # Temporary hack for backward compatibility with "old" DEXSeqDataSet
+  # objects. Remove once all serialized DEXSeqDataSet objects around have
+  # been updated.
+  if (!.hasSlot(object, "rowRanges"))
+      object <- updateObject(object)
   if (is.null(sizeFactors(object)) & is.null(normalizationFactors(object))) {
     stop("first call estimateSizeFactors or provide a normalizationFactor matrix before estimateDispersions")
   }
@@ -93,6 +103,11 @@ plotDispEsts.DEXSeqDataSet <- function(object, ymin,
        legend=TRUE, xlab, ylab, log = "xy", cex = 0.45, ...)
 {
   stopifnot(is(object, "DEXSeqDataSet"))
+  # Temporary hack for backward compatibility with "old" DEXSeqDataSet
+  # objects. Remove once all serialized DEXSeqDataSet objects around have
+  # been updated.
+  if (!.hasSlot(object, "rowRanges"))
+      object <- updateObject(object)
   mcols(object)$baseMean <- 
     mcols(object)$exonBaseMean
   mcols(object)$baseVar <- 
@@ -107,6 +122,11 @@ setMethod( "plotDispEsts", signature(object="DEXSeqDataSet"),
 
 plotMA.DEXSeqDataSet <- function( object, alpha=0.1, ylim=c(-2, 2), foldChangeColumn=NULL, ...){
   stopifnot( is(object, "DEXSeqDataSet") )
+  # Temporary hack for backward compatibility with "old" DEXSeqDataSet
+  # objects. Remove once all serialized DEXSeqDataSet objects around have
+  # been updated.
+  if (!.hasSlot(object, "rowRanges"))
+      object <- updateObject(object)
   hasResults <- attr(object, "results")
   dexseqResults <- mcols(object)[,elementMetadata( mcols( object ) )$type == "DEXSeq results"]
   if( ncol( dexseqResults ) == 0 ){
@@ -128,6 +148,11 @@ setMethod("plotMA", signature(object="DEXSeqDataSet"),
 
 plotMA.DEXSeqResults <- function(object, alpha=0.1, ylim=c(-2,2), foldChangeColumn=NULL, ...){
   stopifnot( is(object, "DEXSeqResults") )
+  # Temporary hack for backward compatibility with "old" DEXSeqDataSet
+  # objects. Remove once all serialized DEXSeqDataSet objects around have
+  # been updated.
+  if (!.hasSlot(object, "rowRanges"))
+      object <- updateObject(object)
   x <- rowMeans( counts(object, normalized=TRUE) )
   dexseqResults <- object[,which( elementMetadata( object )$type == "DEXSeq results" )]
   if( is.null(foldChangeColumn)){

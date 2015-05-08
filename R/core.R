@@ -89,6 +89,11 @@ estimateExonFoldChanges <- function( object,
                                     maxRowsMF=3000)
 {
     stopifnot(is(object, "DEXSeqDataSet"))
+    # Temporary hack for backward compatibility with "old" DEXSeqDataSet
+    # objects. Remove once all serialized DEXSeqDataSet objects around have
+    # been updated.
+    if (!.hasSlot(object, "rowRanges"))
+        object <- updateObject(object)
     if (any(is.na(sizeFactors(object)))) {
       stop("Please estimate sizeFactors first\n")
     }
@@ -181,6 +186,11 @@ estimateExonFoldChanges <- function( object,
 
 DEXSeqResults <- function( object ){
   stopifnot( is(object, "DEXSeqDataSet"))
+  # Temporary hack for backward compatibility with "old" DEXSeqDataSet
+  # objects. Remove once all serialized DEXSeqDataSet objects around have
+  # been updated.
+  if (!.hasSlot(object, "rowRanges"))
+      object <- updateObject(object)
   LRTresults <- results(object, filter=rowMeans( featureCounts(object, normalized=TRUE) ) )
   LRTresults$exonBaseMean <- rowMeans(featureCounts(object, normalized=TRUE))
   LRTresults$featureID <- mcols(object)$featureID
@@ -219,6 +229,11 @@ DEXSeq <- function( object,
                    reducedModel = ~ sample + exon,
                    BPPARAM=MulticoreParam(workers=1), fitExpToVar="condition", quiet=TRUE ){
   stopifnot(is( object, "DEXSeqDataSet") )
+  # Temporary hack for backward compatibility with "old" DEXSeqDataSet
+  # objects. Remove once all serialized DEXSeqDataSet objects around have
+  # been updated.
+  if (!.hasSlot(object, "rowRanges"))
+      object <- updateObject(object)
   object <- estimateSizeFactors( object )
   object <- estimateDispersions( object, formula=fullModel, BPPARAM=BPPARAM, quiet=TRUE)
   object <- testForDEU( object, reducedModel=reducedModel, fullModel=fullModel, BPPARAM=BPPARAM )
