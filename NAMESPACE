@@ -22,7 +22,6 @@ exportClasses(
 )
 
 exportMethods(
-  updateObject,
   estimateDispersions,
   plotMA,
   counts,

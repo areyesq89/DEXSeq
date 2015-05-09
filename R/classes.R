@@ -112,19 +112,6 @@ setValidity( "DEXSeqDataSet", function( object ) {
   TRUE
 } )
 
-setMethod("updateObject", "DEXSeqDataSet",
-    function(object, ..., verbose=FALSE)
-    {
-        new(class(object), metadata=as.list(object@exptData),
-                           rowRanges=object@rowData,
-                           colData=object@colData,
-                           assays=object@assays,
-                           design=object@design,
-                           dispersionFunction=object@dispersionFunction,
-                           modelFrameBM=object@modelFrameBM)
-    }
-)
-
 setClass("DEXSeqResults",
    contains = "DataFrame",
          representation = representation( modelFrameBM = "data.frame", sampleData="DataFrame", dispersionFunction = "function") )
