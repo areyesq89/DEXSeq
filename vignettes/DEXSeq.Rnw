@@ -582,10 +582,10 @@ dxr1
 @
 
 The description of each of the column of the object \Rclass{DEXSeqResults} 
-can be found in the element meta data.
+can be found in the metadata columns.
 
 <<results2,cache=TRUE>>=
-elementMetadata(dxr1)$description
+mcols(dxr1)$description
 @
 
 From this object, we can ask how many genes are significant with a false

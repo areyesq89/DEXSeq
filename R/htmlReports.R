@@ -8,7 +8,7 @@ DEXSeqHTML <- function(object, genes=NULL, path="DEXSeqReport", file="testForDEU
    
    results[,c("dispersion", "pvalue", "padj")] <- round(results[,c("dispersion", "pvalue", "padj")], 3)
 
-   dexseqR <- elementMetadata( object )$type == "DEXSeq results"
+   dexseqR <- mcols( object )$type == "DEXSeq results"
 
    if(sum(dexseqR, na.rm=TRUE) > 0){
       results <-
@@ -53,7 +53,7 @@ DEXSeqHTML <- function(object, genes=NULL, path="DEXSeqReport", file="testForDEU
       condcolor[,1] <- color.samples}
    hwrite(cond, bgcolor=condcolor, p)
 
-   formulas <- elementMetadata(object)[colnames(object) == "pvalue","description"]
+   formulas <- mcols(object)[colnames(object) == "pvalue","description"]
    formulas <- sapply( strsplit(formulas, "vs|p-value:" ), "[", c(2, 3))
    formulas <- as.vector( gsub("'", "", formulas) )
    

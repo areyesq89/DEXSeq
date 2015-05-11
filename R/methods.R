@@ -128,7 +128,7 @@ plotMA.DEXSeqDataSet <- function( object, alpha=0.1, ylim=c(-2, 2), foldChangeCo
   if (!.hasSlot(object, "rowRanges"))
       object <- updateObject(object)
   hasResults <- attr(object, "results")
-  dexseqResults <- mcols(object)[,elementMetadata( mcols( object ) )$type == "DEXSeq results"]
+  dexseqResults <- mcols(object)[,mcols( mcols( object ) )$type == "DEXSeq results"]
   if( ncol( dexseqResults ) == 0 ){
     stop("first call estimateExonFoldChanges")
   }
@@ -154,7 +154,7 @@ plotMA.DEXSeqResults <- function(object, alpha=0.1, ylim=c(-2,2), foldChangeColu
   if (!.hasSlot(object, "rowRanges"))
       object <- updateObject(object)
   x <- rowMeans( counts(object, normalized=TRUE) )
-  dexseqResults <- object[,which( elementMetadata( object )$type == "DEXSeq results" )]
+  dexseqResults <- object[,which( mcols( object )$type == "DEXSeq results" )]
   if( is.null(foldChangeColumn)){
     y <- dexseqResults[,grep("log2fold", colnames(dexseqResults))[1]]
   }else{
@@ -170,7 +170,7 @@ setMethod("plotMA", signature(object="DEXSeqResults"),
     
 show.DEXSeqResults <- function(object){
   cat("\n")
-  cat(elementMetadata(object)[colnames(object) == "pvalue","description"])
+  cat(mcols(object)[colnames(object) == "pvalue","description"])
   cat("\n\n")
   show(DataFrame(object))
 }

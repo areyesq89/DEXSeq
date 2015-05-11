@@ -154,7 +154,7 @@ estimateExonFoldChanges <- function( object,
     colnames(toadd) <- colnames(alleffects)
     toadd[rownames(alleffects), colnames(alleffects)] <- alleffects
     toadd <- DataFrame(toadd)
-    elementMetadata(toadd) <- DataFrame(
+    mcols(toadd) <- DataFrame(
                                         type=rep("DEXSeq results",
                                           ncol(toadd)),
                                         description=rep("exon usage coefficient",
@@ -174,7 +174,7 @@ estimateExonFoldChanges <- function( object,
     toadd2[rownames(alleffects), colnames(alleffects)] <- alleffects
     toadd2 <- toadd2[,-denoCol, drop=FALSE]
     toadd2 <- DataFrame(toadd2)
-    elementMetadata(toadd2) <- DataFrame(type=rep("DEXSeq results",
+    mcols(toadd2) <- DataFrame(type=rep("DEXSeq results",
                                           ncol(toadd2)),
                                        description=rep("relative exon usage fold change",
                                           ncol(toadd2) ) )
@@ -198,22 +198,22 @@ DEXSeqResults <- function( object ){
   LRTresults$dispersion <- mcols(object)$dispersion
   
   LRTresults <- LRTresults[,c("groupID", "featureID", "exonBaseMean", "dispersion", "stat", "pvalue", "padj")]
-  elementMetadata( LRTresults )[colnames(LRTresults) %in% c("groupID", "featureID", "exonBaseMean"),"type"] <- "input"
-  elementMetadata( LRTresults )[colnames(LRTresults) %in% "groupID","description"] <- "group/gene identifier"
-  elementMetadata( LRTresults )[colnames(LRTresults) %in% "featureID","description"] <- "feature/exon identifier"
-  elementMetadata( LRTresults )[colnames(LRTresults) %in% "exonBaseMean","description"] <- "mean of the counts across samples in each feature/exon"
-  elementMetadata( LRTresults )[colnames(LRTresults) %in% "dispersion","description"] <- "exon dispersion estimate"
-  toadd <- mcols(object)[,elementMetadata( mcols(object ) )$type == "DEXSeq results", drop=FALSE]
+  mcols( LRTresults )[colnames(LRTresults) %in% c("groupID", "featureID", "exonBaseMean"),"type"] <- "input"
+  mcols( LRTresults )[colnames(LRTresults) %in% "groupID","description"] <- "group/gene identifier"
+  mcols( LRTresults )[colnames(LRTresults) %in% "featureID","description"] <- "feature/exon identifier"
+  mcols( LRTresults )[colnames(LRTresults) %in% "exonBaseMean","description"] <- "mean of the counts across samples in each feature/exon"
+  mcols( LRTresults )[colnames(LRTresults) %in% "dispersion","description"] <- "exon dispersion estimate"
+  toadd <- mcols(object)[,mcols( mcols(object ) )$type == "DEXSeq results", drop=FALSE]
   LRTresults <- cbind( LRTresults, toadd )
   genomicData <- rowRanges(object)
   mcols(genomicData) <- NULL
   LRTresults$genomicData <- genomicData
   LRTresults$countData <- featureCounts(object)
   LRTresults$transcripts <- mcols(object)$transcripts
-  elementMetadata( LRTresults )[colnames(LRTresults) %in% c("genomicData", "countData", "transcripts"),"type"] <- "input"
-  elementMetadata( LRTresults )[colnames(LRTresults) %in% "genomicData","description"] <- "GRanges object of the coordinates of the exon/feature"
-  elementMetadata( LRTresults )[colnames(LRTresults) %in% "countData","description"] <- "matrix of integer counts, of each column containing a sample"
-  elementMetadata( LRTresults )[colnames(LRTresults) %in% "transcripts","description"] <- "list of transcripts overlapping with the exon"
+  mcols( LRTresults )[colnames(LRTresults) %in% c("genomicData", "countData", "transcripts"),"type"] <- "input"
+  mcols( LRTresults )[colnames(LRTresults) %in% "genomicData","description"] <- "GRanges object of the coordinates of the exon/feature"
+  mcols( LRTresults )[colnames(LRTresults) %in% "countData","description"] <- "matrix of integer counts, of each column containing a sample"
+  mcols( LRTresults )[colnames(LRTresults) %in% "transcripts","description"] <- "list of transcripts overlapping with the exon"
   dxr <-
       new("DEXSeqResults",
           LRTresults,
