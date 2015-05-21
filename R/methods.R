@@ -18,7 +18,7 @@ setMethod("estimateSizeFactors", signature(object="DEXSeqDataSet"),
 
 estimateDispersions.DEXSeqDataSet <- 
   function( object, fitType=c("parametric","local","mean"),
-    maxit=100, quiet=FALSE, formula=design(object), BPPARAM=MulticoreParam(workers=1))
+    maxit=100, niter=10, quiet=FALSE, formula=design(object), BPPARAM=MulticoreParam(workers=1))
 {
   # Temporary hack for backward compatibility with "old" DEXSeqDataSet
   # objects. Remove once all serialized DEXSeqDataSet objects around have
@@ -55,7 +55,7 @@ estimateDispersions.DEXSeqDataSet <-
         estimateDispersionsGeneEst(x, 
           maxit=maxit, quiet=quiet, 
           modelMatrix = modelMatrix, 
-          niter = 10)}, 
+          niter = niter)}, 
     BPPARAM=BPPARAM )
 
   mergeObject <- do.call( rbind, splitObject )

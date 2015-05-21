@@ -5,7 +5,7 @@
 \title{Estimate the dispersions for a DEXSeqDataSet}
 \usage{
 
-\S4method{estimateDispersions}{DEXSeqDataSet}( object, fitType=c("parametric","local","mean"),maxit=100, quiet=FALSE, formula=design(object), BPPARAM=MulticoreParam(workers=1))
+\S4method{estimateDispersions}{DEXSeqDataSet}( object, fitType=c("parametric","local","mean"), maxit=100, niter=10, quiet=FALSE, formula=design(object), BPPARAM=MulticoreParam(workers=1))
 
 }
 \arguments{
@@ -21,6 +21,10 @@
   \item{maxit}{
     Control parameter: maximum number of 
     iterations to allow for convergence
+  }
+  \item{niter}{
+    Number of times to iterate between estimation of means
+    and estimation of dispersion.
   }
   \item{quiet}{
     Whether to print messages at each step

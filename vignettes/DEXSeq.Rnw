@@ -490,7 +490,7 @@ dxd = estimateDispersions( dxd )
 
 As a shrinkage diagnostic, the \Rclass{DEXSeqDataSet} inherits the method \Rfunction{plotDispEsts} that allows us
 to plot the per-exon dispersion estimates versus the mean normalised count, the resulting fitted values
-and the \emph{a posteriori} (shrinked) dispersion estimates (Figure~\ref{figure/fitdiagnostics}).
+and the \emph{a posteriori} (shrinked) dispersion estimates (Figure~\ref{figure/fitdiagnostics-1}).
 
 %
 <<fitdiagnostics, dev='png', resolution=220>>=
@@ -608,7 +608,7 @@ here is not typical.
 To see how the power to detect differential exon usage depends on the number of reads that
 map to an exon, a so-called MA plot is useful, which plots the logarithm of fold change versus average
 normalized count per exon and marks by red colour the exons which are considered significant; here,
-the exons with an adjusted $p$ values of less than 0.1 (Figure \ref{figure/MvsA}).
+the exons with an adjusted $p$ values of less than 0.1 (Figure \ref{figure/MvsA-1}).
 There is of course nothing special about the number 0.1, and you can specify other thresholds in the call to \Rfunction{plotMA}.
 %
 <<MvsA, dev='png', resolution=200>>=
@@ -708,7 +708,7 @@ wh = (dxr2$groupID=="FBgn0010909")
 stopifnot(sum(dxr2$padj[wh] < formals(plotDEXSeq)$FDR)==1)
 @
 %
-The result is shown in Figure~\ref{figure/plot1}. This plot shows the fitted expression values of each of the exons
+The result is shown in Figure~\ref{figure/plot1-1}. This plot shows the fitted expression values of each of the exons
 of gene FBgn0010909, for each of the two conditions, treated and untreated.
 The function \Rfunction{plotDEXSeq} expects at least two arguments, the \Rclass{DEXSeqDataSet} object and the gene ID.
 The option \texttt{legend=TRUE} causes a legend to be included. The three remaining
@@ -716,7 +716,7 @@ arguments in the code chunk above are ordinary plotting parameters which are sim
 plotting functions. They are not strictly needed and included here to improve appearance of
 the plot. See the help page for \Rfunction{par} for details.
 
-Optionally, one can also visualize the transcript models (Figure~\ref{figure/plot2}), which can be
+Optionally, one can also visualize the transcript models (Figure~\ref{figure/plot2-1}), which can be
 useful for putting differential exon usage results into the context of isoform regulation.
 %
 <<plot2, fig.height=8, fig.width=12>>=
@@ -725,11 +725,11 @@ plotDEXSeq( dxr2, "FBgn0010909", displayTranscripts=TRUE, legend=TRUE,
 @
 %
 \incfig{figure/plot2-1}{\textwidth}{Transcripts.}{
-As in Figure~\ref{figure/plot1}, but including the annotated transcript models.}
+As in Figure~\ref{figure/plot1-1}, but including the annotated transcript models.}
 %
 Other useful options are to look at the count values from the individual samples, rather than at the
 model effect estimates. For this display (option \texttt{norCounts=TRUE}), the counts are normalized by 
-dividing them by the size factors (Figure~\ref{figure/plot3}).
+dividing them by the size factors (Figure~\ref{figure/plot3-1}).
 %
 <<plot3, fig.height=8, fig.width=12>>=
 plotDEXSeq( dxr2, "FBgn0010909", expression=FALSE, norCounts=TRUE,
@@ -737,7 +737,7 @@ plotDEXSeq( dxr2, "FBgn0010909", expression=FALSE, norCounts=TRUE,
 @
 %
 \incfig{figure/plot3-1}{\textwidth}{Normalized counts.}{
-As in Figure~\ref{figure/plot1}, with normalized count values of each exon in each of the samples.}
+As in Figure~\ref{figure/plot1-1}, with normalized count values of each exon in each of the samples.}
 %
 As explained in Section~\ref{sec:praeludium}, \Rpackage{DEXSeq} is designed to find
 changes in relative exon usage, i.\,e., changes in the expression of individual exons that are
@@ -751,7 +751,7 @@ plotDEXSeq( dxr2, "FBgn0010909", expression=FALSE, splicing=TRUE,
 @
 %
 \incfig{figure/plot4-1}{\textwidth}{Fitted splicing.}{
-The plot represents the estimated effects, as in Figure~\ref{figure/plot1},
+The plot represents the estimated effects, as in Figure~\ref{figure/plot1-1},
 but after subtraction of overall changes in gene expression.}
 %
 To generate an easily browsable, detailed overview over all analysis results,
