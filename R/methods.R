@@ -63,7 +63,7 @@ estimateDispersions.DEXSeqDataSet <-
   mcols(object) <- mcols( mergeObject )[matchedNames,]
   assays(object) <- assays(mergeObject[matchedNames,])
 
-  mcols(object)$baseMean <- mcols(object)$exonBaseMean
+  mcols(object)$baseMean <- rowMeans( featureCounts(object, normalized=TRUE) )
   mcols(object)$baseVar <- mcols(object)$exonBaseVar
   mcols(object)$allZero <- unname( rowSums( featureCounts(object)) == 0 |
       rowSums(counts(object, normalized = TRUE)[, colData(object)$exon == "others"]) ==0 )
@@ -87,8 +87,8 @@ estimateDispersions.DEXSeqDataSet <-
   mergeObject <- do.call( rbind, splitObject ) 
   matchedNames <- match( rownames(object), rownames(mergeObject) ) 
   mcols(object) <- mcols( mergeObject )[matchedNames,]
-  mcols(object)$baseMean <- unname( rowMeans( counts(object) ) )
-  mcols(object)$baseVar <- unname( rowVars( counts(object) ) )
+  mcols(object)$baseMean <- unname( rowMeans( counts(object, normalized=TRUE) ) )
+  mcols(object)$baseVar <- unname( rowVars( counts(object, normalized=TRUE) ) )
   mcols(object)$dispersion <- pmin( mcols(object)$dispersion, ncol(object) )
 
   object
