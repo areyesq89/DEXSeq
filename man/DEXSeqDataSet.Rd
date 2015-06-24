@@ -10,7 +10,7 @@
   DEXSeqDataSet( countData, sampleData, 
     design= ~ sample + exon + condition:exon, 
     featureID, groupID, featureRanges=NULL, 
-    transcripts=NULL)
+    transcripts=NULL, alternativeCountData=NULL)
 
   DEXSeqDataSetFromHTSeq( 
     countfiles, sampleData, 
@@ -30,6 +30,16 @@
     counts of technical replicates (i.e., several sequencing 
     runs/lanes from the same sample) should be summed up 
     into a single column
+  }
+  \item{alternativeCountData}{
+    DEXSeq can be also used for test for differences in exon inclusion
+    based on the number of reads supporting the inclusion of an exon and
+    the number of reads supporting the exclusion of an exon. A matrix of
+    count data of non-negative integer values.The rows correspond to exonic
+    regions and the columns correspond to samples. This matrix should contain
+    the number of exon-exon junction reads that skip each exon in each sample.
+    If NULL, then the sum of the other exons belonging to the same gene is
+    considered for testing (i.e. the normal DEXSeq approach).
   }
   \item{countfiles}{
     A character vector containing the path to the files that
