@@ -76,8 +76,10 @@ DEXSeqDataSet <- function( countData, sampleData, design= ~ sample + exon + cond
     }
 
     rownames(se) <- paste( groupID, featureID, sep=":")
+    rse <- as( se, "RangedSummarizedExperiment" )
+    mcols(rse) <- mcols(se)
 
-    dds <- DESeqDataSet( se, design, ignoreRank=TRUE )
+    dds <- DESeqDataSet( rse, design, ignoreRank=TRUE )
 
     maxGene <- names(which.max(table(groupID)))
     rows <- mcols(dds)$groupID %in%  maxGene

@@ -172,8 +172,8 @@
       paste0("gene", 1:10),
       each= 100 )
   featureID <- rep(
-      paste0("exon", 1:10),
-      times= 100 )
+      paste0("exon", 1:100),
+      times= 10 )
   DEXSeqDataSet( countData, sampleData, design,
               featureID, groupID )
 
