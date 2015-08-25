@@ -142,13 +142,17 @@ featureCounts <- function( object, normalized=FALSE ){
 }
 
 featureIDs <- function(object){
+    if( is( object, "DEXSeqDataSet") ){
     # Temporary hack for backward compatibility with "old" DEXSeqDataSet
     # objects. Remove once all serialized DEXSeqDataSet objects around have
     # been updated.
-    if (!.hasSlot(object, "rowRanges"))
-        object <- updateObject(object)
-    validObject(object)
-    mcols(object)$featureID
+        if (!.hasSlot(object, "rowRanges"))
+            object <- updateObject(object)
+        validObject(object)
+        mcols(object)$featureID
+    }else if( is(object, "DEXSeqResults") ){
+        object$featureID
+    }
 }
 
 `featureIDs<-` <- function( object, value ) {
@@ -231,11 +235,15 @@ geneIDs <- function( object ){
 sampleAnnotation <- function( object ){
     # Temporary hack for backward compatibility with "old" DEXSeqDataSet
     # objects. Remove once all serialized DEXSeqDataSet objects around have
-    # been updated.
-    if (!.hasSlot(object, "rowRanges"))
-        object <- updateObject(object)
-    validObject( object )
-    colData( object )[colData( object )$exon == "this",!colnames(colData( object )) %in% "exon"]
+                                        # been updated.
+    if( is( object, "DEXSeqDataSet")){
+        if (!.hasSlot(object, "rowRanges"))
+            object <- updateObject(object)
+        validObject( object )
+        colData( object )[colData( object )$exon == "this",!colnames(colData( object )) %in% "exon"]
+    }else if( is(object, "DEXSeqResults") ){
+        object@sampleData
+    }
 }
 
 #################

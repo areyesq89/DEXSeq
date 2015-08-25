@@ -2,16 +2,26 @@
 
 plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCounts=FALSE, expression=TRUE, splicing=FALSE, displayTranscripts=FALSE, names=FALSE, legend=FALSE, color=NULL, color.samples=NULL, ...)
 {
-   stopifnot(is( object, "DEXSeqResults"))
+   stopifnot(is( object, "DEXSeqResults") | is( object, "DEXSeqDataSet"))
    
    op <- sum(c(expression, splicing, norCounts))
    if(op == 0){
       stop("Please indicate what would you like to plot\n")}
 
-   sampleData <- object@sampleData
-   genomicData <- object$genomicData
-   rt<-which(object$groupID==geneID)
-   count <- t( t(object$countData[rt,])/sampleData$sizeFactor )
+   if( is(object, "DEXSeqResults")){
+       sampleData <- object@sampleData
+       genomicData <- object$genomicData
+       rt<-which(object$groupID==geneID)
+       count <- t( t(object$countData[rt,])/sampleData$sizeFactor )
+       each <- object$padj[rt]
+  }else{
+       sampleData <- sampleAnnotation( object )
+       genomicData <- rowRanges( object )
+       mcols(genomicData) <- NULL
+       rt <- which( mcols( object )$groupID == geneID )
+       count <- featureCounts( object, normalized=TRUE )[rt,]
+       each <- rep(1, length.out=length(rt))
+   }
    
    if(sum(count) == 0){
       warning("No read counts falling in this gene, there is nothing to plot.")
@@ -23,7 +33,6 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
    intervals<-(0:nrow(count))/nrow(count)
    numcond<-length(unique(sampleData[[fitExpToVar]]))
    numexons<-nrow(count)
-   each <- object$padj[rt]
    #exoncol<-ifelse(each<=FDR, "#8B0000", "dark green")
    #exoncol[is.na(exoncol)]<-"black"
    #colorlines <- ifelse(each<=FDR, "#FF000060", "lightgrey")
@@ -87,20 +96,23 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
    
    names(color) <- sort(levels(sampleData[[fitExpToVar]]))
 
-   mf <- object@modelFrameBM
-   mf <- mf[as.vector( sapply( split( seq_len(nrow(mf)), mf$sample ), "[", seq_len( numexons ) ) ),]
-   featuresInGene <- object$featureID[rt]
-   mf$exon <- factor( rep( featuresInGene, nrow(sampleData) ) )
-   counts <- object$countData[rt,]
-   rownames(counts) <- gsub("\\S+:", "", rownames(counts))
-   dispersions <- object$dispersion[rt]
-   dispersions[is.na( dispersions )] <- 1e-8
-   names(dispersions) <- object$featureID[rt]
-   for( i in seq_len(nrow(mf))){
-      mf[i,"dispersion"] <- dispersions[as.character(mf[i,"exon"])]
-      mf[i,"count"] <- counts[as.character(mf[i,"exon"]), as.character(mf[i,"sample"])]
+   if( expression | splicing ){
+       stopifnot(is( object, "DEXSeqResults"))
+       mf <- object@modelFrameBM
+       mf <- mf[as.vector( sapply( split( seq_len(nrow(mf)), mf$sample ), "[", seq_len( numexons ) ) ),]
+       featuresInGene <- object$featureID[rt]
+       mf$exon <- factor( rep( featuresInGene, nrow(sampleData) ) )
+       counts <- object$countData[rt,]
+       rownames(counts) <- gsub("\\S+:", "", rownames(counts))
+       dispersions <- object$dispersion[rt]
+       dispersions[is.na( dispersions )] <- 1e-8
+       names(dispersions) <- object$featureID[rt]
+       for( i in seq_len(nrow(mf))){
+          mf[i,"dispersion"] <- dispersions[as.character(mf[i,"exon"])]
+          mf[i,"count"] <- counts[as.character(mf[i,"exon"]), as.character(mf[i,"sample"])]
+       }
+       mf <- droplevels( mf )
    }
-   mf <- droplevels( mf )
 
    if(expression){
     
@@ -190,7 +202,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
 
 makevstaxis <- function(min, ylimn, ecs, ...)
 {
-   minlog10 <- floor( log10( 1/nrow( ecs@sampleData ) ) )
+   minlog10 <- floor( log10( 1/nrow( sampleAnnotation(ecs) ) ) )
    maxlog10 <- ceiling( log10( ylimn[2] ) )
    ticks <- 10^seq( minlog10, maxlog10 )
    decade_lengths <- ( vst(ticks, ecs)[ 2 : length(ticks) ] - vst(ticks, ecs)[ 1 : (length(ticks)-1) ] ) /
@@ -237,7 +249,7 @@ drawPlot <- function(matr, ylimn, ecs, intervals, rango, fitExpToVar, numexons, 
    segments(intervals[rango+1]-((intervals[rango+1]-intervals[rango])*0.2), matr[rango,j], intervals[rango+1], matr[rango+1,j], col=color, lty="dotted", ...)  #### line joining the y levels
    abline(v=middle[rango], lty="dotted", col=colorlines)
    mtext(textAxis, side=2, adj=0.5, line=1.5, outer=FALSE, ...)
-   axis(1, at=middle[seq(along=rt)], labels=ecs$featureID[rt], ...)
+   axis(1, at=middle[seq(along=rt)], labels=featureIDs(ecs)[rt], ...)
 }
 
 #########################

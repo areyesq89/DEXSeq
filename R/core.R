@@ -11,12 +11,14 @@ rmDepCols <- function(m)
 #fullModel <- design(object)
 #reducedModel <- ~ sample + exon
 vst <- function( x,  object ){
-  if( attr(object@dispersionFunction, "fitType") != "parametric" ){
-    warnings("The dispersion function is not parametric, the DEXSeq vst won't be applied to the data\n")
-    return( x )
-  }
+    if( is.null( attr(object@dispersionFunction, "fitType") ) ) {
+        warnings("Dispersion function not found, applying log2(x+ 1) instead of vst...\n")
+        return( log10(x+1) )
+    }else if ( attr(object@dispersionFunction, "fitType") != "parametric" ){
+        warnings("Dispersion function not parametric, applying log2(x+ 1) instead of vst...\n")
+        return( log10(x+1) )
+    }
   coefs <- attr(object@dispersionFunction, "coefficients")
-
     (2/(sqrt(coefs["asymptDisp"]))) * log(2 * coefs["asymptDisp"] * 
       sqrt(x) + 2 * sqrt(coefs["asymptDisp"] * (coefs["extraPois"] + 
         1 + coefs["asymptDisp"] * x))) - (2/(sqrt(coefs["asymptDisp"]))) * 

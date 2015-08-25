@@ -16,7 +16,9 @@
 }
 \arguments{
   \item{object}{
-    An DEXSeqResults object.
+    A DEXSeqResults object. A DEXSeqDataSet object is also accepted, but
+    only with the possibility of plotting the normalized read counts for
+    each exon bin. 
   }
   \item{geneID}{
     Gene identifier to visualize.
