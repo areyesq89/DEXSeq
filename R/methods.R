@@ -220,4 +220,13 @@ findOverlaps.DEXSeqResults <- function( query, subject, maxgap = 0L, minoverlap 
 setMethod("findOverlaps", signature(query="DEXSeqResults", subject="GenomicRanges"),
           findOverlaps.DEXSeqResults)
 
-
+setMethod("[", "DEXSeqDataSet", function(x, i, j, ..., drop = FALSE) {
+  x <- callNextMethod()
+  colData(x) <- droplevels(colData(x))
+  oldBM <- x@modelFrameBM
+  oldBM <- oldBM[oldBM$sample %in% colData(x)$sample,]
+  oldBM <- droplevels(oldBM)
+  x@modelFrameBM <- oldBM
+  validObject(x)
+  x
+})

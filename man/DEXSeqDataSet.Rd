@@ -88,7 +88,7 @@
   \item{SE}{
     A \code{SummarizedExperiments} object, originated using the function
     \code{SummarizeOverlaps}. See examples for more details.
-  }  
+  }
 }
 
 \value{

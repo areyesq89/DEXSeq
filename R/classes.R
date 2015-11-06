@@ -110,6 +110,7 @@ setValidity( "DEXSeqDataSet", function( object ) {
     stopifnot(
         c("sample", "exon", "dispersion", "sizeFactor", "count")
         %in% colnames( object@modelFrameBM ) )
+    stopifnot( all(object@modelFrameBM$sample %in% colData(object)$sample))
     TRUE
 } )
 
@@ -120,7 +121,7 @@ setClass("DEXSeqResults",
 
 setValidity( "DEXSeqResults", function( object ){
     stopifnot( "sample" %in% colnames( object@sampleData ) )
-    stopifnot( colnames(object$countData) == as.character(object@sampleData$sample) )    
+    stopifnot( colnames(object$countData) == as.character(object@sampleData$sample) )
     TRUE
 })
 

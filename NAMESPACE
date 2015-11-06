@@ -27,7 +27,8 @@ exportMethods(
   counts,
   estimateSizeFactors,
   subsetByOverlaps,
-  findOverlaps
+  findOverlaps,
+  "["
 )
 
 export(
