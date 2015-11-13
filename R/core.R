@@ -113,36 +113,31 @@ estimateExonFoldChanges <- function( object,
        filter=rowMeans( featureCounts(object, normalized=TRUE) ))$padj )
     testablegenes <- unique(groupIDs(object)[notNAs])
     groups <- groupIDs(object)
-    features <- featureIDs(object)
-    exonCounts <- featureCounts( object )
     disps <- dispersions(object)
-    disps[is.na( disps )] <- 1e-8
+#    disps[is.na( disps )] <- 1e-8
     mf <- object@modelFrameBM
-    rowsPerSample <- split(seq_len(nrow(mf)), mf$sample)
+#    rowsPerSample <- split(seq_len(nrow(mf)), mf$sample)
     numsamples <- nrow( sampleAnnotation(object) )
     features <- featureIDs(object)
     countsAll <- featureCounts(object)
+    allExonIDs <- as.character( mf$exon )
     geteffects <- function(geneID){
-#        print( geneID )
-        rt <- groups %in% geneID
-        numexons <- sum(rt)
-        newMf <- mf[as.vector( sapply( split( seq_len(nrow(mf)), mf$sample ), "[", seq_len( numexons ) ) ),]
-        featuresInGene <- features[rt]
-        newMf$exon <- factor( rep( featuresInGene, numsamples ) )
+        print( geneID )
+        rt <- groups %in% geneID & notNAs
+        if( sum(rt) < 2 ){ return(NULL) }
         countsThis <- countsAll[rt,]
         rownames(countsThis) <- gsub("\\S+:", "", rownames(countsThis))
         dispsThis <- disps[rt]
         names(dispsThis) <- features[rt]
-        for( i in seq_len(nrow(newMf))){
-           newMf[i,"dispersion"] <- dispsThis[as.character(newMf[i,"exon"])]
-           newMf[i,"count"] <- countsThis[as.character(newMf[i,"exon"]), as.character(newMf[i,"sample"])]
-        }
-        newMf <- droplevels( newMf )
+        newMf <- mf[allExonIDs %in% features[rt],]
+        newMf$exon <- droplevels(newMf$exon)
+        newMf$dispersion <- dispsThis[match(newMf$exon, names(dispsThis))]
+        newMf$count <- as.vector( countsThis )
         coefficients <- fitAndArrangeCoefs( frm, balanceExons = TRUE, mf=newMf, maxRowsMF=maxRowsMF)
         if (is.null(coefficients)) {
             return(coefficients)
         }
-        ret <- t(getEffectsForPlotting(coefficients, averageOutExpression = TRUE, 
+        ret <- t( getEffectsForPlotting(coefficients, averageOutExpression = TRUE, 
             groupingVar = fitExpToVar))
         rownames(ret) <- paste(geneID, rownames(ret), sep = ":")
         return(ret)
