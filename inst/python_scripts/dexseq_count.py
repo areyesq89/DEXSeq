@@ -180,12 +180,11 @@ else:
 num_reads = 0
 
 if not is_PE:
-
    for a in reader( sam_file ):
-      if a.optional_field("NH") > 1:
-         continue
       if not a.aligned:
          counts[ '_notaligned' ] += 1
+         continue
+      if a.optional_field("NH") > 1:
          continue
       if a.aQual < minaqual:
          counts[ '_lowaqual' ] += 1

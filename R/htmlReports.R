@@ -61,7 +61,7 @@ DEXSeqHTML <- function(object, genes=NULL, path="DEXSeqReport", file="testForDEU
    hwrite(paste("\nformula0 = ", formulas[2], sep=""), p, heading=3)
    hwrite(paste("\nformula1 = ", formulas[1], sep=""), p, heading=3)
    hwrite('testForDEU result table', p, heading=2)
-   ptowrite <- file.path(path, "files/")
+   ptowrite <- paste0(path, "/files/")
    ######### prepare colors for table results
 	
    m2col <- colorRampPalette(c("#FF706B", "#FEE08B", "white"), space="rgb")(5)
