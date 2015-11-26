@@ -28,7 +28,9 @@ exportMethods(
   estimateSizeFactors,
   subsetByOverlaps,
   findOverlaps,
-  "["
+  "[",
+  "$<-",
+  "colData<-"
 )
 
 export(

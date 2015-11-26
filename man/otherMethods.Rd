@@ -3,12 +3,15 @@
 \alias{[,DEXSeqDataSet-method}
 \alias{[,DEXSeqDataSet,ANY-method}
 \alias{[,DEXSeqDataSet,ANY,ANY-method}
-\title{Subset DEXSeqDataSet object}
+\alias{colData<-,DEXSeqDataSet,DataFrame-method}
+\alias{$<-,DEXSeqDataSet-method}
+\title{Subset and replacements of DEXSeqDataSet slots}
 \description{
-  Subsets a DEXSeqDataSet object.
+  Subset and replacements of DEXSeqDataSet slots.
 }
 \usage{
     \S4method{[}{DEXSeqDataSet}(x, i, j, ..., drop=TRUE)
+    \S4method{$}{DEXSeqDataSet}(x, name) <- value
 }
 \arguments{
     \item{x}{
@@ -20,6 +23,9 @@
     \item{j}{
         Indices specifying elements to extract.
     }
+    \item{name}{ A symbol representing the name of a column of
+       \code{colData}. }
+    \item{value}{An object of a class specified in the S4 method signature.}
     \item{...}{
         Other arguments passed to lower functions
     }

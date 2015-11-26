@@ -122,7 +122,7 @@ estimateExonFoldChanges <- function( object,
     countsAll <- featureCounts(object)
     allExonIDs <- as.character( mf$exon )
     geteffects <- function(geneID){
-        print( geneID )
+#        print( geneID )
         rt <- groups %in% geneID & notNAs
         if( sum(rt) < 2 ){ return(NULL) }
         countsThis <- countsAll[rt,]

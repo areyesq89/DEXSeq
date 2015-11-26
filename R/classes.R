@@ -81,36 +81,41 @@ DEXSeqDataSet <- function( countData, sampleData, design= ~ sample + exon + cond
 
     dds <- DESeqDataSet( rse, design, ignoreRank=TRUE )
 
-    maxGene <- names(which.max(table(groupID)))
-    rows <- mcols(dds)$groupID %in%  maxGene
-    numExons <- sum( rows )
-
-    exonCol <-
-        rep(factor(featureID[rows]), nrow(sampleData))
-
-    modelFrame <- data.frame(
-        sample=rep( rownames(sampleData), each=numExons),
-        exon = exonCol )
-
-    varNames <- colnames( sampleData )
-    for( i in varNames ){
-        modelFrame[[i]] <- rep( sampleData[[i]], each=numExons )
-    }
-
-    modelFrame$dispersion <- NA
-    modelFrame$sizeFactor <- NA
-    modelFrame$count <- NA
+    modelFrame <- makeBigModelFrame(dds)
 
     dxd <- new( "DEXSeqDataSet", dds, modelFrameBM=modelFrame )
     return(dxd)
 }
 
+makeBigModelFrame <- function(object){
+    groupID <- rowRanges(object)$groupID
+    featureID <- mcols(object)$featureID
+    sampleData <- as.data.frame(colData(object)[colData(object)$exon == "this",])
+    numExonsPerGene <- table(groupID)
+    maxGene <- names(which.max(numExonsPerGene))
+    rows <- mcols(object)$groupID %in%  maxGene
+    numExons <- sum( rows )
+    exonCol <-
+        rep(factor(featureID[rows]), nrow(sampleData))
+    modelFrame <- data.frame(
+        sample=rep( sampleData$sample, each=numExons),
+        exon = exonCol )
+    varNames <- colnames(sampleData)[!colnames(sampleData) %in% c("sample", "exon")]
+    for( i in varNames ){
+        modelFrame[[i]] <- rep( sampleData[[i]], each=numExons )
+    }
+    modelFrame$dispersion <- NA
+    modelFrame$sizeFactor <- NA
+    modelFrame$count <- NA
+    modelFrame
+}
 
 setValidity( "DEXSeqDataSet", function( object ) {
     stopifnot(
         c("sample", "exon", "dispersion", "sizeFactor", "count")
         %in% colnames( object@modelFrameBM ) )
     stopifnot( all(object@modelFrameBM$sample %in% colData(object)$sample))
+    stopifnot( all( c("sample", "exon") %in% colnames(colData(object)) ) )
     TRUE
 } )
 

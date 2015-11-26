@@ -1,6 +1,9 @@
 DEXSeqHTML <- function(object, genes=NULL, path="DEXSeqReport", file="testForDEU.html", fitExpToVar="condition", FDR=0.1, color=NULL, color.samples=NULL, mart="", filter="", attributes="", extraCols=NULL, BPPARAM=MulticoreParam(workers=1) )
 {
    stopifnot( is( object, "DEXSeqResults" ) )
+   if(!fitExpToVar %in% colnames( object@modelFrameBM )){
+       stop(sprintf("The value of the parameter fitExpToVar, '%s', is not a variable from the annotation of the samples. Please specify a column name of the colData slot of the DEXSeqDataSet object.", fitExpToVar))
+   }
    ######## GET THE RESULT TABLE READY ##########
    genomicData <- as.data.frame( object$genomicData )
    results <- data.frame( object[, c( "groupID", "featureID", "exonBaseMean", "dispersion", "pvalue", "padj" )], stringsAsFactors=TRUE)

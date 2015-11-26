@@ -3,7 +3,9 @@
 plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCounts=FALSE, expression=TRUE, splicing=FALSE, displayTranscripts=FALSE, names=FALSE, legend=FALSE, color=NULL, color.samples=NULL, ...)
 {
    stopifnot(is( object, "DEXSeqResults") | is( object, "DEXSeqDataSet"))
-   
+   if ( !fitExpToVar %in% colnames( object@modelFrameBM ) ) {
+       stop(sprintf("The value of the parameter fitExpToVar,'%s', is not a column name of the 'colData' DataFrame from the DEXSeqDataSet object.", fitExpToVar))
+   }
    op <- sum(c(expression, splicing, norCounts))
    if(op == 0){
       stop("Please indicate what would you like to plot\n")}

@@ -221,12 +221,27 @@ setMethod("findOverlaps", signature(query="DEXSeqResults", subject="GenomicRange
           findOverlaps.DEXSeqResults)
 
 setMethod("[", "DEXSeqDataSet", function(x, i, j, ..., drop = FALSE) {
-  x <- callNextMethod()
-  colData(x) <- droplevels(colData(x))
-  oldBM <- x@modelFrameBM
-  oldBM <- oldBM[oldBM$sample %in% colData(x)$sample,]
-  oldBM <- droplevels(oldBM)
-  x@modelFrameBM <- oldBM
-  validObject(x)
-  x
+    x <- callNextMethod()
+    colData(x) <- droplevels(colData(x))
+    x@modelFrameBM <- makeBigModelFrame(x)
+    validObject(x)
+    x
+})
+
+setReplaceMethod("colData", c("DEXSeqDataSet", "DataFrame"),
+    function(x, ..., value)
+{
+    x <- callNextMethod()
+    x@modelFrameBM <- makeBigModelFrame(x)
+    validObject(x)
+    x
+})
+
+setReplaceMethod("$", "DEXSeqDataSet",
+    function(x, name, value)
+{
+    x <- callNextMethod()
+    x@modelFrameBM <- makeBigModelFrame(x)
+    validObject(x)
+    x
 })
