@@ -88,7 +88,7 @@ DEXSeqDataSet <- function( countData, sampleData, design= ~ sample + exon + cond
 }
 
 makeBigModelFrame <- function(object){
-    groupID <- rowRanges(object)$groupID
+    groupID <- mcols(object)$groupID
     featureID <- mcols(object)$featureID
     sampleData <- as.data.frame(colData(object)[colData(object)$exon == "this",])
     numExonsPerGene <- table(groupID)
