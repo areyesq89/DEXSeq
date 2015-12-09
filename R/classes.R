@@ -105,7 +105,9 @@ makeBigModelFrame <- function(object){
         modelFrame[[i]] <- rep( sampleData[[i]], each=numExons )
     }
     modelFrame$dispersion <- NA
-    modelFrame$sizeFactor <- NA
+    if( is.null(object$sizeFactor )){
+        modelFrame$sizeFactor <- NA
+    }
     modelFrame$count <- NA
     modelFrame
 }
