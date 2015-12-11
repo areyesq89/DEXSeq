@@ -12,10 +12,10 @@ rmDepCols <- function(m)
 #reducedModel <- ~ sample + exon
 vst <- function( x,  object ){
     if( is.null( attr(object@dispersionFunction, "fitType") ) ) {
-        warnings("Dispersion function not found, applying log2(x+ 1) instead of vst...\n")
+        warning("Dispersion function not found, applying log2(x+ 1) instead of vst...\n")
         return( log10(x+1) )
     }else if ( attr(object@dispersionFunction, "fitType") != "parametric" ){
-        warnings("Dispersion function not parametric, applying log2(x+ 1) instead of vst...\n")
+        warning("Dispersion function not parametric, applying log2(x+ 1) instead of vst...\n")
         return( log10(x+1) )
     }
   coefs <- attr(object@dispersionFunction, "coefficients")
