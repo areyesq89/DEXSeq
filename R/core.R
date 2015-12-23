@@ -129,10 +129,14 @@ estimateExonFoldChanges <- function( object,
         rownames(countsThis) <- gsub("\\S+:", "", rownames(countsThis))
         dispsThis <- disps[rt]
         names(dispsThis) <- features[rt]
-        newMf <- mf[allExonIDs %in% features[rt],]
-        newMf$exon <- droplevels(newMf$exon)
+        numexons <- sum(rt)
+                                        #        newMf <- mf[allExonIDs %in% features[rt],]
+        newMf <- mf[as.vector( sapply( split( seq_len(nrow(mf)), mf$sample ), "[", seq_len( numexons ) ) ),]
+        newMf$exon <- factor( rep( features[rt], numsamples ) )
+       # newMf$exon <- droplevels(newMf$exon)
         newMf$dispersion <- dispsThis[match(newMf$exon, names(dispsThis))]
         newMf$count <- as.vector( countsThis )
+        newMf <- droplevels(newMf)
         coefficients <- fitAndArrangeCoefs( frm, balanceExons = TRUE, mf=newMf, maxRowsMF=maxRowsMF)
         if (is.null(coefficients)) {
             return(coefficients)
