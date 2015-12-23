@@ -1,6 +1,7 @@
-
-
-plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCounts=FALSE, expression=TRUE, splicing=FALSE, displayTranscripts=FALSE, names=FALSE, legend=FALSE, color=NULL, color.samples=NULL, ...)
+plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
+                       norCounts=FALSE, expression=TRUE, splicing=FALSE,
+                       displayTranscripts=FALSE, names=FALSE, legend=FALSE,
+                       color=NULL, color.samples=NULL, ...)
 {
    stopifnot(is( object, "DEXSeqResults") | is( object, "DEXSeqDataSet"))
    if ( !fitExpToVar %in% colnames( object@modelFrameBM ) ) {
@@ -48,18 +49,18 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
 
    ################## DETERMINE THE LAYOUT OF THE PLOT DEPENDING OF THE OPTIONS THE USER PROVIDES ###########
    if( length( start(unlist(genomicData))) > 0 ){
-     sub <- data.frame(
-       start=start(genomicData[rt]),
-       end=end(genomicData[rt]),
-       chr=as.character( seqnames( genomicData[rt] ) ),
-       strand=as.character( strand( genomicData[rt] )  ) )
+      sub <- data.frame(
+         start=start(genomicData[rt]),
+         end=end(genomicData[rt]),
+         chr=as.character( seqnames( genomicData[rt] ) ),
+         strand=as.character( strand( genomicData[rt] )  ) )
      
       rel<-(data.frame(sub$start, sub$end))-min(sub$start)
       rel<-rel/max(rel[,2])
+      transcripts <- unlist( object$transcripts[rt] )
+      trans <- unique(transcripts)
      
-      if(displayTranscripts==TRUE & !is.null( unlist( object$transcripts[rt] ) ) ){
-         transcripts <- object$transcripts[rt]
-         trans <- Reduce(union, transcripts)
+      if( displayTranscripts & !is.null( transcripts )){
          if(length(trans) > 40){
             warning("This gene contains more than 40 transcripts annotated, only the first 40 will be plotted\n")
          }
@@ -80,7 +81,6 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
    }else if(op > 1){
       par(mfrow=c(op,1))
    }
-
    
    ####### DETERMINE COLORS, IF THE USER DOES NOT PROVIDE ONE PER SAMPLE THE COUNT WILL OBTAIN THEM CORRESPONDING TO THEIR DESIGN ####
    ##### determine colors if not provided by user ######
@@ -94,7 +94,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
               maxColorValue=255,
               alpha=175)
      }
-  }
+   }
    
    names(color) <- sort(levels(sampleData[[fitExpToVar]]))
 
@@ -116,8 +116,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
        mf <- droplevels( mf )
    }
 
-   if(expression){
-    
+   if(expression){ 
       es <-
           fitAndArrangeCoefs(
               frm=as.formula(paste("count ~", fitExpToVar,  "* exon")),
@@ -138,7 +137,6 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
                rango, textAxis="Expression",
                rt=rt, color=rep( color[colnames(coeff)], each=numexons),
                colorlines=colorlines, ...)
-   
    }
 
    if(splicing){
@@ -172,7 +170,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
       plot.new()
       segments(apply((rbind(rel[rango,2], rel[rango, 1])), 2, median), 0, apply(rbind(intervals[rango], intervals[rango+1]-((intervals[rango+1]-intervals[rango])*0.2)), 2, median), 1, col=colorlinesB)
       par(mar=c(1.5, 4, 0, 2))
-      drawGene(min(sub$start), max(sub$end), tr=sub, rango, exoncol=exoncol, names, trName="Gene model", cex=0.8)
+      drawGene(min(sub$start), max(sub$end), tr=sub, exoncol=exoncol, names, trName="Gene model", cex=0.8)
       if( length( unlist( object$transcripts[rt] ) ) > 0  ){
       ##### plot the transcripts #######
          if(displayTranscripts){
@@ -181,7 +179,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition", norCou
                tr <- 
                  as.data.frame( reduce( 
                    IRanges( sub$start[logicexons == 1], sub$end[logicexons==1] ) ) )[,c("start", "end")]
-               drawGene(min(sub$start), max(sub$end), tr=tr, rango, exoncol=NULL, names, trName=trans[i], cex=0.8)
+               drawGene(min(sub$start), max(sub$end), tr=tr, exoncol=NULL, names, trName=trans[i], cex=0.8)
             }
          }
       }
@@ -257,10 +255,11 @@ drawPlot <- function(matr, ylimn, ecs, intervals, rango, fitExpToVar, numexons, 
 #########################
 #FUNCTION TO WRITE THE GENE MODELS:
 #########################
-drawGene <- function(minx, maxx, tr, rango, exoncol=NULL, names, trName, ...)
+drawGene <- function(minx, maxx, tr, exoncol=NULL, names, trName, ...)
 {
    plot.new()
    plot.window(xlim=c(minx, maxx), ylim=c(0, 1))
+   rango <- seq_len(nrow(tr))
    rect(tr[rango,1], 0, tr[rango,2], 1, col=exoncol)
    zr <- apply(rbind(tr[rango, 2], tr[rango+1, 1]), 2, median)
    segments(tr[rango,2], 0.5, zr, 0.65)

@@ -57,6 +57,7 @@ DEXSeqDataSet <- function( countData, sampleData, design= ~ sample + exon + cond
     stopifnot( all( rownames(countData) %in% rownames(others) ) )
     others <- others[rownames(countData),]
     nCountData <- cbind( countData, others )
+    colnames(nCountData) <- NULL
 
     if( !is.null(featureRanges) ){
         stopifnot( class(featureRanges) %in% c("GRanges", "GRangesList"))
