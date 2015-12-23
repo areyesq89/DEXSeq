@@ -57,10 +57,10 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
      
       rel<-(data.frame(sub$start, sub$end))-min(sub$start)
       rel<-rel/max(rel[,2])
-      transcripts <- unlist( object$transcripts[rt] )
-      trans <- unique(transcripts)
-     
-      if( displayTranscripts & !is.null( transcripts )){
+      transcripts <- object$transcripts[rt]
+      trans <- unique(unlist(transcripts))
+      
+      if( displayTranscripts & !is.null( unlist(transcripts) )){
          if(length(trans) > 40){
             warning("This gene contains more than 40 transcripts annotated, only the first 40 will be plotted\n")
          }
