@@ -13,9 +13,10 @@ import(
   BiocParallel,
   geneplotter,
   genefilter,
-  RColorBrewer,
   SummarizedExperiment
 )
+importFrom(AnnotationDbi,select)
+importFrom(RColorBrewer,brewer.pal)
 
 exportClasses( 
   "DEXSeqDataSet",

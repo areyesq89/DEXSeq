@@ -12,7 +12,7 @@
   plotDEXSeq(object, geneID, FDR=0.1, fitExpToVar="condition", 
     norCounts=FALSE, expression=TRUE, splicing=FALSE, 
     displayTranscripts=FALSE, names=FALSE, legend=FALSE, 
-    color=NULL, color.samples=NULL, ...)
+    color=NULL, color.samples=NULL, transcriptDb=NULL, ...)
 }
 \arguments{
   \item{object}{
@@ -59,6 +59,11 @@
     A vector of colors for each of the samples. If NULL, the colors of each 
     sample will be assigned according to its corresponding level from "fitExpToVar". 
     This option is useful to visualize complex experimental designs.
+  }
+  \item{transcriptDb}{
+    A TxDb object, as defined in the GenomicFeatures package. This parameter
+    is optional. If present and if 'displayTranscripts=TRUE', the transcript
+    UTRs will be distinguished from the coding regions.
   }
   \item{...}{
     Further graphical parameters (see \code{par}).

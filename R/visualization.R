@@ -1,7 +1,7 @@
 plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
                        norCounts=FALSE, expression=TRUE, splicing=FALSE,
                        displayTranscripts=FALSE, names=FALSE, legend=FALSE,
-                       color=NULL, color.samples=NULL, ...)
+                       color=NULL, color.samples=NULL, transcriptDb=NULL, ...)
 {
    stopifnot(is( object, "DEXSeqResults") | is( object, "DEXSeqDataSet"))
    if ( !fitExpToVar %in% colnames( object@modelFrameBM ) ) {
@@ -9,8 +9,12 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
    }
    op <- sum(c(expression, splicing, norCounts))
    if(op == 0){
-      stop("Please indicate what would you like to plot\n")}
+       stop("Please indicate what would you like to plot\n")}
 
+   if(!is.null(transcriptDb)){
+       stopifnot( is( transcriptDb, "TxDb" ) )
+   }
+   
    if( is(object, "DEXSeqResults")){
        sampleData <- object@sampleData
        genomicData <- object$genomicData
@@ -173,15 +177,42 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
       drawGene(min(sub$start), max(sub$end), tr=sub, exoncol=exoncol, names, trName="Gene model", cex=0.8)
       if( length( unlist( object$transcripts[rt] ) ) > 0  ){
       ##### plot the transcripts #######
-         if(displayTranscripts){
-            for(i in seq_len(min(length(trans), 40))) {
-               logicexons <- sapply(transcripts, function(x){length(which(x==trans[i]))})
-               tr <- 
-                 as.data.frame( reduce( 
-                   IRanges( sub$start[logicexons == 1], sub$end[logicexons==1] ) ) )[,c("start", "end")]
-               drawGene(min(sub$start), max(sub$end), tr=tr, exoncol=NULL, names, trName=trans[i], cex=0.8)
-            }
-         }
+          if(displayTranscripts){
+              for(i in seq_len(min(length(trans), 40))) {
+                  logicexons <- sapply(transcripts, function(x){length(which(x==trans[i]))})
+                  tr <- reduce(IRanges( sub$start[logicexons == 1], sub$end[logicexons==1] ))
+                  if( is.null( transcriptDb ) ){
+                      tr <- as.data.frame(tr)[,c("start", "end")]
+                      drawGene(min(sub$start), max(sub$end), tr=tr, exoncol="black", names, trName=trans[i], cex=0.8)
+                  }else{
+                      codingRanges <- select( transcriptDb,
+                                                keys=trans[i],
+                                                columns=c("CDSSTART", "CDSEND"),
+                                             keytype="TXNAME")
+                      if( is.na( any( codingRanges$CDSSTART ) ) ){ ### in case is a non coding transcript
+                          tr <- as.data.frame(tr)[,c("start", "end")]
+                          drawGene(min(sub$start), max(sub$end), tr=tr, exoncol=NULL, names, trName=trans[i], cex=0.8, miny=.25, maxy=.75)
+                      }else{
+                          codingRanges <- IRanges(codingRanges$CDSSTART,
+                                                  codingRanges$CDSEND)
+                          utrRanges <- setdiff(tr, codingRanges)
+                          drawGene(min(sub$start), max(sub$end),
+                                   tr=as.data.frame(codingRanges)[,c("start", "end")],
+                                   exoncol="black", names, trName=trans[i], cex=0.8,
+                                   drawNames=FALSE, drawIntronLines=FALSE)
+                          drawGene(min(sub$start), max(sub$end),
+                                   tr=as.data.frame(utrRanges)[,c("start", "end")],
+                                   exoncol=NULL, names, trName=trans[i], cex=0.8,
+                                   drawNames=FALSE, drawIntronLines=FALSE, newPanel=FALSE,
+                                   miny=.25, maxy=.75)
+                          drawGene(min(sub$start), max(sub$end),
+                                   tr=as.data.frame(tr)[,c("start", "end")],
+                                   exoncol="black", names, trName=trans[i], cex=0.8,
+                                   newPanel=FALSE, drawExons=FALSE)
+                      }
+                  }
+              }
+          }
       }
       axis(1, at=round(seq(min(sub$start), max(sub$end), length.out=10)), labels=round(seq(min(sub$start), max(sub$end), length.out=10)), pos=0, lwd.ticks=0.2, padj=-0.7, ...)   ########## genome axis
    }
@@ -255,16 +286,23 @@ drawPlot <- function(matr, ylimn, ecs, intervals, rango, fitExpToVar, numexons, 
 #########################
 #FUNCTION TO WRITE THE GENE MODELS:
 #########################
-drawGene <- function(minx, maxx, tr, exoncol=NULL, names, trName, ...)
+drawGene <- function(minx, maxx, tr, exoncol=NULL, names, trName, newPanel=TRUE,
+                     drawIntronLines=TRUE, drawNames=TRUE, drawExons=TRUE, miny=0, maxy=1, ...)
 {
-   plot.new()
-   plot.window(xlim=c(minx, maxx), ylim=c(0, 1))
-   rango <- seq_len(nrow(tr))
-   rect(tr[rango,1], 0, tr[rango,2], 1, col=exoncol)
-   zr <- apply(rbind(tr[rango, 2], tr[rango+1, 1]), 2, median)
-   segments(tr[rango,2], 0.5, zr, 0.65)
-   segments(zr, 0.65, tr[rango+1,1], 0.5)
-   if(names){
-      mtext(trName, side=2, adj=0.5, padj=1, line=1, outer=FALSE, las=2, ...)
-   }
+    if( newPanel ){
+        plot.new()
+        plot.window(xlim=c(minx, maxx), ylim=c(0, 1))
+    }
+    rango <- seq_len(nrow(tr))
+    if( drawExons ){
+        rect(tr[rango,"start"], miny, tr[rango,"end"], maxy, col=exoncol)
+    }
+    if( drawIntronLines ){
+        zr <- apply(rbind(tr[rango, "end"], tr[rango+1, "start"]), 2, median)
+        segments(tr[rango,"end"], 0.5, zr, 0.65)
+        segments(zr, 0.65, tr[rango+1,"start"], 0.5)
+    }
+    if(names & drawNames){
+        mtext(trName, side=2, adj=0.5, padj=1, line=1, outer=FALSE, las=2, ...)
+    }
 }
