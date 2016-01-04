@@ -70,8 +70,8 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
           if( length(additionalAnnotation) == 0 ){
               additionalAnnotation <- NULL
           }
-          print(additionalAnnotation)
-          print( length(additionalAnnotation ) )
+#          print(additionalAnnotation)
+#          print( length(additionalAnnotation ) )
       }
      
       rel<-(data.frame(sub$start, sub$end))-min(sub$start)
