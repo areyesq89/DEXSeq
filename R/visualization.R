@@ -1,7 +1,8 @@
 plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
                        norCounts=FALSE, expression=TRUE, splicing=FALSE,
                        displayTranscripts=FALSE, names=FALSE, legend=FALSE,
-                       color=NULL, color.samples=NULL, transcriptDb=NULL, ...)
+                       color=NULL, color.samples=NULL, transcriptDb=NULL,
+                       additionalAnnotation=NULL, ...)
 {
    stopifnot(is( object, "DEXSeqResults") | is( object, "DEXSeqDataSet"))
    if ( !fitExpToVar %in% colnames( object@modelFrameBM ) ) {
@@ -13,6 +14,10 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
 
    if(!is.null(transcriptDb)){
        stopifnot( is( transcriptDb, "TxDb" ) )
+   }
+
+   if(!is.null(additionalAnnotation)){
+      stopifnot( is( additionalAnnotation, "GRangesList" ) )
    }
    
    if( is(object, "DEXSeqResults")){
@@ -49,27 +54,41 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
    colorlines[is.na(colorlines)] <- "#B3B3B360"
    colorlinesB <- ifelse(each<=FDR, "#9E109B", "#666666")  # slanted solid lines
    colorlinesB[is.na(colorlinesB)] <- "#666666"
-   
 
    ################## DETERMINE THE LAYOUT OF THE PLOT DEPENDING OF THE OPTIONS THE USER PROVIDES ###########
    if( length( start(unlist(genomicData))) > 0 ){
+       
       sub <- data.frame(
          start=start(genomicData[rt]),
          end=end(genomicData[rt]),
          chr=as.character( seqnames( genomicData[rt] ) ),
          strand=as.character( strand( genomicData[rt] )  ) )
+
+      if( !is.null( additionalAnnotation ) ){
+          additionalHits <- findOverlaps(additionalAnnotation, range( genomicData[rt]) )
+          additionalAnnotation <- additionalAnnotation[queryHits( additionalHits )]
+          if( length(additionalAnnotation) == 0 ){
+              additionalAnnotation <- NULL
+          }
+          print(additionalAnnotation)
+          print( length(additionalAnnotation ) )
+      }
      
       rel<-(data.frame(sub$start, sub$end))-min(sub$start)
       rel<-rel/max(rel[,2])
       transcripts <- object$transcripts[rt]
       trans <- unique(unlist(transcripts))
+      numberOfTrans <- length(trans) + length(additionalAnnotation)
       
-      if( displayTranscripts & !is.null( unlist(transcripts) )){
-         if(length(trans) > 40){
+      if( (displayTranscripts & !is.null( unlist(transcripts) ) ) | !is.null(additionalAnnotation) ){
+         if(numberOfTrans > 40){
             warning("This gene contains more than 40 transcripts annotated, only the first 40 will be plotted\n")
          }
-         mat <- seq_len(3+min(length(trans), 40)) ## max support from transcripts is 45, which seems to be the max for the layout supported by graphics
-         hei<-c(8, 1, 1.5, rep(1.5, min(length(trans), 40)))
+         if( !displayTranscripts ){
+             numberOfTrans <- numberOfTrans - length(trans)
+         }
+         mat <- seq_len(3+min(numberOfTrans, 40)) ## max support from transcripts is 40, which seems to be the max for the layout supported by graphics
+         hei<-c(8, 1, 1.5, rep(1.5, min(numberOfTrans, 40)))
       }else{
          mat<-1:3
          hei<-c(5, 1, 1.5)
@@ -176,6 +195,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
       par(mar=c(1.5, 4, 0, 2))
       drawGene(min(sub$start), max(sub$end), tr=sub, exoncol=exoncol, names, trName="Gene model", cex=0.8)
       if( length( unlist( object$transcripts[rt] ) ) > 0  ){
+          i <- 1
       ##### plot the transcripts #######
           if(displayTranscripts){
               for(i in seq_len(min(length(trans), 40))) {
@@ -211,6 +231,14 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
                                    newPanel=FALSE, drawExons=FALSE)
                       }
                   }
+              }
+          }
+          if(!is.null(additionalAnnotation)){
+              for( j in seq_along(additionalAnnotation) ){
+                  tr <- as.data.frame( additionalAnnotation[[j]] )[,c("start", "end")]
+                  drawGene(min(sub$start), max(sub$end), tr=tr, exoncol="darkred", names, trName=names(additionalAnnotation)[j], cex=0.8, introncol="darkred")
+                  i <- i + 1
+                  if( i > 40 ) break
               }
           }
       }
@@ -287,7 +315,7 @@ drawPlot <- function(matr, ylimn, ecs, intervals, rango, fitExpToVar, numexons, 
 #FUNCTION TO WRITE THE GENE MODELS:
 #########################
 drawGene <- function(minx, maxx, tr, exoncol=NULL, names, trName, newPanel=TRUE,
-                     drawIntronLines=TRUE, drawNames=TRUE, drawExons=TRUE, miny=0, maxy=1, ...)
+                     drawIntronLines=TRUE, drawNames=TRUE, drawExons=TRUE, miny=0, maxy=1, introncol="black", ...)
 {
     if( newPanel ){
         plot.new()
@@ -299,8 +327,8 @@ drawGene <- function(minx, maxx, tr, exoncol=NULL, names, trName, newPanel=TRUE,
     }
     if( drawIntronLines ){
         zr <- apply(rbind(tr[rango, "end"], tr[rango+1, "start"]), 2, median)
-        segments(tr[rango,"end"], 0.5, zr, 0.65)
-        segments(zr, 0.65, tr[rango+1,"start"], 0.5)
+        segments(tr[rango,"end"], 0.5, zr, 0.65, col=introncol)
+        segments(zr, 0.65, tr[rango+1,"start"], 0.5, col=introncol)
     }
     if(names & drawNames){
         mtext(trName, side=2, adj=0.5, padj=1, line=1, outer=FALSE, las=2, ...)

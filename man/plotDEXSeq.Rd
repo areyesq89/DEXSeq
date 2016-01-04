@@ -12,7 +12,8 @@
   plotDEXSeq(object, geneID, FDR=0.1, fitExpToVar="condition", 
     norCounts=FALSE, expression=TRUE, splicing=FALSE, 
     displayTranscripts=FALSE, names=FALSE, legend=FALSE, 
-    color=NULL, color.samples=NULL, transcriptDb=NULL, ...)
+    color=NULL, color.samples=NULL, transcriptDb=NULL,
+    additionalAnnotation=NULL, ...)
 }
 \arguments{
   \item{object}{
@@ -64,6 +65,12 @@
     A TxDb object, as defined in the GenomicFeatures package. This parameter
     is optional. If present and if 'displayTranscripts=TRUE', the transcript
     UTRs will be distinguished from the coding regions.
+  }
+  \item{additionalAnnotation}{
+    A GRangesList object specifying the genomic coordinates of
+    annotation features that should be plotted. This parameter is
+    useful, for example, when one wants to show protein domain
+    annotations.
   }
   \item{...}{
     Further graphical parameters (see \code{par}).
