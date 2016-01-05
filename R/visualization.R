@@ -220,11 +220,13 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
                                    tr=as.data.frame(codingRanges)[,c("start", "end")],
                                    exoncol="black", names, trName=trans[i], cex=0.8,
                                    drawNames=FALSE, drawIntronLines=FALSE)
-                          drawGene(min(sub$start), max(sub$end),
+                          if( length( utrRanges ) > 0 ){
+                              drawGene( min(sub$start), max(sub$end),
                                    tr=as.data.frame(utrRanges)[,c("start", "end")],
                                    exoncol=NULL, names, trName=trans[i], cex=0.8,
                                    drawNames=FALSE, drawIntronLines=FALSE, newPanel=FALSE,
                                    miny=.25, maxy=.75)
+                          }
                           drawGene(min(sub$start), max(sub$end),
                                    tr=as.data.frame(tr)[,c("start", "end")],
                                    exoncol="black", names, trName=trans[i], cex=0.8,
