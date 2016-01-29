@@ -114,15 +114,12 @@ estimateExonFoldChanges <- function( object,
     testablegenes <- unique(groupIDs(object)[notNAs])
     groups <- groupIDs(object)
     disps <- dispersions(object)
-#    disps[is.na( disps )] <- 1e-8
     mf <- object@modelFrameBM
-#    rowsPerSample <- split(seq_len(nrow(mf)), mf$sample)
     numsamples <- nrow( sampleAnnotation(object) )
     features <- featureIDs(object)
     countsAll <- featureCounts(object)
     allExonIDs <- as.character( mf$exon )
     geteffects <- function(geneID){
-#        print( geneID )
         rt <- groups %in% geneID & notNAs
         if( sum(rt) < 2 ){ return(NULL) }
         countsThis <- countsAll[rt,]
@@ -130,15 +127,15 @@ estimateExonFoldChanges <- function( object,
         dispsThis <- disps[rt]
         names(dispsThis) <- features[rt]
         numexons <- sum(rt)
-                                        #        newMf <- mf[allExonIDs %in% features[rt],]
         newMf <- mf[as.vector( sapply( split( seq_len(nrow(mf)), mf$sample ), "[", seq_len( numexons ) ) ),]
         newMf$exon <- factor( rep( features[rt], numsamples ) )
-       # newMf$exon <- droplevels(newMf$exon)
-        newMf$dispersion <- dispsThis[match(newMf$exon, names(dispsThis))]
-        newMf$count <- as.vector( countsThis )
+        for (i in seq_len(nrow(newMf))) {
+            newMf[i, "dispersion"] <- dispsThis[as.character(newMf[i, "exon"])]
+            newMf[i, "count"] <- countsThis[as.character(newMf[i, "exon"]), as.character(newMf[i, "sample"])]
+        }
         newMf <- droplevels(newMf)
         coefficients <- fitAndArrangeCoefs( frm, balanceExons = TRUE, mf=newMf, maxRowsMF=maxRowsMF)
-        if (is.null(coefficients)) {
+        if (is.null(coefficients)){
             return(coefficients)
         }
         ret <- t( getEffectsForPlotting(coefficients, averageOutExpression = TRUE, 
@@ -146,7 +143,6 @@ estimateExonFoldChanges <- function( object,
         rownames(ret) <- paste(geneID, rownames(ret), sep = ":")
         return(ret)
     }
-   
     alleffects <- bplapply( testablegenes, geteffects, BPPARAM=BPPARAM )
     alleffects <- do.call(rbind, alleffects)
     alleffects <- vst(exp(alleffects), object)
