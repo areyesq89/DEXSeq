@@ -78,6 +78,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
       rel<-rel/max(rel[,2])
       transcripts <- object$transcripts[rt]
       trans <- unique(unlist(transcripts))
+      trans <- trans[!is.na(trans)]
       numberOfTrans <- length(trans) + length(additionalAnnotation)
       
       if( (displayTranscripts & !is.null( unlist(transcripts) ) ) | !is.null(additionalAnnotation) ){
