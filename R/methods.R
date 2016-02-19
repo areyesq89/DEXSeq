@@ -18,7 +18,7 @@ setMethod("estimateSizeFactors", signature(object="DEXSeqDataSet"),
 
 estimateDispersions.DEXSeqDataSet <- 
   function( object, fitType=c("parametric","local","mean"),
-    maxit=100, niter=10, quiet=FALSE, formula=design(object), BPPARAM=MulticoreParam(workers=1))
+    maxit=100, niter=10, quiet=FALSE, formula=design(object), BPPARAM=SerialParam())
 {
   # Temporary hack for backward compatibility with "old" DEXSeqDataSet
   # objects. Remove once all serialized DEXSeqDataSet objects around have
@@ -51,12 +51,16 @@ estimateDispersions.DEXSeqDataSet <-
     model.matrix(formula, as.data.frame(colData(object))))
   
   splitObject <- bplapply( splitObject, 
-      function(x){
-        estimateDispersionsGeneEst(x, 
-          maxit=maxit, quiet=quiet, 
-          modelMatrix = modelMatrix, 
-          niter = niter)}, 
-    BPPARAM=BPPARAM )
+      function(x, ... ){
+          library(DEXSeq)
+          estimateDispersionsGeneEst(x, 
+              maxit=maxit, quiet=quiet, 
+              modelMatrix = modelMatrix, 
+              niter = niter)},
+                          maxit=maxit, quiet=quiet,
+                          modelMatrix=modelMatrix,
+                          niter=niter,
+                          BPPARAM=BPPARAM )
 
   mergeObject <- do.call( rbind, splitObject )
   matchedNames <- match( rownames(object), rownames(mergeObject))  
@@ -74,15 +78,19 @@ estimateDispersions.DEXSeqDataSet <-
   
   splitObject <- split( object, splitParts )
   
-  splitObject <- bplapply( splitObject, 
-      function(x){
-        estimateDispersionsMAP(x, 
-          maxit=maxit, 
-          quiet=quiet, 
-          modelMatrix=modelMatrix, 
-          dispPriorVar=dispPriorVar)
-      }, 
-    BPPARAM=BPPARAM )
+  splitObject <- bplapply( splitObject,
+      function(x, ... ){
+          library(DEXSeq)
+          estimateDispersionsMAP(x, 
+              maxit=maxit, 
+              quiet=quiet, 
+              modelMatrix=modelMatrix, 
+              dispPriorVar=dispPriorVar)
+          },
+                          maxit=maxit, quiet=quiet,
+                          modelMatrix=modelMatrix,
+                          dispPriorVar,
+                          BPPARAM=BPPARAM )
 
   mergeObject <- do.call( rbind, splitObject ) 
   matchedNames <- match( rownames(object), rownames(mergeObject) ) 
@@ -90,9 +98,7 @@ estimateDispersions.DEXSeqDataSet <-
   mcols(object)$baseMean <- unname( rowMeans( counts(object, normalized=TRUE) ) )
   mcols(object)$baseVar <- unname( rowVars( counts(object, normalized=TRUE) ) )
   mcols(object)$dispersion <- pmin( mcols(object)$dispersion, ncol(object) )
-
   object
-
 }
 
 setMethod( "estimateDispersions", signature(object="DEXSeqDataSet"),

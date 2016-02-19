@@ -5,7 +5,7 @@
 \title{Estimate the dispersions for a DEXSeqDataSet}
 \usage{
 
-\S4method{estimateDispersions}{DEXSeqDataSet}( object, fitType=c("parametric","local","mean"), maxit=100, niter=10, quiet=FALSE, formula=design(object), BPPARAM=MulticoreParam(workers=1))
+\S4method{estimateDispersions}{DEXSeqDataSet}( object, fitType=c("parametric","local","mean"), maxit=100, niter=10, quiet=FALSE, formula=design(object), BPPARAM=SerialParam())
 
 }
 \arguments{

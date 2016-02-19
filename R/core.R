@@ -65,9 +65,12 @@ testForDEU <-
   splitObject <- split( object, splitParts )
 
   splitObject <- bplapply( splitObject,
-    function(x){
-      x <- nbinomLRT( x, reduced = reducedModelMatrix, full=fullModelMatrix )
-    }, BPPARAM=BPPARAM )
+                          function(x, ... ){
+                              library(DEXSeq)
+                              nbinomLRT( x, reduced = reducedModelMatrix, full=fullModelMatrix )
+                          },
+                          reducedModelMatrix=reducedModelMatrix, fullModelMatrix=fullModelMatrix,
+                          BPPARAM=BPPARAM )
 
   mergeObject <- do.call(rbind, splitObject)
   matchedNames <- match( rownames(object), rownames(mergeObject))  
