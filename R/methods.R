@@ -52,7 +52,7 @@ estimateDispersions.DEXSeqDataSet <-
   
   splitObject <- bplapply( splitObject, 
       function(x, ... ){
-          library(DEXSeq)
+#          library(DEXSeq)
           estimateDispersionsGeneEst(x, 
               maxit=maxit, quiet=quiet, 
               modelMatrix = modelMatrix, 
@@ -80,7 +80,7 @@ estimateDispersions.DEXSeqDataSet <-
   
   splitObject <- bplapply( splitObject,
       function(x, ... ){
-          library(DEXSeq)
+#          library(DEXSeq)
           estimateDispersionsMAP(x, 
               maxit=maxit, 
               quiet=quiet, 

@@ -11,7 +11,7 @@
   testForDEU( object, 
      fullModel = design(object), 
      reducedModel = ~ sample + exon, 
-     BPPARAM=MulticoreParam(workers=1) )
+     BPPARAM=SerialParam() )
 
 }
 \arguments{

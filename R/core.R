@@ -30,7 +30,7 @@ testForDEU <-
   function(object,
            fullModel=design(object),
            reducedModel= ~ sample + exon,
-           BPPARAM=MulticoreParam(workers=1))
+           BPPARAM=SerialParam())
 {
   if (is.null(sizeFactors(object)) & is.null(normalizationFactors(object))) {
     stop("first call estimateSizeFactors or provide a normalizationFactor matrix")
@@ -66,7 +66,7 @@ testForDEU <-
 
   splitObject <- bplapply( splitObject,
                           function(x, ... ){
-                              library(DEXSeq)
+#                              library(DEXSeq)
                               nbinomLRT( x, reduced = reducedModelMatrix, full=fullModelMatrix )
                           },
                           reducedModelMatrix=reducedModelMatrix, fullModelMatrix=fullModelMatrix,
