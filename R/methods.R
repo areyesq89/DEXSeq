@@ -89,7 +89,7 @@ estimateDispersions.DEXSeqDataSet <-
           },
                           maxit=maxit, quiet=quiet,
                           modelMatrix=modelMatrix,
-                          dispPriorVar,
+                          dispPriorVar=dispPriorVar,
                           BPPARAM=BPPARAM )
 
   mergeObject <- do.call( rbind, splitObject ) 
