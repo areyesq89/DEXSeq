@@ -4,12 +4,21 @@
 \alias{DEXSeqResults-class}
 \title{DEXSeqResults object}
 \usage{
-  DEXSeqResults( object )
+  DEXSeqResults( object, independentFiltering=TRUE, filter)
 }
 \arguments{
-  \item{object}{
-    A \code{DEXSeqDataSet} object.
-  }
+    \item{object}{
+        A \code{DEXSeqDataSet} object.
+    }
+    \item{independentFiltering}{
+        Logical indicating whether independent filtering should be 
+    	applied automatically. 
+	}
+    \item{filter}{
+        A vector of filter statistics over which the independent
+        filtering will be optimized. The default is the normalized
+        exon means.
+	}						   
 }
 \value{
   A DEXSeqResults object.

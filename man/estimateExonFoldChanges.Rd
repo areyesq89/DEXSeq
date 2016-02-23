@@ -9,7 +9,8 @@
 
   estimateExonFoldChanges( object, 
      fitExpToVar = "condition", denominator = "",
-     BPPARAM=MulticoreParam(workers=1), maxRowsMF=3000)
+     BPPARAM=MulticoreParam(workers=1), maxRowsMF=3000,
+	 independentFiltering=TRUE, filter)
 
 }
 \arguments{
@@ -39,6 +40,15 @@
      of rows from the model frame (this will be number of samples x number
      of exons from a gene).  For the genes passing this threshold 
      the exon fold changes won't be calculated.
+  }
+  \item{independentFiltering}{
+     Logical indicating whether independent filtering should be 
+	 applied automatically. 
+  }
+  \item{filter}{
+     A vector of filter statistics over which the independent
+	 filtering will be optimized. The default is the normalized
+	 exon means.
   }
 }
 \details{
