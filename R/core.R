@@ -90,7 +90,7 @@ testForDEU <-
 estimateExonFoldChanges <- function( object,
                                     fitExpToVar = "condition",
                                     denominator = "",
-                                    BPPARAM=MulticoreParam(workers=1), 
+                                    BPPARAM=SerialParam(), 
                                     maxRowsMF=3000, independentFiltering=TRUE, filter)
 {
     stopifnot(is(object, "DEXSeqDataSet"))
@@ -131,31 +131,15 @@ estimateExonFoldChanges <- function( object,
     features <- featureIDs(object)
     countsAll <- featureCounts(object)
     allExonIDs <- as.character( mf$exon )
-    geteffects <- function(geneID){
-        rt <- groups %in% geneID & notNAs
-        if( sum(rt) < 2 ){ return(NULL) }
-        countsThis <- countsAll[rt,]
-        rownames(countsThis) <- gsub("\\S+:", "", rownames(countsThis))
-        dispsThis <- disps[rt]
-        names(dispsThis) <- features[rt]
-        numexons <- sum(rt)
-        newMf <- mf[as.vector( sapply( split( seq_len(nrow(mf)), mf$sample ), "[", seq_len( numexons ) ) ),]
-        newMf$exon <- factor( rep( features[rt], numsamples ) )
-        for (i in seq_len(nrow(newMf))) {
-            newMf[i, "dispersion"] <- dispsThis[as.character(newMf[i, "exon"])]
-            newMf[i, "count"] <- countsThis[as.character(newMf[i, "exon"]), as.character(newMf[i, "sample"])]
-        }
-        newMf <- droplevels(newMf)
-        coefficients <- fitAndArrangeCoefs( frm, balanceExons = TRUE, mf=newMf, maxRowsMF=maxRowsMF)
-        if (is.null(coefficients)){
-            return(coefficients)
-        }
-        ret <- t( getEffectsForPlotting(coefficients, averageOutExpression = TRUE, 
-            groupingVar = fitExpToVar))
-        rownames(ret) <- paste(geneID, rownames(ret), sep = ":")
-        return(ret)
-    }
-    alleffects <- bplapply( testablegenes, geteffects, BPPARAM=BPPARAM )
+    alleffects <- bplapply( testablegenes,
+                           getEffectsForGene,
+                           groups=groups, notNAs=notNAs,
+                           countsAll=countsAll, disps=disps,
+                           features=features, mf=mf, frm=frm,
+                           maxRowsMF=maxRowsMF,
+                           numsamples=numsamples,
+                           fitExpToVar=fitExpToVar,
+                           BPPARAM=BPPARAM )
     alleffects <- do.call(rbind, alleffects)
     alleffects <- vst(exp(alleffects), object)
     toadd <- matrix(NA, nrow = nrow(object), ncol = ncol(alleffects))
@@ -190,6 +174,31 @@ estimateExonFoldChanges <- function( object,
     allAdd <- cbind(toadd, toadd2)
     mcols(object) <- cbind(mcols(object), allAdd)
     object
+}
+
+getEffectsForGene <- function(geneID, groups, notNAs, countsAll, disps, features, mf, frm, maxRowsMF, numsamples, fitExpToVar){
+    rt <- groups %in% geneID & notNAs
+    if( sum(rt) < 2 ){ return(NULL) }
+    countsThis <- countsAll[rt,]
+    rownames(countsThis) <- gsub("\\S+:", "", rownames(countsThis))
+    dispsThis <- disps[rt]
+    names(dispsThis) <- features[rt]
+    numexons <- sum(rt)
+    newMf <- mf[as.vector( sapply( split( seq_len(nrow(mf)), mf$sample ), "[", seq_len( numexons ) ) ),]
+    newMf$exon <- factor( rep( features[rt], numsamples ) )
+    for (i in seq_len(nrow(newMf))) {
+       newMf[i, "dispersion"] <- dispsThis[as.character(newMf[i, "exon"])]
+       newMf[i, "count"] <- countsThis[as.character(newMf[i, "exon"]), as.character(newMf[i, "sample"])]
+    }
+    newMf <- droplevels(newMf)
+    coefficients <- fitAndArrangeCoefs( frm, balanceExons = TRUE, mf=newMf, maxRowsMF=maxRowsMF)
+    if (is.null(coefficients)){
+       return(coefficients)
+    }
+    ret <- t( getEffectsForPlotting(coefficients, averageOutExpression = TRUE, 
+        groupingVar = fitExpToVar))
+    rownames(ret) <- paste(geneID, rownames(ret), sep = ":")
+    return(ret)
 }
 
 

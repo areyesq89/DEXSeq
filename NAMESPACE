@@ -15,8 +15,18 @@ import(
   genefilter,
   SummarizedExperiment
 )
+
 importFrom(AnnotationDbi,select)
 importFrom(RColorBrewer,brewer.pal)
+importFrom(grDevices, colorRamp, colorRampPalette,
+           dev.off, rgb, svg)
+importFrom(graphics, abline, axis, hist,
+           layout, mtext, par, plot.new,
+           plot.window, rect, segments)
+importFrom(stats, as.formula,
+           coefficients, model.matrix,
+           runif, terms, weighted.mean)
+importFrom(utils, read.delim, read.table)
 
 exportClasses( 
   "DEXSeqDataSet",

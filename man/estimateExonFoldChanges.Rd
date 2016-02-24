@@ -9,7 +9,7 @@
 
   estimateExonFoldChanges( object, 
      fitExpToVar = "condition", denominator = "",
-     BPPARAM=MulticoreParam(workers=1), maxRowsMF=3000,
+     BPPARAM=SerialParam(), maxRowsMF=3000,
 	 independentFiltering=TRUE, filter)
 
 }
