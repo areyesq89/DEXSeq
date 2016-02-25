@@ -27,6 +27,9 @@ importFrom(stats, as.formula,
            coefficients, model.matrix,
            runif, terms, weighted.mean)
 importFrom(utils, read.delim, read.table)
+importFrom(stats, relevel)
+importFrom(S4Vectors, DataFrame, queryHits)
+
 
 exportClasses( 
   "DEXSeqDataSet",

@@ -66,7 +66,6 @@ testForDEU <-
 
   splitObject <- bplapply( splitObject,
                           function(x, ... ){
-#                              library(DEXSeq)
                               nbinomLRT( x, reduced = reducedModelMatrix, full=fullModelMatrix )
                           },
                           reducedModelMatrix=reducedModelMatrix, fullModelMatrix=fullModelMatrix,
@@ -91,7 +90,7 @@ estimateExonFoldChanges <- function( object,
                                     fitExpToVar = "condition",
                                     denominator = "",
                                     BPPARAM=SerialParam(), 
-                                    maxRowsMF=3000, independentFiltering=TRUE, filter)
+                                    maxRowsMF=2400, independentFiltering=TRUE, filter)
 {
     stopifnot(is(object, "DEXSeqDataSet"))
     # Temporary hack for backward compatibility with "old" DEXSeqDataSet
@@ -118,29 +117,56 @@ estimateExonFoldChanges <- function( object,
         }
         notNAs <- !is.na( results(object, filter=filter)$padj )
     }else{
- #       notNAs <- rowSums( featureCounts(object) ) > ncol(object)
         notNAs <- rep(TRUE, nrow(object))
     }
-    testablegenes <- unique(groupIDs(object)[notNAs])
     groups <- groupIDs(object)
     disps <- dispersions(object)
-#	disps <- pmin(disps, 1e-6)
     disps[is.na(disps)] <- 1e-6
     mf <- object@modelFrameBM
     numsamples <- nrow( sampleAnnotation(object) )
     features <- featureIDs(object)
     countsAll <- featureCounts(object)
     allExonIDs <- as.character( mf$exon )
-    alleffects <- bplapply( testablegenes,
-                           getEffectsForGene,
-                           groups=groups, notNAs=notNAs,
-                           countsAll=countsAll, disps=disps,
-                           features=features, mf=mf, frm=frm,
-                           maxRowsMF=maxRowsMF,
-                           numsamples=numsamples,
-                           fitExpToVar=fitExpToVar,
-                           BPPARAM=BPPARAM )
-    alleffects <- do.call(rbind, alleffects)
+    testablegenes <- groups[notNAs]
+
+    ###### separate genes with few exons from large exons
+    ###### and fit the different but equivalent models separately
+    ######
+    
+    numOfExonsLimitBM <- round(maxRowsMF/numsamples)
+    exonsPerGene <- table(testablegenes)
+    testablegenesBM <- names(exonsPerGene[exonsPerGene < numOfExonsLimitBM])
+    testablegenesSM <- names(exonsPerGene)[!names(exonsPerGene) %in% testablegenesBM]
+    if( length(testablegenesBM) > 0 ){
+       alleffectsBM <- bplapply( testablegenesBM,
+                              getEffectsForGeneBM,
+                              groups=groups, notNAs=notNAs,
+                              countsAll=countsAll, disps=disps,
+                              features=features, mf=mf, frm=frm,
+                              numsamples=numsamples,
+                              fitExpToVar=fitExpToVar,
+                              BPPARAM=BPPARAM )
+       alleffectsBM <- do.call(rbind, alleffectsBM)
+    }else{
+        alleffectsBM <- NULL
+    }
+
+    exonIndexes <- which( groups %in% testablegenesSM & notNAs )
+
+    if( length(exonIndexes) > 0 ){
+        countsAll <- counts( object )
+        mfSmall <- modelFrameSM(object)
+        alleffectsSM <- bplapply( exonIndexes, getEffectsForExonsSM,
+                                 frm=frm, countsAll=countsAll,
+                                 disps=disps, mfSmall=mfSmall,
+                                 fitExpToVar=fitExpToVar)    
+        names(alleffectsSM) <- rownames(object)[exonIndexes]
+        alleffectsSM <- t(simplify2array(alleffectsSM))
+    }else{
+        alleffectsSM <- NULL
+    }
+
+    alleffects <- rbind( alleffectsBM, alleffectsSM )
     alleffects <- vst(exp(alleffects), object)
     toadd <- matrix(NA, nrow = nrow(object), ncol = ncol(alleffects))
     rownames(toadd) <- rownames(object)
@@ -148,10 +174,8 @@ estimateExonFoldChanges <- function( object,
     toadd[rownames(alleffects), colnames(alleffects)] <- alleffects
     toadd <- DataFrame(toadd)
     mcols(toadd) <- DataFrame(
-                                        type=rep("DEXSeq results",
-                                          ncol(toadd)),
-                                        description=rep("exon usage coefficient",
-                                          ncol(toadd) ) )
+        type=rep("DEXSeq results",ncol(toadd)),
+        description=rep("exon usage coefficient",ncol(toadd) ) )
     toadd2 <- matrix(NA, nrow = nrow(object), ncol = ncol(alleffects) )
     if (denominator == "") {
         denominator <- as.character(sampleAnnotation(object)[[fitExpToVar]][1])
@@ -167,16 +191,25 @@ estimateExonFoldChanges <- function( object,
     toadd2[rownames(alleffects), colnames(alleffects)] <- alleffects
     toadd2 <- toadd2[,-denoCol, drop=FALSE]
     toadd2 <- DataFrame(toadd2)
-    mcols(toadd2) <- DataFrame(type=rep("DEXSeq results",
-                                          ncol(toadd2)),
-                                       description=rep("relative exon usage fold change",
-                                          ncol(toadd2) ) )
+    mcols(toadd2) <- DataFrame(
+        type=rep("DEXSeq results",ncol(toadd2)),
+        description=rep("relative exon usage fold change",ncol(toadd2) ) )
     allAdd <- cbind(toadd, toadd2)
     mcols(object) <- cbind(mcols(object), allAdd)
     object
 }
 
-getEffectsForGene <- function(geneID, groups, notNAs, countsAll, disps, features, mf, frm, maxRowsMF, numsamples, fitExpToVar){
+modelFrameSM <- function(object){
+    mfSmall <- as.data.frame( colData(object) )
+    mfSmall$exon <- relevel(mfSmall$exon, "others")
+    mfSmall$dispersion <- NA
+    mfSmall$count <- NA
+    mfSmall
+}
+
+getEffectsForGeneBM <- function(geneID, groups, notNAs, countsAll,
+                                disps, features, mf, frm, numsamples,
+                                fitExpToVar, averageOutExpression=TRUE){
     rt <- groups %in% geneID & notNAs
     if( sum(rt) < 2 ){ return(NULL) }
     countsThis <- countsAll[rt,]
@@ -191,16 +224,26 @@ getEffectsForGene <- function(geneID, groups, notNAs, countsAll, disps, features
        newMf[i, "count"] <- countsThis[as.character(newMf[i, "exon"]), as.character(newMf[i, "sample"])]
     }
     newMf <- droplevels(newMf)
-    coefficients <- fitAndArrangeCoefs( frm, balanceExons = TRUE, mf=newMf, maxRowsMF=maxRowsMF)
+    coefficients <- fitAndArrangeCoefs( frm, balanceExons = TRUE, mf=newMf)
     if (is.null(coefficients)){
        return(coefficients)
     }
-    ret <- t( getEffectsForPlotting(coefficients, averageOutExpression = TRUE, 
+    ret <- t( getEffectsForPlotting(coefficients, averageOutExpression = averageOutExpression, 
         groupingVar = fitExpToVar))
     rownames(ret) <- paste(geneID, rownames(ret), sep = ":")
     return(ret)
 }
 
+getEffectsForExonsSM <- function(index, frm, countsAll, disps,
+                                 mfSmall, averageOutExpression=TRUE,
+                                 fitExpToVar){
+    mfSmall$count <- countsAll[index,]
+    mfSmall$dispersion <- disps[index]
+    getEffectsForPlotting(
+        fitAndArrangeCoefs(frm, mf=mfSmall, balanceExons=TRUE),
+            averageOutExpression=averageOutExpression,
+            groupingVar=fitExpToVar)[,"this"]
+}
 
 DEXSeqResults <- function( object, independentFiltering=TRUE, filter){
   stopifnot( is(object, "DEXSeqDataSet"))

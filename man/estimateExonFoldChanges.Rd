@@ -9,7 +9,7 @@
 
   estimateExonFoldChanges( object, 
      fitExpToVar = "condition", denominator = "",
-     BPPARAM=SerialParam(), maxRowsMF=3000,
+     BPPARAM=SerialParam(), maxRowsMF=2400,
 	 independentFiltering=TRUE, filter)
 
 }
@@ -32,14 +32,18 @@
      See \code{?bplapply} for details.
   }
   \item{maxRowsMF}{
-     For the fold change estimation, the size of the model matrix 
+     For the exon fold change estimation, the size of the model matrix 
      for the fitted glm increases with the number of samples and 
      the number of exons for a specific gene (see the DEXSeq paper
-     for details). Since the glm fit for big models can be slow, 
+     for details). Since the glm fit for big models is very slow, 
      the maxRowsMF parameter allows to set a threshold on the number
-     of rows from the model frame (this will be number of samples x number
-     of exons from a gene).  For the genes passing this threshold 
-     the exon fold changes won't be calculated.
+     of rows from the model matrix (the number of rows of the model
+     matrix will be number of samples times number of exons of a
+     gene). For all genes passing this threshold, the exon fold
+     changes will be estimated by fitting a slightly different
+     but equivalent model that considers, for each exon, the
+     counts from the specific exon and the sum of the rest of exons
+     of the same gene.
   }
   \item{independentFiltering}{
      Logical indicating whether independent filtering should be 
