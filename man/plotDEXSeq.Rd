@@ -13,7 +13,7 @@
     norCounts=FALSE, expression=TRUE, splicing=FALSE, 
     displayTranscripts=FALSE, names=FALSE, legend=FALSE, 
     color=NULL, color.samples=NULL, transcriptDb=NULL,
-    additionalAnnotation=NULL, ...)
+    additionalAnnotation=NULL, maxRowsMF=2400, ...)
 }
 \arguments{
   \item{object}{
@@ -72,6 +72,10 @@
     useful, for example, when one wants to show protein domain
     annotations.
   }
+  \item{maxRowsMF}{
+    See \code{?estimateExonFoldChanges} for details.
+ }
+
   \item{...}{
     Further graphical parameters (see \code{par}).
   }

@@ -6,11 +6,10 @@
   (on log2 scale) between the different conditions.
 }
 \usage{
-
   estimateExonFoldChanges( object, 
      fitExpToVar = "condition", denominator = "",
      BPPARAM=SerialParam(), maxRowsMF=2400,
-	 independentFiltering=TRUE, filter)
+	 independentFiltering=FALSE, filter)
 
 }
 \arguments{
@@ -38,21 +37,23 @@
      for details). Since the glm fit for big models is very slow, 
      the maxRowsMF parameter allows to set a threshold on the number
      of rows from the model matrix (the number of rows of the model
-     matrix will be number of samples times number of exons of a
+     matrix will be number of samples times the number of exons of a
      gene). For all genes passing this threshold, the exon fold
      changes will be estimated by fitting a slightly different
-     but equivalent model that considers, for each exon, the
-     counts from the specific exon and the sum of the rest of exons
-     of the same gene.
+     but equivalent model. The formula remains the same, but instead
+     of fitting one model per gene that considers all its exons, it
+     considers, for each exon, the counts from the specific exon and
+     the sum of the rest of exons of the same gene.
   }
   \item{independentFiltering}{
-     Logical indicating whether independent filtering should be 
-	 applied automatically. 
+    Logical indicating whether independent filtering should be
+    applied automatically. For the exons that were discarded,
+    fold changes won't be estimated.
   }
   \item{filter}{
-     A vector of filter statistics over which the independent
-	 filtering will be optimized. The default is the normalized
-	 exon means.
+    A vector of filter statistics over which the independent
+    filtering will be optimized. The default is the normalized
+    exon means.
   }
 }
 \details{
@@ -63,9 +64,11 @@
   '~ sample + fitExpToVar * exon' is fitted.  
   The resulted coefficients are arranged and reformatted 
   in order to remove gene expression effects (absorbed by the
-  'sample' variable in the formula), leaving only exon 
+  'sample' term in the formula), leaving only exon 
   usage effects for each individual exon in each level of
-  'fitExpToVar'. These values are used by the function \code{plotDEXSeq}. 
+  'fitExpToVar'. These values are used by the function
+  \code{plotDEXSeq}. For specific details please check
+  the DEXSeq paper.
 }
 \examples{
   data(pasillaDEXSeqDataSet, package="pasilla")

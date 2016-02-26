@@ -2,7 +2,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
                        norCounts=FALSE, expression=TRUE, splicing=FALSE,
                        displayTranscripts=FALSE, names=FALSE, legend=FALSE,
                        color=NULL, color.samples=NULL, transcriptDb=NULL,
-                       additionalAnnotation=NULL, ...)
+                       additionalAnnotation=NULL, maxRowsMF=2400, ...)
 {
    stopifnot(is( object, "DEXSeqResults") | is( object, "DEXSeqDataSet"))
    if ( !fitExpToVar %in% colnames( object@modelFrameBM ) ) {
@@ -63,6 +63,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
          end=end(genomicData[rt]),
          chr=as.character( seqnames( genomicData[rt] ) ),
          strand=as.character( strand( genomicData[rt] )  ) )
+      rownames(sub) <- rownames(object)[rt]
 
       if( !is.null( additionalAnnotation ) ){
           additionalHits <- findOverlaps(additionalAnnotation, range( genomicData[rt]) )
@@ -123,36 +124,20 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
    names(color) <- sort(levels(sampleData[[fitExpToVar]]))
 
    if( expression | splicing ){
-       stopifnot(is( object, "DEXSeqResults"))
-       mf <- object@modelFrameBM
-       mf <- mf[as.vector( sapply( split( seq_len(nrow(mf)), mf$sample ), "[", seq_len( numexons ) ) ),]
-       featuresInGene <- object$featureID[rt]
-       mf$exon <- factor( rep( featuresInGene, nrow(sampleData) ) )
-       counts <- object$countData[rt,]
-       rownames(counts) <- gsub("\\S+:", "", rownames(counts))
-       dispersions <- object$dispersion[rt]
-       dispersions[is.na( dispersions )] <- 1e-8
-       names(dispersions) <- object$featureID[rt]
-       for( i in seq_len(nrow(mf))){
-          mf[i,"dispersion"] <- dispersions[as.character(mf[i,"exon"])]
-          mf[i,"count"] <- counts[as.character(mf[i,"exon"]), as.character(mf[i,"sample"])]
+       effects <- getEffectsForGene( geneID, object, maxRowsMF, fitExpToVar)
+       if(is.null(effects[["expression"]])){
+           warning(sprintf("glm fit failed for gene %s", geneID))
+           return()
        }
-       mf <- droplevels( mf )
+       if( !all( rownames(sub) %in% rownames(effects[["expression"]]) ) ){
+           warning(sprintf("glm fit failed for gene %s", geneID))
+           return()
+       }       
    }
 
    if(expression){ 
-      es <-
-          fitAndArrangeCoefs(
-              frm=as.formula(paste("count ~", fitExpToVar,  "* exon")),
-              balanceExons=TRUE,
-              mf=mf)
-      if(is.null(es)){
-          warning(sprintf("glm fit failed for gene %s", geneID))
-          return()
-      }
-      coeff <-
-          as.matrix( t(
-              getEffectsForPlotting(es, averageOutExpression=FALSE, groupingVar=fitExpToVar) )[featuresInGene,] )
+      coeff <- effects[["expression"]]
+      coeff <- coeff[rownames(sub),]
       coeff <- exp(coeff)
       ylimn <- c(0, max(coeff, na.rm=TRUE))
       coeff <- vst( coeff, object )
@@ -164,16 +149,14 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
    }
 
    if(splicing){
-      es <- fitAndArrangeCoefs( frm=as.formula(paste("count ~", fitExpToVar,  "* exon")), balanceExons=TRUE, mf=mf)
-      if(is.null(es)){
-          warning(sprintf("glm fit failed for gene %s", geneID))
-          return()
-      }
-      coeff <- as.matrix( t( getEffectsForPlotting(es, averageOutExpression=TRUE, groupingVar=fitExpToVar) )[featuresInGene,] )
+      coeff <- effects[["splicing"]]
+      coeff <- coeff[rownames(sub),]
       coeff <- exp(coeff)
       ylimn <- c(0, max(coeff, na.rm=TRUE))
       coeff <- vst( coeff, object )
-      drawPlot(matr=coeff, ylimn, object, intervals, rango, textAxis="Exon usage", rt=rt, color=rep( color[colnames(coeff)], each=numexons),
+      drawPlot(matr=coeff, ylimn, object, intervals,
+               rango, textAxis="Exon usage", rt=rt,
+               color=rep( color[colnames(coeff)], each=numexons),
                colorlines=colorlines, ...)
        
    }

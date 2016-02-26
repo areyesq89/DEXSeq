@@ -90,7 +90,7 @@ estimateExonFoldChanges <- function( object,
                                     fitExpToVar = "condition",
                                     denominator = "",
                                     BPPARAM=SerialParam(), 
-                                    maxRowsMF=2400, independentFiltering=TRUE, filter)
+                                    maxRowsMF=2400, independentFiltering=FALSE, filter)
 {
     stopifnot(is(object, "DEXSeqDataSet"))
     # Temporary hack for backward compatibility with "old" DEXSeqDataSet
@@ -240,9 +240,72 @@ getEffectsForExonsSM <- function(index, frm, countsAll, disps,
     mfSmall$count <- countsAll[index,]
     mfSmall$dispersion <- disps[index]
     getEffectsForPlotting(
-        fitAndArrangeCoefs(frm, mf=mfSmall, balanceExons=TRUE),
+        fitAndArrangeCoefs(frm, mf=mfSmall, balanceExons=FALSE),
             averageOutExpression=averageOutExpression,
             groupingVar=fitExpToVar)[,"this"]
+}
+
+getEffectsForGene <- function( geneID, object, maxRowsMF, fitExpToVar){
+    rt <- object$groupID %in% geneID
+    sampleData <- object@sampleData
+    numsamples <- nrow(object@sampleData)
+    numexons <- sum(rt)
+    featuresInGene <- object$featureID[rt]
+    dispersions <- object$dispersion[rt]
+    dispersions[is.na(dispersions)] <- 1e-08
+    frm <- as.formula(paste("count ~", fitExpToVar, "* exon"))
+    bigFlag <- numsamples*numexons < maxRowsMF
+    if( bigFlag ){
+        mf <- object@modelFrameBM
+        mf <- mf[as.vector(sapply(split(seq_len(nrow(mf)), mf$sample), 
+            "[", seq_len(numexons))), ]
+        mf$exon <- factor(rep(featuresInGene, nrow(sampleData)))
+        counts <- object$countData[rt,]
+        rownames(counts) <- gsub("\\S+:", "", rownames(counts))
+        names(dispersions) <- object$featureID[rt]
+        for (i in seq_len(nrow(mf))) {
+            mf[i, "dispersion"] <-
+                dispersions[as.character(mf[i, "exon"])]
+            mf[i, "count"] <-
+                counts[as.character(mf[i, "exon"]), as.character(mf[i, "sample"])]
+        }
+        mf <- droplevels(mf)
+        coefs <- fitAndArrangeCoefs(frm, balanceExons=TRUE, mf=mf)
+        if( is.null(coefs ) ){
+            return()
+        }
+        splicing <- t(getEffectsForPlotting( coefs, groupingVar=fitExpToVar, averageOutExpression=TRUE))
+        expression <- t(getEffectsForPlotting( coefs, groupingVar=fitExpToVar, averageOutExpression=FALSE))
+        rownames(splicing) <- sprintf("%s:%s", geneID, rownames(splicing))
+        rownames(expression) <- rownames(splicing)
+        list( expression=expression, splicing=splicing )
+    }else{
+        mf <- object@sampleData
+        mf <- rbind( data.frame(mf, exon="this"), data.frame(mf, exon="others"))
+        mf$exon <- relevel( mf$exon, "others" )
+        countsThis <- object$countData[rt,]
+        countsOthers <- sapply( rownames( countsThis ),
+                               function(x){
+                                   colSums(countsThis[!rownames(countsThis) %in% x,,drop=FALSE])
+                               })
+        countsOthers <- t(countsOthers)
+        stopifnot(all(rownames(countsThis) ==  rownames(countsOthers)))
+        effects <- lapply( seq_len(numexons), function(x){
+                   mf$count <- c( countsThis[x,], countsOthers[x,])
+                   mf$dispersion <- dispersions[x]
+                   coefs <- fitAndArrangeCoefs(frm, balanceExons=FALSE, mf=mf)
+                   if( is.null(coefs) ){
+                       return(NULL)
+                   }
+                   splicing <- getEffectsForPlotting( coefs, groupingVar=fitExpToVar, averageOutExpression=TRUE)[,"this"]
+                   expression <- getEffectsForPlotting( coefs, groupingVar=fitExpToVar, averageOutExpression=FALSE)[,"this"]
+                   list(splicing=splicing, expression=expression)
+               })
+        names(effects) <- rownames(object)[rt]
+        splicing <- t(sapply(effects, "[[", "splicing"))
+        expression <- t( sapply(effects, "[[", "expression" ))
+        list( expression=expression, splicing=splicing )
+    }
 }
 
 DEXSeqResults <- function( object, independentFiltering=TRUE, filter){
