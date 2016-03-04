@@ -119,10 +119,14 @@ estimateExonFoldChanges <- function( object,
     }else{
         notNAs <- rep(TRUE, nrow(object))
     }
+    notNAs <- notNAs & !mcols(object)$allZero
     groups <- groupIDs(object)
     disps <- dispersions(object)
     disps[is.na(disps)] <- 1e-6
     mf <- object@modelFrameBM
+    if( is( mf[[fitExpToVar]], "numeric" ) ){
+        maxRowsMF <- 0
+    }
     numsamples <- nrow( sampleAnnotation(object) )
     features <- featureIDs(object)
     countsAll <- featureCounts(object)
@@ -167,6 +171,7 @@ estimateExonFoldChanges <- function( object,
     }
 
     alleffects <- rbind( alleffectsBM, alleffectsSM )
+#    alleffects[
     alleffects <- vst(exp(alleffects), object)
     toadd <- matrix(NA, nrow = nrow(object), ncol = ncol(alleffects))
     rownames(toadd) <- rownames(object)
@@ -178,7 +183,8 @@ estimateExonFoldChanges <- function( object,
         description=rep("exon usage coefficient",ncol(toadd) ) )
     toadd2 <- matrix(NA, nrow = nrow(object), ncol = ncol(alleffects) )
     if (denominator == "") {
-        denominator <- as.character(sampleAnnotation(object)[[fitExpToVar]][1])
+#        denominator <- as.character(sampleAnnotation(object)[[fitExpToVar]][1])
+        denominator=colnames(alleffects)[1]
     }
     colRemove <- colnames(alleffects) %in% denominator
     stopifnot(any(colRemove))
@@ -199,114 +205,6 @@ estimateExonFoldChanges <- function( object,
     object
 }
 
-modelFrameSM <- function(object){
-    mfSmall <- as.data.frame( colData(object) )
-    mfSmall$exon <- relevel(mfSmall$exon, "others")
-    mfSmall$dispersion <- NA
-    mfSmall$count <- NA
-    mfSmall
-}
-
-getEffectsForGeneBM <- function(geneID, groups, notNAs, countsAll,
-                                disps, features, mf, frm, numsamples,
-                                fitExpToVar, averageOutExpression=TRUE){
-    rt <- groups %in% geneID & notNAs
-    if( sum(rt) < 2 ){ return(NULL) }
-    countsThis <- countsAll[rt,]
-    rownames(countsThis) <- gsub("\\S+:", "", rownames(countsThis))
-    dispsThis <- disps[rt]
-    names(dispsThis) <- features[rt]
-    numexons <- sum(rt)
-    newMf <- mf[as.vector( sapply( split( seq_len(nrow(mf)), mf$sample ), "[", seq_len( numexons ) ) ),]
-    newMf$exon <- factor( rep( features[rt], numsamples ) )
-    for (i in seq_len(nrow(newMf))) {
-       newMf[i, "dispersion"] <- dispsThis[as.character(newMf[i, "exon"])]
-       newMf[i, "count"] <- countsThis[as.character(newMf[i, "exon"]), as.character(newMf[i, "sample"])]
-    }
-    newMf <- droplevels(newMf)
-    coefficients <- fitAndArrangeCoefs( frm, balanceExons = TRUE, mf=newMf)
-    if (is.null(coefficients)){
-       return(coefficients)
-    }
-    ret <- t( getEffectsForPlotting(coefficients, averageOutExpression = averageOutExpression, 
-        groupingVar = fitExpToVar))
-    rownames(ret) <- paste(geneID, rownames(ret), sep = ":")
-    return(ret)
-}
-
-getEffectsForExonsSM <- function(index, frm, countsAll, disps,
-                                 mfSmall, averageOutExpression=TRUE,
-                                 fitExpToVar){
-    mfSmall$count <- countsAll[index,]
-    mfSmall$dispersion <- disps[index]
-    getEffectsForPlotting(
-        fitAndArrangeCoefs(frm, mf=mfSmall, balanceExons=FALSE),
-            averageOutExpression=averageOutExpression,
-            groupingVar=fitExpToVar)[,"this"]
-}
-
-getEffectsForGene <- function( geneID, object, maxRowsMF, fitExpToVar){
-    rt <- object$groupID %in% geneID
-    sampleData <- object@sampleData
-    numsamples <- nrow(object@sampleData)
-    numexons <- sum(rt)
-    featuresInGene <- object$featureID[rt]
-    dispersions <- object$dispersion[rt]
-    dispersions[is.na(dispersions)] <- 1e-08
-    frm <- as.formula(paste("count ~", fitExpToVar, "* exon"))
-    bigFlag <- numsamples*numexons < maxRowsMF
-    if( bigFlag ){
-        mf <- object@modelFrameBM
-        mf <- mf[as.vector(sapply(split(seq_len(nrow(mf)), mf$sample), 
-            "[", seq_len(numexons))), ]
-        mf$exon <- factor(rep(featuresInGene, nrow(sampleData)))
-        counts <- object$countData[rt,]
-        rownames(counts) <- gsub("\\S+:", "", rownames(counts))
-        names(dispersions) <- object$featureID[rt]
-        for (i in seq_len(nrow(mf))) {
-            mf[i, "dispersion"] <-
-                dispersions[as.character(mf[i, "exon"])]
-            mf[i, "count"] <-
-                counts[as.character(mf[i, "exon"]), as.character(mf[i, "sample"])]
-        }
-        mf <- droplevels(mf)
-        coefs <- fitAndArrangeCoefs(frm, balanceExons=TRUE, mf=mf)
-        if( is.null(coefs ) ){
-            return()
-        }
-        splicing <- t(getEffectsForPlotting( coefs, groupingVar=fitExpToVar, averageOutExpression=TRUE))
-        expression <- t(getEffectsForPlotting( coefs, groupingVar=fitExpToVar, averageOutExpression=FALSE))
-        rownames(splicing) <- sprintf("%s:%s", geneID, rownames(splicing))
-        rownames(expression) <- rownames(splicing)
-        list( expression=expression, splicing=splicing )
-    }else{
-        mf <- object@sampleData
-        mf <- rbind( data.frame(mf, exon="this"), data.frame(mf, exon="others"))
-        mf$exon <- relevel( mf$exon, "others" )
-        countsThis <- object$countData[rt,]
-        countsOthers <- sapply( rownames( countsThis ),
-                               function(x){
-                                   colSums(countsThis[!rownames(countsThis) %in% x,,drop=FALSE])
-                               })
-        countsOthers <- t(countsOthers)
-        stopifnot(all(rownames(countsThis) ==  rownames(countsOthers)))
-        effects <- lapply( seq_len(numexons), function(x){
-                   mf$count <- c( countsThis[x,], countsOthers[x,])
-                   mf$dispersion <- dispersions[x]
-                   coefs <- fitAndArrangeCoefs(frm, balanceExons=FALSE, mf=mf)
-                   if( is.null(coefs) ){
-                       return(NULL)
-                   }
-                   splicing <- getEffectsForPlotting( coefs, groupingVar=fitExpToVar, averageOutExpression=TRUE)[,"this"]
-                   expression <- getEffectsForPlotting( coefs, groupingVar=fitExpToVar, averageOutExpression=FALSE)[,"this"]
-                   list(splicing=splicing, expression=expression)
-               })
-        names(effects) <- rownames(object)[rt]
-        splicing <- t(sapply(effects, "[[", "splicing"))
-        expression <- t( sapply(effects, "[[", "expression" ))
-        list( expression=expression, splicing=splicing )
-    }
-}
 
 DEXSeqResults <- function( object, independentFiltering=TRUE, filter){
   stopifnot( is(object, "DEXSeqDataSet"))

@@ -40,6 +40,10 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
       return()}
    if(FDR>1|FDR<0){
       stop("FDR has to be a numeric value between 0 - 1")}
+#   if( is(sampleData[[fitExpToVar]], "numeric" ) & expression ){
+#       warning("'Expression' fit not supported for numeric predictors")
+#       return()
+#   }
 
    rango <- seq(along=rt)
    intervals<-(0:nrow(count))/nrow(count)
@@ -71,8 +75,6 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
           if( length(additionalAnnotation) == 0 ){
               additionalAnnotation <- NULL
           }
-#          print(additionalAnnotation)
-#          print( length(additionalAnnotation ) )
       }
      
       rel<-(data.frame(sub$start, sub$end))-min(sub$start)
@@ -120,22 +122,32 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
               alpha=175)
      }
    }
+
+#   if( is(sampleData[[fitExpToVar]], "numeric" ) & expression ){
+#       warning("'Expression' fit not supported for numeric predictors")
+#       return()
+#   }
+
    
-   names(color) <- sort(levels(sampleData[[fitExpToVar]]))
+   names(color) <- sort( unique( as.character( (sampleData[[fitExpToVar]]) ) ) )
+   
 
    if( expression | splicing ){
+       if( !is(object, "DEXSeqResults") ){
+           stop("To visualize beta estimates, please provide a DEXSeqResults object")
+       }
        effects <- getEffectsForGene( geneID, object, maxRowsMF, fitExpToVar)
-       if(is.null(effects[["expression"]])){
+       if(is.null(effects[["splicing"]])){
            warning(sprintf("glm fit failed for gene %s", geneID))
            return()
        }
-       if( !all( rownames(sub) %in% rownames(effects[["expression"]]) ) ){
+       if( !all( rownames(sub) %in% rownames(effects[["splicing"]]) ) ){
            warning(sprintf("glm fit failed for gene %s", geneID))
            return()
        }       
    }
 
-   if(expression){ 
+   if(expression){
       coeff <- effects[["expression"]]
       coeff <- coeff[rownames(sub),]
       coeff <- exp(coeff)
