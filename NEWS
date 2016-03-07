@@ -69,10 +69,18 @@ CHANGES IN VERSION 1.9.7
 SIGNIFICANT USER-VISIBLE CHANGES
 
 
-
     o Major code revisions: the ExonCountSet object was deprecated and substituted by the DEXSeqDataSet class,
       a subclass of the DESeqDataSet.
     o DEXseq now uses the DESeq2 package as internal engine and backbone for all analyses
     o All functions and methods for the ExonCountSet object were replaced by new functions
     o DEXSeq is now better integrated with other Bioconductor packages
     o We now use knitr to build the vignette
+
+
+CHANGES IN VERSION 1.17.28
+-------------------------
+
+
+    o Added support for estimating fold change rates with continous variables.
+    o Reduced RAM usage when parallelizing
+
