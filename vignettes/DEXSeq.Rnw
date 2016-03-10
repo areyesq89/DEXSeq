@@ -285,9 +285,9 @@ Open an \R session and type:
 <<loadDEXSeq>>=
 inDir = system.file("extdata", package="pasilla")
 countFiles = list.files(inDir, pattern="fb.txt$", full.names=TRUE)
-countFiles
+basename(countFiles)
 flattenedFile = list.files(inDir, pattern="gff$", full.names=TRUE)
-flattenedFile
+basename(flattenedFile)
 @
 %
 Now, we need to prepare a sample table. This table should contain one row for each library, and columns for
@@ -534,8 +534,8 @@ Note, however, that all observations from the same sample are also from the same
 \verb|condition| main effects are absorbed in the \verb|sample| main effects, because the \verb|sample| 
 factor is nested within the \verb|condition| factor. 
 
-The deviances of both fits are compared using a $\chi^2$-distribution, giving rise to a $p$ value.
-Based on that, we can decide whether the null model
+The deviances of both fits are compared using a $\chi^2$-distribution, providing a $p$ value.
+Based on this $p$-value, we can decide whether the null model
 (\ref{eq:nullmodel}) is sufficient to explain the data, or whether it
 may be rejected in favour of the alternative,
 model~(\ref{eq:altmodel}), which contains an interaction coefficient for \verb|condition:exon|. The latter
@@ -553,15 +553,25 @@ regarding the test.
 
 %
 
-For some uses, we may also want to estimate relative exon fold changes. To this end, 
+For some uses, we may also want to estimate relative exon usage fold changes. To this end, 
 we call \Rfunction{estimateExonFoldChanges}. Exon usage fold changes are 
-calculated by fitting for each gene, a GLM from the joint data of all its 
-exons.  The model frame can be found in the slot object@modelFrameBM of a 
-\Rclass{DEXSeqDataSet} object. The model "~ sample + fitExpToVar * exon" is fitted.  
-The resulted coefficients are arranged and reformatted in order to remove gene
-expression effects (absorbed by the 'sample' variable in the formula), leaving 
-only exon usage effects for each individual exon in each level of the parameter 
-"fitExpToVar".
+calculated based on the coefficients of a GLM fit that uses the formula
+
+\begin{equation}\label{eq:nullmodel}
+\mbox{\texttt{count \tttildemiddle\ condition + exon + condition:exon}.}
+\end{equation}
+
+Where ``condition'' can be replaced with any of the 
+column names of \Rfunction{colData} (see man pages for details). The resulting 
+coefficients allow the estimation of changes on the usage of exons 
+across different conditions. Note that the differences on exon usage 
+are distinguished from gene expression differences across conditions. 
+For example, consider the case of a gene that is differentially expressed 
+between conditions and has one exon that is differentially used between conditions. 
+From the coefficients of the fitted model, it is possible to distinguish 
+overall gene expression effects, that alter the counts from all the exons, from 
+exon usage effects, that are captured by the interaction term \verb|condition:exon|
+and that affect the each exon individually.
 
 %
 <<estFC,cache=TRUE>>=
@@ -764,7 +774,7 @@ DEXSeqHTML( dxr2, FDR=0.1, color=c("#FF000080", "#0000FF80") )
 @
 
 %--------------------------------------------------
-\section{Parallelization} \label{parallelization}
+\section{Parallelization and large number of samples} \label{parallelization}
 %--------------------------------------------------
 DEXSeq analyses can be computationally heavy, especially with data
 sets that comprise a large number of samples, or with genomes
@@ -772,7 +782,8 @@ containing genes with large numbers of exons.  While some steps
 of the analysis work on the whole data set, the computational load
 can be parallelized for some steps. We use the package \Rpackage{BiocParallel},  
 and implemented the \Rfunction{BPPARAM} parameter of the functions 
-\Rfunction{estimateDispersions},  \Rfunction{testForDEU} and \Rfunction{estimateExonFoldChanges}:
+\Rfunction{estimateDispersions},  \Rfunction{testForDEU} and 
+\Rfunction{estimateExonFoldChanges}:
 
 <<para1,cache=TRUE,results='hide', eval=FALSE>>=
 BPPARAM = MultiCoreParam(workers=4)
@@ -782,6 +793,14 @@ dxd = testForDEU( dxd, BPPARAM=BPPARAM)
 dxd = estimateExonFoldChanges(dxd, BPPARAM=BPPARAM)
 @
 
+For running analysis with a large number of samples (e.g. more than 100), 
+we recommend configuring \Rclass{BatchJobsParam} 
+classes to BPPARAM in order to distribute the calculations 
+across a computer cluster and significantly reduce running times.
+Users might also consider reducing the number of tests by 
+filtering for lowly expressed isoforms or exonic regions with 
+low counts. Appart from reducing running times, this filtering 
+step also leads to more accurate results~\cite{soneson2015}.
 
 %--------------------------------------------------
 \section{Perform a standard differential exon usage analysis in one command}
@@ -809,6 +828,42 @@ class(dxr)
 \begin{center}
 {\Large\sffamily\bfseries\color{BiocBlue} APPENDIX} \addcontentsline{toc}{section}{APPENDIX}
 \end{center}
+
+\section{Controlling FDR at the gene level}
+
+\Rpackage{DEXSeq} returns one $p$-value for each exonic region. Using these p-values, a rejection 
+threshold is established according to a multiple testing correction method. Consider a setting 
+with $M$ exonic regions, where  $p_{k}$ is the $p$-value for the $k$ exonic region and 
+$\theta \in {p_{1}, ..., p_{M}} \subset [0, 1]$ is a rejection threshold, leading to 
+$V=\left|\left\{k: p_k\le\theta\right\}\right|$ rejections (i.e. number of exonic regions being 
+DEU). The Benjamini-Hochberg method establishes that FDR is controlled at the level $q^{*}$ where
+
+\begin{equation}
+  q^* = \frac{M \theta}{\left|\left\{k: p_k\le\theta\right\}\right|}.  
+\end{equation}
+
+Note that $\theta$ in the denominator of this expression is the probability of rejecting a single 
+hypothesis if it is true. $q^*$ allows to estimate the number of exons that are differentially
+used at a specific FDR. 
+
+However, sometimes it is informative to know what is the FDR at the gene level, i.e. knowing the
+numer of genes with at least one differentially used exon while keeping control of FDR. For this 
+scenario, let $p_{i,l}$ be the $p$-value from the DEU test for exon $l$ in gene $i$, let $n_i$ 
+the number of exons in gene $i$, and $M$ the number of genes. A gene $i$ has at least one DEU 
+exon if $\exists l$ such that $p_{i,l}\le\theta$. Then, FDR is controlled at the level
+
+\begin{equation}
+  \frac{\sum_{i=1}^{M} 1-(1-\theta)^{n_i}}{\left|\left\{i: \exists l: p_{il}\le\theta\right\}\right|}.
+\end{equation}
+
+The implementation of the formula above is provided by the function \Rfunction{perGeneQValue}. For
+the \Rpackage{pasilla} example, the code below calculates the number of genes (at a FDR of 10\%) 
+with at least one differentially used exon.
+
+<<pergeneqval>>=
+numbOfGenes <- sum( perGeneQValue(dxr) < 0.1)
+numbOfGenes
+@ 
 
 %--------------------------------------------------
 \section{Preprocessing within R}\label{sec:creatingInR}
@@ -919,15 +974,6 @@ a model for an exon, we now sum up the counts from all the other exon and use on
 the individual counts in the model. Now, computation time per exon is independent of the number of other exons in the gene,
 which improved \Rpackage{DEXSeq}'s scalability. While the $p$ values returned by the two approaches are not
 exactly equal, the differences were very minor in the tests that we performed.
-
-For now, the function for our original approach (which we now call the ``big model'' or ``BM'' approach)
-are still included; all relevant functions, however, have been renamed to carry the suffix \verb|_BM|
-in their name. The new approach, which is now default and is used by the work flow described in this 
-vignette, has no special name (in some previous releases of \Rpackage{DEXSeq} which had included it 
-first on an experimental basis, it was termed the ``TRT'' approach).
-
-In the following, we describe the current default (``TRT'') approach in detail (though the exposition assumes
-the reader's familiarity with our paper).
 
 Deviating from the paper's notation, we now use the index $i$ to indicate a specific counting bin, 
 with $i$ running through all counting bins of all genes. The samples are indexed with $j$, as in the paper.

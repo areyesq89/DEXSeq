@@ -19,7 +19,7 @@
   \item{fitExpToVar}{
     A variable contained in \code{design(ecs)}. The expression 
     values will be fitted to this variable using the the formula 
-    " ~ sample + fitExpToVar * exon".
+    " ~ fitExpToVar * exon".
   }
   \item{denominator}{
     A value of the sample annotation (e.g. condition) to use as a denominator 
@@ -61,10 +61,9 @@
   a GLM from the joint data of all exons of the same gene.
   The model frame can be found in the slot object@modelFrameBM
   of a \code{DEXSeqDataSet} object.  The model 
-  '~ sample + fitExpToVar * exon' is fitted.  
+  '~ fitExpToVar * exon' is fitted.  
   The resulted coefficients are arranged and reformatted 
-  in order to remove gene expression effects (absorbed by the
-  'sample' term in the formula), leaving only exon 
+  in order to remove gene expression effects, leaving only exon 
   usage effects for each individual exon in each level of
   'fitExpToVar'. These values are used by the function
   \code{plotDEXSeq}. For specific details please check

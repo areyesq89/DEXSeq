@@ -1,8 +1,9 @@
 citEntry(entry="article",
          title = "Detecting differential usage of exons from RNA-seq data.",
-         author = personList( as.person("Simon Anders"),
-		                      as.person("Alejandro Reyes"),
-                              as.person("Wolfgang Huber")),
+         author = personList(
+             as.person("Simon Anders"),
+             as.person("Alejandro Reyes"),
+             as.person("Wolfgang Huber")),
          year = 2012,
          journal = "Genome Research",
          volume = 22,
@@ -13,3 +14,22 @@ citEntry(entry="article",
                "Detecting differential usage of exons from RNA-seq data.",
                "Genome Research (2012) 22:2008. doi:10.1101/gr.133744.111" ) )
 
+
+citEntry(entry="article",
+         title = "Drift and conservation of differential exon usage across tissues in primate species.",
+         author = personList(
+             as.person("Alejandro Reyes"),
+             as.person("Simon Anders"),
+             as.person("Robert Weatheritt"),
+             as.person("Toby Gibson"),
+             as.person("Lars Steinmetz"),
+             as.person("Wolfgang Huber")),
+         year = 2013,
+         journal = "PNAS",
+         volume = 110,
+         pages = {15377-15382},
+         doi = "10.1073/pnas.1307202110",
+         textVersion = 
+         paste("Alejandro Reyes, Simon Anders, et al (2013):", 
+               "Drift and conservation of differential exon usage across tissues in primate species.",
+               "PNAS (2013) 110:15277. doi:10.1073/pnas.1307202110" ) )
