@@ -8,8 +8,6 @@ DEXSeqHTML <- function(object, genes=NULL, path="DEXSeqReport", file="testForDEU
    genomicData <- as.data.frame( object$genomicData )
    results <- data.frame( object[, c( "groupID", "featureID", "exonBaseMean", "dispersion", "pvalue", "padj" )], stringsAsFactors=TRUE)
    results <- cbind( results, genomicData )
-   
-   results[,c("dispersion", "pvalue", "padj")] <- round(results[,c("dispersion", "pvalue", "padj")], 3)
 
    dexseqR <- mcols( object )$type == "DEXSeq results"
 
@@ -38,7 +36,8 @@ DEXSeqHTML <- function(object, genes=NULL, path="DEXSeqReport", file="testForDEU
    }else{
       gns <- genes
    }
-
+      
+   results[,c("dispersion", "pvalue", "padj")] <- round(results[,c("dispersion", "pvalue", "padj")], 3)
    
    if(!all(gns %in% object$groupID)){
       stop("The geneIDs provided are not in the ecs object")}
@@ -78,7 +77,7 @@ DEXSeqHTML <- function(object, genes=NULL, path="DEXSeqReport", file="testForDEU
    legend <- hwrite(c("<= 0.01", "<= 0.05", "<= 0.1", "<= 0.25", "> 0.25"), bgcolor=m2col)
 
   makePagesForGene <- function(gene){
-#      print( gene )
+      print( gene )
       back <- hwrite("back", link=file.path("..", file))
       nameforlinks <- sapply(strsplit(gene, "\\+"), "[[", 1)
       otherlinks <- hwrite(c("counts", "expression", "splicing", "transcripts", "results"), link=c(paste(nameforlinks, "counts.html", sep=""), paste(nameforlinks, "expression.html", sep=""), paste(nameforlinks, "splicing.html", sep=""), paste(nameforlinks, "transcripts.html", sep=""), paste(nameforlinks, "results.html", sep="")), table=FALSE)
