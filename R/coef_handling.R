@@ -99,37 +99,8 @@ balanceExons <- function( coefs, dispersions ) {
     } )
 }         
 
-fitAndArrangeCoefs <- function( frm = count ~ condition * exon, balanceExons = TRUE, mf, fitExpToVar)
-{
-   if( length(levels(mf$exon)) <= 1 )
-      return( NULL )
-   mm <- model.matrix( frm, mf )
-   fit <- try(
-              glmnb.fit(mm,
-                        mf$count,
-                        dispersion=mf$dispersion,
-                        offset=log(mf$sizeFactor),
-                        tol=0.1),
-              silent=TRUE)
-   
-   if( is( fit, "try-error" ) ){
-       return( NULL )
-   }
 
-   if( is( mf[[fitExpToVar]], "numeric" ) ){
-       coefs <- fit$coefficients
-       attributes(coefs)$fitType <- "numeric"
-   }else{
-       coefs <- arrangeCoefs( frm, mf, mm, fit )
-       if( balanceExons ) {
-           coefs <- balanceExons( coefs, tapply( mf$dispersion, mf$exon, `[`, 1 ) )
-       }
-       attributes(coefs)$fitType <- "factor"
-   }
-   coefs
-}
-
-fitAndArrangeCoefs2 <- function( frm = count ~ condition * exon, balanceExons = TRUE, mf, fitExpToVar, geneID)
+fitAndArrangeCoefs <- function( frm = count ~ condition * exon, balanceExons = TRUE, mf, fitExpToVar, geneID)
 {
    if( length(levels(mf$exon)) <= 1 )
       return( NULL )
@@ -245,7 +216,7 @@ getEffectsForGeneBM <- function(geneID, groups, notNAs, countsAll,
        newMf[i, "count"] <- countsThis[as.character(newMf[i, "exon"]), as.character(newMf[i, "sample"])]
     }
     newMf <- droplevels(newMf)
-    coefficients <- fitAndArrangeCoefs2( frm, balanceExons = TRUE, mf=newMf, fitExpToVar=fitExpToVar, geneID=geneID)
+    coefficients <- fitAndArrangeCoefs( frm, balanceExons = TRUE, mf=newMf, fitExpToVar=fitExpToVar, geneID=geneID)
     if (is.null(coefficients)){
        return(coefficients)
     }
@@ -261,7 +232,7 @@ getEffectsForExonsSM <- function(index, frm, countsAll, disps,
 {
     mfSmall$count <- countsAll[index,]
     mfSmall$dispersion <- disps[index]
-    coefs <- fitAndArrangeCoefs2( frm, mf=mfSmall, balanceExons=FALSE, fitExpToVar=fitExpToVar, rownames(countsAll)[index])
+    coefs <- fitAndArrangeCoefs( frm, mf=mfSmall, balanceExons=FALSE, fitExpToVar=fitExpToVar, rownames(countsAll)[index])
     if( is.null(coefs) ){
         return(NULL)
     }
@@ -299,7 +270,7 @@ getEffectsForGene <- function( geneID, object, maxRowsMF, fitExpToVar)
                 counts[as.character(mf[i, "exon"]), as.character(mf[i, "sample"])]
         }
         mf <- droplevels(mf)
-        coefs <- fitAndArrangeCoefs2(frm, balanceExons=TRUE, mf=mf, fitExpToVar=fitExpToVar, geneID)
+        coefs <- fitAndArrangeCoefs(frm, balanceExons=TRUE, mf=mf, fitExpToVar=fitExpToVar, geneID)
         if( is.null(coefs ) ){
             return(NULL)
         }
@@ -322,7 +293,7 @@ getEffectsForGene <- function( geneID, object, maxRowsMF, fitExpToVar)
         effects <- lapply( seq_len(numexons), function(x){
                    mf$count <- c( countsThis[x,], countsOthers[x,])
                    mf$dispersion <- dispersions[x]
-                   coefs <- fitAndArrangeCoefs2(frm, balanceExons=FALSE, mf=mf, fitExpToVar=fitExpToVar, geneID)
+                   coefs <- fitAndArrangeCoefs(frm, balanceExons=FALSE, mf=mf, fitExpToVar=fitExpToVar, geneID)
                    if( is.null(coefs) ){
                        return(NULL)
                    }
