@@ -129,6 +129,42 @@ fitAndArrangeCoefs <- function( frm = count ~ condition * exon, balanceExons = T
    coefs
 }
 
+fitAndArrangeCoefs2 <- function( frm = count ~ condition * exon, balanceExons = TRUE, mf, fitExpToVar, geneID)
+{
+   if( length(levels(mf$exon)) <= 1 )
+      return( NULL )
+   mm <- model.matrix( frm, mf )
+   fit <- tryCatch(
+       {
+           glmnb.fit(mm, mf$count, dispersion=mf$dispersion,
+                     offset=log(mf$sizeFactor), tol=0.01)
+       },
+       error=function(cond){
+           message( sprintf("Fit for gene/exon %s failed, coefficients for this gene won't show up.", geneID ) )
+           return(NULL)
+       },
+       warning=function(cond){
+           message( sprintf("Fit for gene/exon %s threw the next warning(s): %s", geneID, unique(cond$message) ) )
+       } )
+   
+   if( is.null( fit ) ){
+       return( NULL )
+   }
+
+   if( is( mf[[fitExpToVar]], "numeric" ) ){
+       coefs <- fit$coefficients
+       attributes(coefs)$fitType <- "numeric"
+   }else{
+       coefs <- arrangeCoefs( frm, mf, mm, fit )
+       if( balanceExons ) {
+           coefs <- balanceExons( coefs, tapply( mf$dispersion, mf$exon, `[`, 1 ) )
+       }
+       attributes(coefs)$fitType <- "factor"
+   }
+   coefs
+}
+
+
 getEffectsForPlotting <- function( coefs, groupingVar = "condition", averageOutExpression=FALSE, frm, mf )
 {
     if( attributes(coefs)$fitType == "factor" ){
@@ -209,7 +245,7 @@ getEffectsForGeneBM <- function(geneID, groups, notNAs, countsAll,
        newMf[i, "count"] <- countsThis[as.character(newMf[i, "exon"]), as.character(newMf[i, "sample"])]
     }
     newMf <- droplevels(newMf)
-    coefficients <- fitAndArrangeCoefs( frm, balanceExons = TRUE, mf=newMf, fitExpToVar=fitExpToVar)
+    coefficients <- fitAndArrangeCoefs2( frm, balanceExons = TRUE, mf=newMf, fitExpToVar=fitExpToVar, geneID=geneID)
     if (is.null(coefficients)){
        return(coefficients)
     }
@@ -225,10 +261,13 @@ getEffectsForExonsSM <- function(index, frm, countsAll, disps,
 {
     mfSmall$count <- countsAll[index,]
     mfSmall$dispersion <- disps[index]
-    getEffectsForPlotting(
-        fitAndArrangeCoefs( frm, mf=mfSmall, balanceExons=FALSE, fitExpToVar=fitExpToVar),
+    coefs <- fitAndArrangeCoefs2( frm, mf=mfSmall, balanceExons=FALSE, fitExpToVar=fitExpToVar, rownames(countsAll)[index])
+    if( is.null(coefs) ){
+        return(NULL)
+    }
+    getEffectsForPlotting(coefs,
             averageOutExpression=averageOutExpression,
-            groupingVar=fitExpToVar, frm, mfSmall )[,"this"]
+            groupingVar=fitExpToVar, frm, mfSmall)[,"this"]
 }
 
 getEffectsForGene <- function( geneID, object, maxRowsMF, fitExpToVar)
@@ -260,9 +299,9 @@ getEffectsForGene <- function( geneID, object, maxRowsMF, fitExpToVar)
                 counts[as.character(mf[i, "exon"]), as.character(mf[i, "sample"])]
         }
         mf <- droplevels(mf)
-        coefs <- fitAndArrangeCoefs(frm, balanceExons=TRUE, mf=mf, fitExpToVar=fitExpToVar)
+        coefs <- fitAndArrangeCoefs2(frm, balanceExons=TRUE, mf=mf, fitExpToVar=fitExpToVar, geneID)
         if( is.null(coefs ) ){
-            return()
+            return(NULL)
         }
         splicing <- t(getEffectsForPlotting( coefs, groupingVar=fitExpToVar, averageOutExpression=TRUE, frm=frm, mf=mf))
         expression <- t(getEffectsForPlotting( coefs, groupingVar=fitExpToVar, averageOutExpression=FALSE, frm=frm, mf=mf))
@@ -283,7 +322,7 @@ getEffectsForGene <- function( geneID, object, maxRowsMF, fitExpToVar)
         effects <- lapply( seq_len(numexons), function(x){
                    mf$count <- c( countsThis[x,], countsOthers[x,])
                    mf$dispersion <- dispersions[x]
-                   coefs <- fitAndArrangeCoefs(frm, balanceExons=FALSE, mf=mf, fitExpToVar=fitExpToVar)
+                   coefs <- fitAndArrangeCoefs2(frm, balanceExons=FALSE, mf=mf, fitExpToVar=fitExpToVar, geneID)
                    if( is.null(coefs) ){
                        return(NULL)
                    }

@@ -77,7 +77,7 @@ DEXSeqHTML <- function(object, genes=NULL, path="DEXSeqReport", file="testForDEU
    legend <- hwrite(c("<= 0.01", "<= 0.05", "<= 0.1", "<= 0.25", "> 0.25"), bgcolor=m2col)
 
   makePagesForGene <- function(gene){
-      print( gene )
+#      print( gene )
       back <- hwrite("back", link=file.path("..", file))
       nameforlinks <- sapply(strsplit(gene, "\\+"), "[[", 1)
       otherlinks <- hwrite(c("counts", "expression", "splicing", "transcripts", "results"), link=c(paste(nameforlinks, "counts.html", sep=""), paste(nameforlinks, "expression.html", sep=""), paste(nameforlinks, "splicing.html", sep=""), paste(nameforlinks, "transcripts.html", sep=""), paste(nameforlinks, "results.html", sep="")), table=FALSE)

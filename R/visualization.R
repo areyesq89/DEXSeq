@@ -138,11 +138,11 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
        }
        effects <- getEffectsForGene( geneID, object, maxRowsMF, fitExpToVar)
        if(is.null(effects[["splicing"]])){
-           warning(sprintf("glm fit failed for gene %s", geneID))
+#           warning(sprintf("glm fit failed for gene %s", geneID))
            return()
        }
        if( !all( rownames(sub) %in% rownames(effects[["splicing"]]) ) ){
-           warning(sprintf("glm fit failed for gene %s", geneID))
+#           warning(sprintf("glm fit failed for gene %s", geneID))
            return()
        }       
    }
