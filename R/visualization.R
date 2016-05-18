@@ -30,11 +30,11 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
   }else{
        sampleData <- sampleAnnotation( object )
        genomicData <- rowRanges( object )
-       mcols(genomicData) <- NULL
        rt <- which( mcols( object )$groupID == geneID )
+       transcripts <- genomicData$transcripts[rt]
+       mcols(genomicData) <- NULL
        count <- featureCounts( object, normalized=TRUE )[rt,]
        each <- rep(1, length.out=length(rt))
-       transcripts <- genomicData$transcripts[rt]
    }
    
    if(sum(count) == 0){
@@ -191,7 +191,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
       segments(apply((rbind(rel[rango,2], rel[rango, 1])), 2, median), 0, apply(rbind(intervals[rango], intervals[rango+1]-((intervals[rango+1]-intervals[rango])*0.2)), 2, median), 1, col=colorlinesB)
       par(mar=c(1.5, 4, 0, 2))
       drawGene(min(sub$start), max(sub$end), tr=sub, exoncol=exoncol, names, trName="Gene model", cex=0.8)
-      if( length( unlist( object$transcripts[rt] ) ) > 0  ){
+      if( length( unlist( transcripts ) ) > 0 ){
           i <- 1
       ##### plot the transcripts #######
           if(displayTranscripts){
