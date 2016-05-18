@@ -25,6 +25,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
        genomicData <- object$genomicData
        rt<-which(object$groupID==geneID)
        count <- t( t(object$countData[rt,])/sampleData$sizeFactor )
+       transcripts <- object$transcripts[rt]
        each <- object$padj[rt]
   }else{
        sampleData <- sampleAnnotation( object )
@@ -33,6 +34,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
        rt <- which( mcols( object )$groupID == geneID )
        count <- featureCounts( object, normalized=TRUE )[rt,]
        each <- rep(1, length.out=length(rt))
+       transcripts <- genomicData$transcripts[rt]
    }
    
    if(sum(count) == 0){
@@ -79,7 +81,6 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
      
       rel<-(data.frame(sub$start, sub$end))-min(sub$start)
       rel<-rel/max(rel[,2])
-      transcripts <- object$transcripts[rt]
       trans <- unique(unlist(transcripts))
       trans <- trans[!is.na(trans)]
       numberOfTrans <- length(trans) + length(additionalAnnotation)

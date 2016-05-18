@@ -3,6 +3,7 @@
 \alias{[,DEXSeqDataSet-method}
 \alias{[,DEXSeqDataSet,ANY-method}
 \alias{[,DEXSeqDataSet,ANY,ANY-method}
+\alias{[,DEXSeqDataSet,ANY,ANY,ANY-method}
 \alias{colData<-,DEXSeqDataSet,DataFrame-method}
 \alias{$<-,DEXSeqDataSet-method}
 \title{Subset and replacements of DEXSeqDataSet slots}
