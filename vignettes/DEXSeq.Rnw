@@ -139,10 +139,17 @@ protocol article on differential expression calling~\cite{DEProt}.
 
 \subsection{HTSeq} \label{HTSeq}
 
-The initial steps of a \emph{DEXSeq} analysis, described in the following two sections,
-is typically done outside R, by using two provided Python scripts. You do not need
-to know how to use Python; however you have to install the Python package \software{HTSeq},
-following the explanations given on the HTSeq web page:
+The initial steps of a \emph{DEXSeq} analysis
+are done using two Python scripts that we provide with \emph{DEXSeq}. Importantly, 
+these preprocessing steps can also be done using tools equivalent to these Python scripts, for
+example, using \emph{GenomicRanges} infrastructure (\ref{sec:creatingInR}) or \emph{featureCounts} 
+(\ref{sec:creatingFeatureCounts}). The following two steps describe how to do this steps
+using the Python scripts that we provide within \emph{DEXSeq}.
+
+You do not need to 
+know how to use Python; however you have to 
+install the Python package \software{HTSeq}, following the explanations given on the 
+HTSeq web page:
 
 \url{http://www-huber.embl.de/users/anders/HTSeq/doc/install.html}
 
@@ -163,7 +170,7 @@ The displayed path should contain the two files. If it does not, try to re-insta
 (as usual, with \Rfunction{biocLite}).
 
 An alternative work flow, which replaces the two Python-based steps with R=based code, is also available
-and is demonstrated in the vignette of the \Rpackage{parathyroidSE} package~\cite{parathyroidSEVignette}. 
+and is demonstrated in the vignette of the \Rpackage{parathyroidSE} package~\cite{parathyroidSEVignette}.
 
 
 \subsection{Preparing the annotation} \label{prepAnno}
@@ -913,8 +920,7 @@ SE = summarizeOverlaps( exonicParts, bamlst, mode="Union",
 We can now call the function \Rfunction{DEXSeqDataSetFromSE}
 to build an \Robject{DEXSeqDataSet} object. We modify the \Rfunction{colData}
 slot in order to specify the sample annotation, indicating that the first two BAM files form
-one experimental condition and the third one the other. Then
-we create our \Robject{DEXSeqDataSet} object.
+one experimental condition. Then we create our \Robject{DEXSeqDataSet} object.
 
 %     
 <<buildExonCountSet3,cache=TRUE, eval=FALSE>>=
@@ -922,7 +928,19 @@ colData(SE)$condition = c("A", "A", "B")
 DEXSeqDataSetFromSE( SE, design= ~ sample + exon + condition:exon )
 @
 
-\subsection{Further accessors}
+%--------------------------------------------------
+\section{Preprocessing using featureCounts}\label{sec:creatingFeatureCounts}
+%--------------------------------------------------
+
+As an alternative to \emph{HTSeq}, one could use \emph{featureCounts} to count
+the number of reads overlapping with each exonic region. The output files from 
+\emph{featureCounts} can then be used as input to DEXSeq. In this \emph{Github} 
+repository (\url{https://github.com/vivekbhr/Subread_to_DEXSeq}), Vivek Bhardwaj 
+provides scripts and documentation that integrate \emph{featureCounts} with \Rpackage{DEXSeq}. 
+He also provides a function to import the count files into R and generate a \Robject{DEXSeqDataSet}
+object. 
+
+\section{Further accessors}
 
 The function \Rfunction{geneIDs} returns the gene ID column of the feature data as a character
 vector, and the function \Rfunction{exonIDs} return the exon ID column as a \Rclass{factor}.
@@ -934,7 +952,7 @@ head( exonIDs(dxd) )
 %
 These functions are useful for subsetting an \Rclass{DEXSeqDataSet} object.
 
-\subsection{Overlap operations}
+\section{Overlap operations}
 
 The methods \Rfunction{subsetByOverlaps} and \Rfunction{findOverlaps} have
 been implemented for the DEXSeqResults object, the \Rfunction{query} argument 
