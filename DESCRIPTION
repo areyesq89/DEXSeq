@@ -1,5 +1,5 @@
 Package: DEXSeq
-Version: 1.19.6
+Version: 1.19.7
 Title: Inference of differential exon usage in RNA-Seq
 Author: Simon Anders <sanders@fs.tum.de> and Alejandro Reyes
         <alejandro.reyes@embl.de>
@@ -21,6 +21,6 @@ Description: The package is focused on finding differential exon usage
         visualization and exploration of the results.
 License: GPL (>= 3)
 URL:
-biocViews: Sequencing, RNASeq, DifferentialExpression
+biocViews: Sequencing, RNASeq, DifferentialExpression, AlternativeSplicing, DifferentialSplicing, GeneExpression, Visualization
 Packaged: 2014-03-21 08:48:43 UTC; alejandro
 VignetteBuilder: knitr
