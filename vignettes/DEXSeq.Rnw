@@ -591,7 +591,7 @@ can be found in the metadata columns.
 mcols(dxr1)$description
 @
 
-From this object, we can ask how many genes are significant with a false
+From this object, we can ask how many exonic regions are significant with a false
 discovery rate of 10\%:
 
 %

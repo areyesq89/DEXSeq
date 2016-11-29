@@ -78,8 +78,9 @@
   }
   \item{transcripts}{
     Optional. A \code{list} of the same length as the number of
-    columns of countData. Each element of the list should contain
-    the transcript identifiers of the 
+    rows in countData. Each element of the list should contain
+    a character vector of transcript identifiers indicating the
+    transcript identifiers overlapping with the exonic regions.
   }
   \item{flattenedfile}{
     A character vector containing the path to the flattened annotation 
