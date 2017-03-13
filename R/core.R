@@ -172,11 +172,11 @@ estimateExonFoldChanges <- function( object,
 
     alleffects <- rbind( alleffectsBM, alleffectsSM )
 #    alleffects[
-    alleffects <- vst(exp(alleffects), object)
+    alleffectsVst <- vst(exp(alleffects), object)
     toadd <- matrix(NA, nrow = nrow(object), ncol = ncol(alleffects))
     rownames(toadd) <- rownames(object)
     colnames(toadd) <- colnames(alleffects)
-    toadd[rownames(alleffects), colnames(alleffects)] <- alleffects
+    toadd[rownames(alleffects), colnames(alleffects)] <- alleffectsVst
     toadd <- DataFrame(toadd)
     mcols(toadd) <- DataFrame(
         type=rep("DEXSeq results",ncol(toadd)),
@@ -189,7 +189,8 @@ estimateExonFoldChanges <- function( object,
     colRemove <- colnames(alleffects) %in% denominator
     stopifnot(any(colRemove))
     denoCol <- which(colnames(alleffects) == denominator)
-    alleffects <- log2(alleffects/alleffects[, denoCol])
+    alleffects <- alleffects / log(2)
+    alleffects <- alleffects - alleffects[, denoCol]
     colnames(alleffects) <- sprintf("log2fold_%s_%s", colnames(alleffects), 
             denominator)
     colnames(toadd2) <- colnames(alleffects)
