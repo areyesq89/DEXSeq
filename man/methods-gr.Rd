@@ -12,20 +12,20 @@
 }
 \usage{
 
-  \S4method{subsetByOverlaps}{DEXSeqResults,GenomicRanges}( query, subject, maxgap = 0L, 
-    minoverlap = 1L, type = c("any", "start", "end", "within", "equal"),
+  \S4method{subsetByOverlaps}{DEXSeqResults,GenomicRanges}( x, ranges, maxgap = -1L, 
+    minoverlap = 0L, type = c("any", "start", "end", "within", "equal"),
     ignore.strand = FALSE )
 
-  \S4method{findOverlaps}{DEXSeqResults,GenomicRanges}( query, subject, maxgap = 0L, 
-    minoverlap = 1L, type = c("any", "start", "end", "within", "equal"),
+  \S4method{findOverlaps}{DEXSeqResults,GenomicRanges}( query, subject, maxgap = -1L, 
+    minoverlap = 0L, type = c("any", "start", "end", "within", "equal"),
     ignore.strand = FALSE )
 
 }
 \arguments{
-  \item{query}{
+  \item{query, x}{
      Either a \code{DEXSeqResults} object.
   }
-  \item{subject}{
+  \item{subject, ranges}{
       A GRanges or GRangesList object.
   }
   \item{maxgap, minoverlap, type}{
@@ -48,7 +48,7 @@
 
   interestingRegion = GRanges("chr2L", IRanges(start=3872658, end=3875302))
 
-  subsetByOverlaps( query=dxr, subject=interestingRegion )
+  subsetByOverlaps( x=dxr, ranges=interestingRegion )
   findOverlaps( query=dxr, subject=interestingRegion )
 
 }

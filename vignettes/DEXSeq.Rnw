@@ -962,7 +962,7 @@ must be a \Rclass{DEXSeqResults} object.
 <<grmethods>>=
 interestingRegion = GRanges( "chr2L", 
    IRanges(start=3872658, end=3875302) )
-subsetByOverlaps( query=dxr, subject=interestingRegion )
+subsetByOverlaps( x=dxr, ranges=interestingRegion )
 findOverlaps( query=dxr, subject=interestingRegion )
 @
 %

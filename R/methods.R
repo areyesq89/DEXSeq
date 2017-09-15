@@ -11,12 +11,12 @@ estimateSizeFactors.DEXSeqDataSet <- function(object, locfunc=median, geoMeans) 
   object@modelFrameBM$sizeFactor <- rep(normFactors, each=maxExons)
   object
 }
-  
+
 setMethod("estimateSizeFactors", signature(object="DEXSeqDataSet"),
           estimateSizeFactors.DEXSeqDataSet)
 
 
-estimateDispersions.DEXSeqDataSet <- 
+estimateDispersions.DEXSeqDataSet <-
   function( object, fitType=c("parametric","local","mean"),
     maxit=100, niter=10, quiet=FALSE, formula=design(object), BPPARAM=SerialParam())
 {
@@ -43,19 +43,19 @@ estimateDispersions.DEXSeqDataSet <-
   }
 
   splitParts <- sort(
-    rep(seq_len(BPPARAM$workers), 
+    rep(seq_len(BPPARAM$workers),
     length.out=nrow(object) ) )
   splitObject <- split( object, splitParts )
 
   modelMatrix <- rmDepCols(
     model.matrix(formula, as.data.frame(colData(object))))
-  
-  splitObject <- bplapply( splitObject, 
+
+  splitObject <- bplapply( splitObject,
       function(x, ... ){
 #          library(DEXSeq)
-          estimateDispersionsGeneEst(x, 
-              maxit=maxit, quiet=quiet, 
-              modelMatrix = modelMatrix, 
+          estimateDispersionsGeneEst(x,
+              maxit=maxit, quiet=quiet,
+              modelMatrix = modelMatrix,
               niter = niter)},
                           maxit=maxit, quiet=quiet,
                           modelMatrix=modelMatrix,
@@ -63,7 +63,7 @@ estimateDispersions.DEXSeqDataSet <-
                           BPPARAM=BPPARAM )
 
   mergeObject <- do.call( rbind, splitObject )
-  matchedNames <- match( rownames(object), rownames(mergeObject))  
+  matchedNames <- match( rownames(object), rownames(mergeObject))
   mcols(object) <- mcols( mergeObject )[matchedNames,]
   assays(object) <- assays(mergeObject[matchedNames,])
 
@@ -75,16 +75,16 @@ estimateDispersions.DEXSeqDataSet <-
   object <- estimateDispersionsFit(object, fitType=fitType, quiet=quiet)
 
   dispPriorVar <- estimateDispersionsPriorVar(object, modelMatrix=modelMatrix)
-  
+
   splitObject <- split( object, splitParts )
-  
+
   splitObject <- bplapply( splitObject,
       function(x, ... ){
 #          library(DEXSeq)
-          estimateDispersionsMAP(x, 
-              maxit=maxit, 
-              quiet=quiet, 
-              modelMatrix=modelMatrix, 
+          estimateDispersionsMAP(x,
+              maxit=maxit,
+              quiet=quiet,
+              modelMatrix=modelMatrix,
               dispPriorVar=dispPriorVar)
           },
                           maxit=maxit, quiet=quiet,
@@ -92,8 +92,8 @@ estimateDispersions.DEXSeqDataSet <-
                           dispPriorVar=dispPriorVar,
                           BPPARAM=BPPARAM )
 
-  mergeObject <- do.call( rbind, splitObject ) 
-  matchedNames <- match( rownames(object), rownames(mergeObject) ) 
+  mergeObject <- do.call( rbind, splitObject )
+  matchedNames <- match( rownames(object), rownames(mergeObject) )
   mcols(object) <- mcols( mergeObject )[matchedNames,]
   mcols(object)$baseMean <- unname( rowMeans( counts(object, normalized=TRUE) ) )
   mcols(object)$baseVar <- unname( rowVars( counts(object, normalized=TRUE) ) )
@@ -114,9 +114,9 @@ plotDispEsts.DEXSeqDataSet <- function(object, ymin,
   # been updated.
   if (!.hasSlot(object, "rowRanges"))
       object <- updateObject(object)
-  mcols(object)$baseMean <- 
+  mcols(object)$baseMean <-
     mcols(object)$exonBaseMean
-  mcols(object)$baseVar <- 
+  mcols(object)$baseVar <-
     mcols(object)$exonBaseVar
   plotDispEsts( as(object, "DESeqDataSet"), genecol=genecol, fitcol=fitcol,
     finalcol=finalcol, legend=legend, log=log, cex=cex, ...)
@@ -173,7 +173,7 @@ plotMA.DEXSeqResults <- function(object, alpha=0.1, ylim=c(-2,2), foldChangeColu
 
 setMethod("plotMA", signature(object="DEXSeqResults"),
           plotMA.DEXSeqResults)
-    
+
 show.DEXSeqResults <- function(object){
   cat("\n")
   cat(mcols(object)[colnames(object) == "pvalue","description"])
@@ -196,21 +196,21 @@ setMethod( "counts", signature(object="DEXSeqResults"),
           counts.DEXSeqResults )
 
 
-subsetByOverlaps.DEXSeqResults <- function( query, subject, maxgap = 0L, minoverlap = 1L,
+subsetByOverlaps.DEXSeqResults <- function( x, ranges, maxgap = -1L, minoverlap = 0L,
          type = c("any", "start", "end", "within", "equal"),
          ignore.strand = FALSE ){
-  stopifnot( is( query, "DEXSeqResults") )
-  genomicData <- query$genomicData
-  overlaps <- findOverlaps( query=genomicData, subject=subject, maxgap=maxgap,
+  stopifnot( is( x, "DEXSeqResults") )
+  genomicData <- x$genomicData
+  overlaps <- findOverlaps( query=genomicData, subject=ranges, maxgap=maxgap,
     minoverlap=minoverlap, type=type,
     ignore.strand=ignore.strand )
-  query[queryHits( overlaps ),]
+  x[queryHits( overlaps ),]
 }
 
-setMethod("subsetByOverlaps", signature(query="DEXSeqResults", subject="GenomicRanges"),
+setMethod("subsetByOverlaps", signature(x="DEXSeqResults", ranges="GenomicRanges"),
           subsetByOverlaps.DEXSeqResults)
 
-findOverlaps.DEXSeqResults <- function( query, subject, maxgap = 0L, minoverlap = 1L,
+findOverlaps.DEXSeqResults <- function( query, subject, maxgap = -1L, minoverlap = 0L,
          type = c("any", "start", "end", "within", "equal"),
          ignore.strand = FALSE ){
   stopifnot( is( query, "DEXSeqResults") )
