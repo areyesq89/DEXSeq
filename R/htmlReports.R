@@ -134,7 +134,7 @@ DEXSeqHTML <- function(object, genes=NULL, path="DEXSeqReport", file="testForDEU
          warning("length(filter) > 2, only first element will be taken")
          filter <- filter[1]
       }
-      extra <- getBM(attributes=c(filter, attributes), filters=filter, values=forvalues, mart=mart)
+      extra <- getBM(attributes=c(filter, attributes), filters=filter, values=unlist(forvalues), mart=mart)
       fromart <- lapply(genetable$geneID, function(x){
          sep <- do.call(c, strsplit(as.character(x), "\\+"))
          extra[which(extra[,filter] %in% sep),]
