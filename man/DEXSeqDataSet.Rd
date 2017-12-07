@@ -139,7 +139,8 @@
   library(GenomicAlignments)
 
   hse <- makeTxDbFromBiomart( biomart="ensembl",
-                              dataset="hsapiens_gene_ensembl" )
+                             dataset="hsapiens_gene_ensembl",
+                             host="grch37.ensembl.org")
 
   bamDir <- system.file( 
     "extdata", package="parathyroidSE", mustWork=TRUE )
