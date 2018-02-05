@@ -60,7 +60,8 @@ DEXSeqDataSet <- function( countData, sampleData, design= ~ sample + exon + cond
     colnames(nCountData) <- NULL
 
     if( !is.null(featureRanges) ){
-        stopifnot( class(featureRanges) %in% c("GRanges", "GRangesList"))
+        stopifnot(is(featureRanges, "GRanges") ||
+                  is(featureRanges, "GRangesList"))
         se <- SummarizedExperiment( nCountData, colData=colData, rowRanges=featureRanges )
     }else{
         se <- SummarizedExperiment( nCountData, colData=colData )
