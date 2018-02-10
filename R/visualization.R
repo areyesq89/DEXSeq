@@ -62,7 +62,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
    colorlinesB[is.na(colorlinesB)] <- "#666666"
 
    ################## DETERMINE THE LAYOUT OF THE PLOT DEPENDING OF THE OPTIONS THE USER PROVIDES ###########
-   if( length( start(unlist(genomicData))) > 0 ){
+   if( length( unlist(start(genomicData))) > 0 ){
        
       sub <- data.frame(
          start=start(genomicData[rt]),
@@ -185,7 +185,7 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
       drawPlot(matr=count, ylimn, object, intervals, rango, textAxis="Normalized counts", rt=rt, color=colorcounts, colorlines=colorlines, ...)
    }
 	########### plot the gene model ########## just if transcript information available
-   if( length( start(unlist(genomicData))) > 0 ){
+   if( length( unlist(start(genomicData))) > 0 ){
       par(mar=c(0, 4, 0, 2))
       plot.new()
       segments(apply((rbind(rel[rango,2], rel[rango, 1])), 2, median), 0, apply(rbind(intervals[rango], intervals[rango+1]-((intervals[rango+1]-intervals[rango])*0.2)), 2, median), 1, col=colorlinesB)
