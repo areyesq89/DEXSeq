@@ -163,9 +163,11 @@ estimateExonFoldChanges <- function( object,
         alleffectsSM <- bplapply( exonIndexes, getEffectsForExonsSM,
                                  frm=frm, countsAll=countsAll,
                                  disps=disps, mfSmall=mfSmall,
-                                 fitExpToVar=fitExpToVar)    
+                                 fitExpToVar=fitExpToVar, 
+                                 BPPARAM=BPPARAM) 
         names(alleffectsSM) <- rownames(object)[exonIndexes]
-        alleffectsSM <- t(simplify2array(alleffectsSM))
+#        alleffectsSM <- t(simplify2array(alleffectsSM))
+        alleffectsSM <- do.call( rbind, alleffectsSM )
     }else{
         alleffectsSM <- NULL
     }
