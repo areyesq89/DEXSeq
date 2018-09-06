@@ -167,7 +167,7 @@ system.file( "python_scripts", package="DEXSeq", mustWork=TRUE )
 @
 %
 The displayed path should contain the two files. If it does not, try to re-install \Rpackage{DEXSeq} 
-(as usual, with \Rfunction{biocLite}).
+(as usual, with \Rfunction{BiocManager::install()}).
 
 An alternative work flow, which replaces the two Python-based steps with R=based code, is also available
 and is demonstrated in the vignette of the \Rpackage{parathyroidSE} package~\cite{parathyroidSEVignette}.
