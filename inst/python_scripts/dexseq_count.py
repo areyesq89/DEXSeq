@@ -1,3 +1,4 @@
+from __future__ import division
 import sys, itertools, optparse, warnings
 
 optParser = optparse.OptionParser( 
@@ -94,7 +95,7 @@ features = HTSeq.GenomicArrayOfSets( "auto", stranded=stranded )
 for f in  HTSeq.GFF_Reader( gff_file ):
    if f.type == "exonic_part":
       f.name = f.attr['gene_id'] + ":" + f.attr['exonic_part_number']
-      features[f.iv] += f
+      features[f.iv] += f.name
 
 # initialise counters
 num_reads = 0
@@ -108,7 +109,7 @@ counts['_ambiguous_readpair_position'] = 0
 # put a zero for each feature ID
 for iv, s in features.steps():
    for f in s:
-      counts[ f.name ] = 0
+      counts[ f ] = 0
 
 #We need this little helper below:
 def reverse_strand( s ):
@@ -117,14 +118,14 @@ def reverse_strand( s ):
    elif s == "-":
       return "+"
    else:
-      raise SystemError, "illegal strand"
+      raise SystemError("illegal strand")
 
 def update_count_vector( counts, rs ):
    if( type(rs) == str):
       counts[ rs ] += 1
    else:
       for f in rs:
-         counts[f.name] += 1
+         counts[f] += 1
    return counts
 
 
@@ -134,7 +135,7 @@ def map_read_pair(af, ar):
       return '_notaligned'
    if af and ar and not af.aQual < minaqual and ar.aQual < minaqual:
       return '_lowaqual'
-   if af and af.aligned and af.aQual >= minaqual and af.iv.chrom in features.chrom_vectors.keys():
+   if af and af.aligned and af.aQual >= minaqual and af.iv.chrom in list(features.chrom_vectors.keys()):
       for cigop in af.cigar:
          if cigop.type != "M":
             continue
@@ -142,7 +143,7 @@ def map_read_pair(af, ar):
             cigop.ref_iv.strand = reverse_strand( cigop.ref_iv.strand )
          for iv, s in features[cigop.ref_iv].steps():
             rs = rs.union( s )
-   if ar and ar.aligned and ar.aQual >= minaqual and ar.iv.chrom in features.chrom_vectors.keys():
+   if ar and ar.aligned and ar.aQual >= minaqual and ar.iv.chrom in list(features.chrom_vectors.keys()):
       for cigop in ar.cigar:
          if cigop.type != "M":
             continue
@@ -150,7 +151,7 @@ def map_read_pair(af, ar):
             cigop.ref_iv.strand = reverse_strand( cigop.ref_iv.strand )
          for iv, s in features[cigop.ref_iv].steps():
                rs = rs.union( s )
-   set_of_gene_names = set( [ f.name.split(":")[0] for f in rs ] )
+   set_of_gene_names = set( [ f.split(":")[0] for f in rs ] )
    if len( set_of_gene_names ) == 0:
       return '_empty'
    elif len( set_of_gene_names ) > 1:
@@ -171,9 +172,10 @@ def clean_read_queue( queue, current_position ):
 if alignment == "sam":
    reader = HTSeq.SAM_Reader
 else:
-   if HTSeq.__version__ < '0.5.4p4':
-      raise SystemError, "If you are using alignment files in a bam format, please update your HTSeq to 0.5.4p4 or higher"
-   reader = HTSeq.BAM_Reader
+   try:
+       reader = HTSeq.BAM_Reader
+   except AttributeError:
+       raise SystemError("If you are using alignment files in a bam format, please update your HTSeq to 0.5.4p4 or higher")
 
 
 # Now go through the aligned reads
@@ -184,7 +186,7 @@ if not is_PE:
       if not a.aligned:
          counts[ '_notaligned' ] += 1
          continue
-      if a.optional_field("NH") > 1:
+      if "NH" in a.optional_fields and a.optional_field("NH") > 1:
          continue
       if a.aQual < minaqual:
          counts[ '_lowaqual' ] += 1
@@ -197,14 +199,14 @@ if not is_PE:
             cigop.ref_iv.strand = reverse_strand( cigop.ref_iv.strand )
          for iv, s in features[cigop.ref_iv].steps( ):
             rs = rs.union( s )
-      set_of_gene_names = set( [ f.name.split(":")[0] for f in rs ] )
+      set_of_gene_names = set( [ f.split(":")[0] for f in rs ] )
       if len( set_of_gene_names ) == 0:
          counts[ '_empty' ] += 1
       elif len( set_of_gene_names ) > 1:
          counts[ '_ambiguous' ] +=1
       else:
          for f in rs:
-            counts[ f.name ] += 1
+            counts[ f ] += 1
       num_reads += 1
       if num_reads % 100000 == 0:
          sys.stderr.write( "%d reads processed.\n" % num_reads )
@@ -243,13 +245,13 @@ else: # paired-end
             continue
          if current_chromosome != a.iv.chrom:
             if current_chromosome in processed_chromosomes:
-               raise SystemError, "A chromosome that had finished to be processed before was found again in the alignment file, is your alignment file properly sorted by position?"
+               raise SystemError("A chromosome that had finished to be processed before was found again in the alignment file, is your alignment file properly sorted by position?")
             processed_chromosomes[current_chromosome] = 1
             alignments = clean_read_queue( alignments, current_position )
             del alignments
             alignments = dict()
          if current_chromosome == a.iv.chrom and a.iv.start < current_position:
-            raise SystemError, "Current read position is smaller than previous reads, is your alignment file properly sorted by position?"
+            raise SystemError("Current read position is smaller than previous reads, is your alignment file properly sorted by position?")
          current_chromosome = a.iv.chrom
          current_position = a.iv.start
          if a.read.name and a.mate_aligned:
