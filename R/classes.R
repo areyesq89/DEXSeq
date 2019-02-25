@@ -311,10 +311,14 @@ DEXSeqDataSetFromHTSeq <- function( countfiles, sampleData, design= ~ sample + e
 }
 
 DEXSeqDataSetFromSE <- function( SE, design= ~ sample + exon + condition:exon ){
-    if( !all( c("gene_id", "tx_name", "exonic_part") %in% colnames( mcols( SE  ) ) ) ){
-      stop("make sure your SummarizedExperiment object contain the columns gene_id, tx_name and exonic_part")
+    if( !all( c("gene_id", "tx_name") %in% colnames( mcols( SE  ) ) ) ){
+      stop("make sure your SummarizedExperiment object contain the columns gene_id and tx_name")
     }
+    SE <- SE[order(mcols(SE)$gene_id),]
     groupID <- as.character( mcols(SE)$gene_id )
+    ln <- table( groupID )
+    mcols(SE)$exonic_part <- unlist( lapply( ln, function(x){1:x}) )
+    stopifnot( all( rep(names(ln), ln) == groupID ) )
     featureID <- sprintf("E%3.3d",  mcols(SE)$exonic_part )
     transcripts <- as.list( mcols(SE)$tx_name )
     sampleData <- as.data.frame( colData(SE) )

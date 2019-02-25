@@ -150,7 +150,7 @@
     fls, index=character(), 
     yieldSize=100000, obeyQname=TRUE )
 
-  exonicParts <- disjointExons( hse, aggregateGenes=FALSE )
+  exonicParts <- exonicParts( hse, linked.to.single.gene.only = TRUE )
 
   SE <- summarizeOverlaps( exonicParts, bamlst, 
     mode="Union", singleEnd=FALSE,
@@ -160,7 +160,6 @@
 
   DEXSeqDataSetFromSE( SE, 
     design= ~ sample + exon + condition:exon )
-  
    
 
   #######################################
