@@ -60,7 +60,7 @@ testForDEU <-
     rmDepCols( model.matrix( reducedModel, as.data.frame(colData(object)) ) )
 
   splitParts <- sort(
-    rep(seq_len(BPPARAM$workers), 
+    rep(seq_len(max(BPPARAM$workers, 1L)), 
     length.out=nrow(object) ) )
   splitObject <- split( object, splitParts )
 
