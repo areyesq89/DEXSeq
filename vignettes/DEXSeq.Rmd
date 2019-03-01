@@ -237,7 +237,7 @@ head( rowRanges(dxd), 3 )
 
 So far, this table contains information on the annotation data, such as gene and exon IDs, genomic coordinates of the exon, and the list of transcripts that contain an exon. 
 
-The accessor function `annotationData()` shows the design table with the sample annotation (which was passed as the second argument to `DEXSeqDataSetFromHTSeq()`:
+The accessor function `annotationData()` shows the design table with the sample annotation (which was passed as the second argument to `DEXSeqDataSetFromHTSeq()`):
 
 ```{r}
 sampleAnnotation( dxd )
@@ -285,7 +285,7 @@ on **R** if you are unfamiliar with it), `sample` is a factor with different lev
 _**DEXSeqDataSet**_ object at the beginning of the analysis, and `exon` is a factor with
 two levels, `this` and `others`, that were specified when we generated our _**DEXSeqDataSet**_
 object. The two models described by these formulae are fit for each counting bin, where the data 
-supplied to the fit comprise **two* read count values for each sample, corresponding to the 
+supplied to the fit comprise **two** read count values for each sample, corresponding to the 
 two levels of the `exon` factor: the number of reads mapping to the bin in question 
 (level `this`), and the sum of the read counts from all other bins of the same gene 
 (level `others`). Note that this approach differs from the approach described in 
