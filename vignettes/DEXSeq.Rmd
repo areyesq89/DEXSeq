@@ -77,7 +77,7 @@ using the Python scripts that we provide within `r BiocStyle::Biocpkg("DEXSeq")`
 
 You do not need to know how to use Python; however you have to install the Python package **HTSeq**, following the explanations given on the [**HTSeq** web page](http://www-huber.embl.de/users/anders/HTSeq/doc/install.html).
 
-Once you have installed **HTSeq**, you can use the two Python scripts, *dexseq_prepare_annotation.py* (described in Section \@ref(preparing-the-annotation)) and *dexseq_count.py* (see Section \@ref(counting-reads)), that come with the `r BiocStyle::Biocpkg("DEXSeq")` package. If you have trouble finding them, start R and ask for the installation directory with
+Once you have installed **HTSeq**, you can use the two Python scripts, *dexseq_prepare_annotation.py* (described in Section \@ref(preparing-the-annotation)) and *dexseq_count.py* (see Section \@ref(counting-reads)), that come with the `r BiocStyle::Biocpkg("DEXSeq")` package. If you have trouble finding them, start R and ask for the installation directory with:
 
 ```{r systemFile}
 pythonScriptsDir = system.file( "python_scripts", package="DEXSeq" )
@@ -86,11 +86,11 @@ system.file( "python_scripts", package="DEXSeq", mustWork=TRUE )
 ```
 
 The displayed path should contain the two files. If it does not, try to re-install `r BiocStyle::Biocpkg("DEXSeq")` 
-(as usual, with the function `BiocManager::install()`). An alternative work flow, which replaces the two Python-based steps with R based code, is also available and is demonstrated in the vignette of the `r BiocStyle::Biocpkg("parathyroidSE")` package (@parathyroidSEVignette).
+(as usual, with the function `BiocManager::install()`). An alternative work flow, which replaces the two Python-based steps with R based code, is also available in the Appendix section of this vignette.
 
-## Preparing the annotation
+## Preparing the annotation {#preparing-the-annotation}
 
-The Python scripts expect a GTF file with gene models for your species. We have tested our tools chiefly with GTF files from Ensembl and hence recommend to prefer these, as files from other providers sometimes do not adhere fully to the GTF standard and cause the preprocessing to fail. Ensembl GTF files can be found in the "FTP Download" sections of the Ensembl web sites (i.e., Ensembl, EnsemblPlants, EnsemblFungi, etc.). Make sure that your GTF file uses a coordinate system that matches the reference genome that you have used for aligning your reads. (The safest way to ensure this is to download the reference genome from Ensembl, too.) If you cannot use an Ensembl GTF file, see Appendix \@ref(requirements-on-gtf-files) for advice on converting GFF files from other sources to make them suitable as input for the *dexseq_prepare_annotation.py* script.
+The Python scripts expect a GTF file with gene models for your species. We have tested our tools chiefly with GTF files from Ensembl and hence recommend to use these, as files from other providers sometimes do not adhere fully to the GTF standard and cause the preprocessing to fail. Ensembl GTF files can be found in the "FTP Download" sections of the Ensembl web sites (i.e., Ensembl, EnsemblPlants, EnsemblFungi, etc.). Make sure that your GTF file uses a coordinate system that matches the reference genome that you have used for aligning your reads. The safest way to ensure this is to download the reference genome from Ensembl, too. If you cannot use an Ensembl GTF file, see Appendix \@ref(requirements-on-gtf-files) for advice on converting GFF files from other sources to make them suitable as input for the *dexseq_prepare_annotation.py* script.
 
 In a GTF file, many exons appear multiple times, once for each transcript that contains them. We need to "collapse" this information to define *exon counting bins*, i.e., a list of intervals, each corresponding to one exon or part of an exon. Counting bins for parts of exons arise when an exonic region appears with different boundaries in different transcripts. See Figure 1 of the `r BiocStyle::Biocpkg("DEXSeq")` paper (@DEXSeqPaper) for an illustration. The Python script *dexseq_prepare_annotation.py*
 takes an Ensembl GTF file and translates it into a GFF file with collapsed exon counting bins.
@@ -98,8 +98,7 @@ takes an Ensembl GTF file and translates it into a GFF file with collapsed exon 
 Make sure that your current working directory contains the GTF file and call the script (from the command line shell, not from within R) with
 
 ```
-python /path/to/library/DEXSeq/python_scripts/dexseq_prepare_annotation.py 
-    Drosophila_melanogaster.BDGP5.72.gtf Dmel.BDGP5.25.62.DEXSeq.chr.gff
+python /path/to/library/DEXSeq/python_scripts/dexseq_prepare_annotation.py Drosophila_melanogaster.BDGP5.72.gtf Dmel.BDGP5.25.62.DEXSeq.chr.gff
 ```
 
 In this command, which should be entered as a single line, replace */path/to.../python_scripts* with the correct path to the Python scripts, which you have found with the call to `system.file()` shown above. *Drosophila_melanogaster.BDGP5.72.gtf* is the Ensembl GTF file (here the one for fruit fly, already de-compressed) and *Dmel.BDGP5.25.62.DEXSeq.chr.gff* is the name of the output file.
@@ -111,8 +110,7 @@ In the process of forming the counting bins, the script might come across overla
 For each SAM file, we next count the number of reads that overlap with each of the exon counting bins defined in the flattened GFF file. This is done with the script *python_count.py*:
 
 ```
-python /path/to/library/DEXSeq/python_scripts/dexseq_count.py 
-    Dmel.BDGP5.25.62.DEXSeq.chr.gff untreated1.sam untreated1fb.txt
+python /path/to/library/DEXSeq/python_scripts/dexseq_count.py Dmel.BDGP5.25.62.DEXSeq.chr.gff untreated1.sam untreated1fb.txt
 ```
 
 This command (again, to be entered as a single line) expects two files in the current working directory, namely the GFF file produced in the previous step (here *Dmel.BDGP5.25.62.DEXSeq.chr.gff*) and a SAM file with the aligned reads from a sample (here the file *untreated1.sam* with the aligned reads from the first control sample). The command generates an output file, here called *untreated1fb.txt*, with one line for each exon counting bin defined in the flattened GFF file. The lines contain the exon counting bin IDs (which are composed of gene IDs and exon bin numbers), followed by a integer number which indicates the number of reads that were aligned such that they overlap with the counting bin.
@@ -122,7 +120,7 @@ Use the script multiple times to produce a count file from each of your SAM file
 There are a number of crucial points to pay attention to when using the *python_count.py* script:
 
 **Paired-end data: ** If your data is from a paired-end sequencing run, you need to add the option `-p yes` to 
-the command to call the script. (As usual, options have to be placed before the file names, surrounded by spaces.) In addition, the SAM file needs to be sorted, either by read name or by position. Most aligners produce sorted SAM files; if your SAM file is not sorted, use `samtools sort -n` to sort by read name (or `samtools sort`) to sort by position. (See e.g. reference (@ DEProt), if you need further explanations on how to sort SAM files.) Use the option `-r pos` or `-r name` to indicate whether your paired-end data is sorted by alignment position or by read name.
+the command to call the script. (As usual, options have to be placed before the file names, surrounded by spaces.) In addition, the SAM file needs to be sorted, either by read name or by position. Most aligners produce sorted SAM files; if your SAM file is not sorted, use `samtools sort -n` to sort by read name (or `samtools sort`) to sort by position. (See @DEProt, if you need further explanations on how to sort SAM files.) Use the option `-r pos` or `-r name` to indicate whether your paired-end data is sorted by alignment position or by read name.
 
 **Strandedness:** By default, the counting script assumes your library to be *strand-specific*, i.e., reads are aligned to the same strand as the gene they originate from. If you have used a library preparation protocol that does not preserve strand information (i.e., reads from a given gene can appear equally likely on either strand), you need to inform the script by specifying the option `-s no`. If your library preparation protocol reverses the strand (i.e., reads appear on the strand opposite to their gene of origin), use `-s reverse`. In case of paired-end data, the default (`-s yes`) means that the read from the first sequence pass is on the same strand as the gene and the read from the second pass on the opposite strand ("forward-reverse" or "fr" order in the parlance of the Bowtie/TopHat manual) and the options `-s reverse` specifies the opposite case.
 
@@ -169,7 +167,7 @@ sampleTable
 ```
 
 Our table contains the sample names as row names and the two covariates that vary between samples: first the experimental condition (factor _**condition**_ with levels **control** and **treatment**) and the library type (factor **libType**), which we included because the samples in this particular experiment were sequenced partly in single-end runs and partly in paired-end runs. 
-For now, we will ignore this latter piece of information, and postpone the discussion of how to include such additional covariates to Section \@ref(additional-technical-or-experimental-variables). If you have only a single covariate and want to perform a simple analysis, the column with this covariate should be named **condition**.
+For now, we will ignore this latter piece of information, and postpone the discussion of how to include such additional covariates to Section \@ref(complexdesigns). If you have only a single covariate and want to perform a simple analysis, the column with this covariate should be named **condition**.
 
 Now, we construct an _**DEXSeqDataSet**_ object from this data. This object holds all the input data and will be passed along the stages of the subsequent analysis. We construct the object with the function `DEXSeqDataSetFromHTSeq()`, 
 as follows:
@@ -258,7 +256,7 @@ dxd = estimateSizeFactors( dxd )
 
 To test for differential exon usage, we need to estimate the variability of the data. This is necessary to be able to distinguish technical and biological variation (noise) from real effects on exon usage due to the different conditions. The information on the strength of the noise is inferred from the biological replicates in the data set and characterized by the so-called *dispersion*. In RNA-Seq experiments the number of replicates is typically too small to reliably estimate variance or dispersion parameters individually exon by exon, and therefore, variance information is shared across exons and genes, in an intensity-dependent manner.
 
-In this section, we discuss simple one-way designs: In this setting, samples with the same experimental condition, as indicated in the `condition` factor of the design table (see above), are considered as replicates -- and therefore, the design table needs to contain a column with the name `condition`. In Section \@ref(additional-technical-or-experimental-variables), we discuss how to treat more complicated experimental designs which are not accommodated by a single condition factor.
+In this section, we discuss simple one-way designs: In this setting, samples with the same experimental condition, as indicated in the `condition` factor of the design table (see above), are considered as replicates -- and therefore, the design table needs to contain a column with the name `condition`. In Section \@ref(complexdesigns), we discuss how to treat more complicated experimental designs which are not accommodated by a single condition factor.
 
 To estimate the dispersion estimates, `r BiocStyle::Biocpkg("DEXSeq")` uses the approach of the package `r BiocStyle::Biocpkg("DESeq2")`. Internally, the functions from `r BiocStyle::Biocpkg("DEXSeq")` are called, adapting the parameters of the functions for the specific case of the `r BiocStyle::Biocpkg("DEXSeq")` model. Briefly, per-exon dispersions are calculated using a Cox-Reid adjusted profile likelihood estimation, then a dispersion-mean relation is fitted to this individual dispersion values andfinally, the fitted values are taken as a prior in order to shrink the per-exon estimates towards the fitted
 values. See the `r BiocStyle::Biocpkg("DESeq2")` paper for the rational behind the shrinkage approach (@deseq2).
@@ -321,7 +319,7 @@ where `condition` can be replaced with any of the column names of `colData()` (s
 dxd = estimateExonFoldChanges( dxd, fitExpToVar="condition")
 ```
 
-So far in the pipeline, the intermediate and final results have been stored in the meta data of a _**DEXSeqDataSet**_ object, they can be accessed using the function `mcols()`. In order to summarize the results without showing the values from intermediate steps, we call the function `DEXSeqResults()`. The result is a _**DEXSeqResults**_ object, which is a subclass of a _**DataFrame*_ object. 
+So far in the pipeline, the intermediate and final results have been stored in the meta data of a _**DEXSeqDataSet**_ object, they can be accessed using the function `mcols()`. In order to summarize the results without showing the values from intermediate steps, we call the function `DEXSeqResults()`. The result is a _**DEXSeqResults**_ object, which is a subclass of a _**DataFrame**_ object. 
 
 ```{r results1}
 dxr1 = DEXSeqResults( dxd )
@@ -357,7 +355,7 @@ the exons with an adjusted $p$ values of less than $0.1$ (Figure \@ref(fig:MvsA)
 plotMA( dxr1, cex=0.8 )
 ```
 
-# Additional technical or experimental variables
+# Additional technical or experimental variables {#complexdesigns}
 
 In the previous section we performed a simple analysis of differential exon usage, in which each sample was assigned
 to one of two experimental conditions. If your experiment is of this type, you can use the work flow shown above. All
@@ -430,8 +428,7 @@ Accounting for the library type has allowed us to find six more hits, which conf
 The `plotDEXSeq()` provides a means  to visualize the results of an analysis.
 
 ```{r plot1, fig.height=8, fig.width=12, fig.cap="Fitted expression. The plot represents the expression estimates from a call to `testForDEU()`. Shown in red is the exon that showed significant differential exon usage."}
-plotDEXSeq( dxr2, "FBgn0010909", legend=TRUE, cex.axis=1.2, cex=1.3,
-   lwd=2 )
+plotDEXSeq( dxr2, "FBgn0010909", legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 ```
 
 ```{r checkClaim}
@@ -447,8 +444,7 @@ Optionally, one can also visualize the transcript models (Figure \@ref(fig:plot2
 useful for putting differential exon usage results into the context of isoform regulation.
 
 ```{r plot2, fig.height=8, fig.width=12, fig.cap="Transcripts. As in the previous plots, but including the annotated transcript models"}
-plotDEXSeq( dxr2, "FBgn0010909", displayTranscripts=TRUE, legend=TRUE,
-   cex.axis=1.2, cex=1.3, lwd=2 )
+plotDEXSeq( dxr2, "FBgn0010909", displayTranscripts=TRUE, legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
 ```
 
 Other useful options are to look at the count values from the individual samples, rather than at the
@@ -489,11 +485,11 @@ dxd = testForDEU( dxd, BPPARAM=BPPARAM)
 dxd = estimateExonFoldChanges(dxd, BPPARAM=BPPARAM)
 ```
 
-For running analysis with a large number of samples (e.g. more than 100), we recommend configuring `BatchJobsParam()` classes in order to distribute the calculations across a computer cluster and significantly reduce running times.Users might also consider reducing the number of tests by filtering for lowly expressed isoforms or exonic regions with low counts. Appart from reducing running times, this filtering step also leads to more accurate results [@soneson2015].
+For running analysis with a large number of samples (e.g. more than 100), we recommend configuring `BatchJobsParam()` classes in order to distribute the calculations across a computer cluster and significantly reduce running times. Users might also consider reducing the number of tests by filtering for lowly expressed isoforms or exonic regions with low counts. Appart from reducing running times, this filtering step also leads to more accurate results [@soneson2015].
 
 # Perform a standard differential exon usage analysis in one command
 
-In the previous sections, we went through the analysis step by step.Once you are sufficiently confident about the work flow for your data, its invocation can be streamlined by the wrapper function `DEXseq()`, which runs the analysis shown above through a single function call. 
+In the previous sections, we went through the analysis step by step. Once you are sufficiently confident about the work flow for your data, its invocation can be streamlined by the wrapper function `DEXseq()`, which runs the analysis shown above through a single function call. 
 
 In the simplest case, construct the _**DEXSeqDataSet**_ as shown before, then run `DEXSeq()` passing the _**DEXSeqDataSet**_ as only argument, this function will output a _**DEXSeqResults**_ object.
 
@@ -512,7 +508,7 @@ $\theta \in {p_{1}, ..., p_{M}} \subset [0, 1]$ is a rejection threshold, leadin
 $V=\left|\left\{k: p_k\le\theta\right\}\right|$ rejections (i.e. number of exonic regions being 
 DEU). The Benjamini-Hochberg method establishes that FDR is controlled at the level $q^{*}$ where
 
-$q^* = \frac{M \theta}{\left|\left\{k: p_k\le\theta\right\}\right|}$
+$q^* = \frac{M \theta}{\left|\left\{k: p_k\le\theta\right\}\right|}$.
 
 Note that $\theta$ in the denominator of this expression is the probability of rejecting a single 
 hypothesis if it is true. $q^*$ allows to estimate the number of exons that are differentially
@@ -524,7 +520,7 @@ scenario, let $p_{i,l}$ be the $p$-value from the DEU test for exon $l$ in gene 
 the number of exons in gene $i$, and $M$ the number of genes. A gene $i$ has at least one DEU 
 exon if $\exists l$ such that $p_{i,l}\le\theta$. Then, FDR is controlled at the level
 
-$\frac{\sum_{i=1}^{M} 1-(1-\theta)^{n_i}}{\left|\left\{i: \exists l:p_{il}\le\theta\right\}\right|}$
+$\frac{\sum_{i=1}^{M} 1-(1-\theta)^{n_i}}{\left|\left\{i: \exists l:p_{il}\le\theta\right\}\right|}$.
 
 The implementation of the formula above is provided by the function `perGeneQValue()`. For
 the `r BiocStyle::Biocpkg("pasilla")` example, the code below calculates the number of genes (at a FDR of 10%) with at least one differentially used exon.
@@ -536,8 +532,7 @@ numbOfGenes
 
 ## Preprocessing within R
 
-As an alternative to the approach described in the introductory section, users can also create  
-_**DEXSeqDataSeq**_ objects from other _**R**_ data objects. The code for implementationg these functions was kindly contributed by Michael I. Love. For details, see the `r BiocStyle::Biocpkg("parathyroidSE")` package vignette [@parathyroidSEVignette]. The work flow is similar to the one using the python scripts.
+As an alternative to the approach described in the introductory section, users can also create _**DEXSeqDataSeq**_ objects from other _**R**_ data objects. The code for implementationg these functions was kindly contributed by Michael I. Love. For details, see the `r BiocStyle::Biocpkg("parathyroidSE")` package vignette [@parathyroidSEVignette]. The work flow is similar to the one using the python scripts.
 
 _Note_: The code in this section is not run when the vignette is built, as some of the commands
 have long run time. Therefore, no output is given.
@@ -550,42 +545,36 @@ library(GenomicAlignments)
 ```
 
 We demonstrate the workflow briefly (for more details, see [@parathyroidSEVignette]) on the data set
-of Haglund et al. [@parathyroidPaper], which is provided as example data in the 
-`r BiocStyle::Biocpkg("parathyroidSE")` data package.
+by @parathyroidPaper, which is provided as example data in the `r BiocStyle::Biocpkg("parathyroidSE")` data package.
 
 First, we download the current human gene model annotation from Ensembl via Biomart and create
 a transcript data base from these. Note that this step takes some time.
 
 ```{r buildExonCountSetDownloadAnno, eval=FALSE}
-hse = makeTxDbFromBiomart( biomart="ensembl",
-   dataset="hsapiens_gene_ensembl" )
+hse = makeTxDbFromBiomart( biomart="ensembl", dataset="hsapiens_gene_ensembl" )
 ```
 
 Next, we collapse the gene models into counting bins.
 
 ```{r buildExonCountSetDisjoin,cache=TRUE, eval=FALSE}
-exonicParts = disjointExons( hse, aggregateGenes=FALSE )
+exonicParts = exonicParts( hse, linked.to.single.gene.only = TRUE )
 ```
 
-As before, we have to choose how to handle genes with overlapping exons. The `aggregateGenes=TRUE` option here plays the same role as the `-r` option to *dexseq_prepare_anotation.py*. The  _**exonicParts**_ object contains a GRanges object with our counting bins. We use it to count the number of read fragments that overlap with the bins by means of the function  `summarizeOverlaps()`. To demonstrate this, we first determine the paths to the example BAM files in the `r BiocStyle::Biocpkg("parathyroidSE")` data package.
+As before, we have to choose how to handle genes with overlapping exons. The `linked.to.single.gene.only =` option here plays the same role as the `-r` option to *dexseq_prepare_anotation.py*. The  _**exonicParts**_ object contains a GRanges object with our counting bins. We use it to count the number of read fragments that overlap with the bins by means of the function  `summarizeOverlaps()`. To demonstrate this, we first determine the paths to the example BAM files in the `r BiocStyle::Biocpkg("parathyroidSE")` data package.
 
 ```{r buildExonCountSet2FindBAMs, cache=TRUE, eval=FALSE}
-bamDir = system.file( "extdata", package="parathyroidSE",
-   mustWork=TRUE )
+bamDir = system.file( "extdata", package="parathyroidSE", mustWork=TRUE )
 fls = list.files( bamDir, pattern="bam$", full=TRUE )
 ```
 
 Then, use the following code to count the reads overlapping the bins.
 
 ```{r buildExonCountSet2FindBAMs2,  eval=FALSE}
-bamlst = BamFileList( fls, index=character(), yieldSize=100000,
-   obeyQname=TRUE )
-SE = summarizeOverlaps( exonicParts, bamlst, mode="Union",
-   singleEnd=FALSE, ignore.strand=TRUE, inter.feature=FALSE,
-   fragments=TRUE )
+bamlst = BamFileList( fls, index=character(), yieldSize=100000, obeyQname=TRUE )
+SE = summarizeOverlaps( exonicParts, bamlst, mode="Union", singleEnd=FALSE, ignore.strand=TRUE, inter.feature=FALSE, fragments=TRUE )
 ```
 
-We can now call the function `DEXSeqDataSetFromSE()` to build an _**DEXSeqDataSet*__ object. We modify the `colData()` slot in order to specify the sample annotation, indicating that the first two BAM files form one experimental condition. Then we create our _**DEXSeqDataSet**_ object.
+We can now call the function `DEXSeqDataSetFromSE()` to build an _**DEXSeqDataSet**_ object. We modify the `colData()` slot in order to specify the sample annotation, indicating that the first two BAM files form one experimental condition. Then we create our _**DEXSeqDataSet**_ object.
 
 ```{r buildExonCountSet3, eval=FALSE}
 colData(SE)$condition = c("A", "A", "B")
@@ -637,7 +626,7 @@ This model is fit separately for each counting bin $i$. The coefficient $\beta^\
 is only included if $l=1$ and hence estimates the logarithm of the ratio $K_{ij1}/K_{ij0}$ between the counts for all other exons and the counts for the tested exon. As this coefficient is estimated from data from all samples, it can be considered as a measure of "average exon usage". In the R model formula, it is represented by the term `exon` with its two levels `this` ($l=0$) and `others` ($l=1$). Finally, the last term, $\beta^\text{EC}_{i,\rho_j}$, captures the interaction `condition:exon`, i.e., the change in exon usage if sample $j$ is from experimental condition group $\rho(j)$. Here, the first condition, $\rho=0$, is absorbed in the sample coefficients, i.e., $\beta^\text{EC}_{i0}$ is fixed to zero and does not appear in the model matrix.
 
 For the dispersion estimation, one dispersion value $\alpha_i$ is estimated with Cox-Reid-adjusted maximum likelihood using the full model given above. A mean-variance relation is fitted using the individual dispersion values. Finally, the individual values are shrinked towards the fitted values. For more details about this shrinkage approach look at the `r BiocStyle::Biocpkg("DESeq2")` vignette and/or its manuscript [@deseq2]. For the likelihood ratio test, this full model 
-is fit and compared with the fit of the reduced model, which lacks the interaction term $\beta^\text{EC}_{i\rho_j}$. As described in Section \@ref{additional-technical-or-experimental-variables}, alternative model formulae can be specified.
+is fit and compared with the fit of the reduced model, which lacks the interaction term $\beta^\text{EC}_{i\rho_j}$. As described in Section \@ref{complexdesigns}, alternative model formulae can be specified.
 
 #Requirements on GTF files
 
