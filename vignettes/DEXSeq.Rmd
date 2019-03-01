@@ -551,7 +551,7 @@ First, we download the current human gene model annotation from Ensembl via Biom
 a transcript data base from these. Note that this step takes some time.
 
 ```{r buildExonCountSetDownloadAnno, eval=FALSE}
-hse = makeTxDbFromBiomart( biomart="ensembl", dataset="hsapiens_gene_ensembl" )
+hse = makeTxDbFromBiomart( biomart="ensembl", dataset="hsapiens_gene_ensembl", host="grch37.ensembl.org" )
 ```
 
 Next, we collapse the gene models into counting bins.
