@@ -41,10 +41,14 @@ estimateDispersions.DEXSeqDataSet <-
      notPresent <- paste(notPresent, collapse=",")
      stop(sprintf("the variables '%s' of the parameter 'formula' are not specified in the columns of the colData", notPresent ) )
   }
-
-  splitParts <- sort(
-    rep(seq_len(max(BPPARAM$workers, 1L)),
-    length.out=nrow(object) ) )
+  
+  if( is( BPPARAM, "SerialParam" ) ){
+    numParts <- 1L
+  }else{
+    numParts <- BPPARAM$workers
+  }
+  
+  splitParts <- sort( rep( seq_len( numParts ), length.out=nrow(object) ) )
   splitObject <- split( object, splitParts )
 
   modelMatrix <- rmDepCols(
