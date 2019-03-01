@@ -65,10 +65,10 @@ To demonstrate the use of `r BiocStyle::Biocpkg("DEXSeq")`, we use the *pasilla*
 
 ##Executability of the code
 
-Usually, Bioconductor vignettes contain automatically executable code, i.e., you can follow the vignette by directly running the code shown, using functionality and data provided with the package. However, it would not be practical to include the voluminous raw data of the pasilla experiment here. Therefore, the code in this section is not automatically executable. You may download the raw data yourself from GEO, as well as the required extra tools, and follow the work flow shown here and in the *pasilla* vignette [@pasillaVignette]. From Section \@ref(standard-analysis-work-flow) on, code is directly executable, as usual. Therefore, we recommend that you just read this section, and try following our analysis in R only from the next section onwards. Once you work with your own data, you will want to come back and adapt the workflow shown here to your data.
+Usually, Bioconductor vignettes contain automatically executable code, i.e., you can follow the vignette by directly running the code shown, using functionality and data provided with the package. However, it would not be practical to include the voluminous raw data of the pasilla experiment here. Therefore, the code in this section is not automatically executable. You may download the raw data yourself from GEO, as well as the required extra tools, and follow the work flow shown here and in the *pasilla* vignette [@pasillaVignette]. From Section \@ref(standard-analysis-workflow) on, code is directly executable, as usual. Therefore, we recommend that you just read this section, and try following our analysis in R only from the next section onwards. Once you work with your own data, you will want to come back and adapt the workflow shown here to your data.
 
 ## Alignment
-The first step of the analysis is to align the reads to a reference genome. If you are using classic alignment methods (i.e. not pseudo-alignment approaches) it is important to align them to the genome, not to the transcriptome, and to use a splice-aware aligner (i.e., a short-read alignment tool that can deal with reads that span across introns) such as TopHat2 [@TopHat2], GSNAP [@GSNAP], or STAR [@STAR]. The explanation of the analysis work-flow presented here starts with the aligned reads in the SAM format. If you are unfamiliar with the process of aligning reads to obtain SAM files, you can find a summary how we proceeded in preparing the pasilla data in the vignette for the `r BiocStyle::Biocpkg("pasilla")` data package [@pasillaVignette] and a more extensive explanation, using the same  data set, in our protocol article on differential expression calling [@DEProt].
+The first step of the analysis is to align the reads to a reference genome. If you are using classic alignment methods (i.e. not pseudo-alignment approaches) it is important to align them to the genome, not to the transcriptome, and to use a splice-aware aligner (i.e., a short-read alignment tool that can deal with reads that span across introns) such as TopHat2 [@TopHat2], GSNAP [@GSNAP], or STAR [@STAR]. The explanation of the analysis workflow presented here starts with the aligned reads in the SAM format. If you are unfamiliar with the process of aligning reads to obtain SAM files, you can find a summary how we proceeded in preparing the pasilla data in the vignette for the `r BiocStyle::Biocpkg("pasilla")` data package [@pasillaVignette] and a more extensive explanation, using the same  data set, in our protocol article on differential expression calling [@DEProt].
 
 ## HTSeq
 
@@ -77,7 +77,7 @@ using the Python scripts that we provide within `r BiocStyle::Biocpkg("DEXSeq")`
 
 You do not need to know how to use Python; however you have to install the Python package **HTSeq**, following the explanations given on the [**HTSeq** web page](http://www-huber.embl.de/users/anders/HTSeq/doc/install.html).
 
-Once you have installed **HTSeq**, you can use the two Python scripts, *dexseq_prepare_annotation.py* (described in Section \@ref(preparing-the-annotation)) and *dexseq_count.py* (section \@ref(counting-reads)), that come with the `r BiocStyle::Biocpkg("DEXSeq")` package. If you have trouble finding them, start R and ask for the installation directory with
+Once you have installed **HTSeq**, you can use the two Python scripts, *dexseq_prepare_annotation.py* (described in Section \@ref(preparing-the-annotation)) and *dexseq_count.py* (see Section \@ref(counting-reads)), that come with the `r BiocStyle::Biocpkg("DEXSeq")` package. If you have trouble finding them, start R and ask for the installation directory with
 
 ```{r systemFile}
 pythonScriptsDir = system.file( "python_scripts", package="DEXSeq" )
@@ -86,7 +86,7 @@ system.file( "python_scripts", package="DEXSeq", mustWork=TRUE )
 ```
 
 The displayed path should contain the two files. If it does not, try to re-install `r BiocStyle::Biocpkg("DEXSeq")` 
-(as usual, with the function `BiocManager::install()`). An alternative work flow, which replaces the two Python-based steps with R=based code, is also available and is demonstrated in the vignette of the `r BiocStyle::Biocpkg("parathyroidSE")` package (@parathyroidSEVignette).
+(as usual, with the function `BiocManager::install()`). An alternative work flow, which replaces the two Python-based steps with R based code, is also available and is demonstrated in the vignette of the `r BiocStyle::Biocpkg("parathyroidSE")` package (@parathyroidSEVignette).
 
 ## Preparing the annotation
 
@@ -189,7 +189,7 @@ The function takes four arguments. First, a vector with names of count files, i.
 There are other ways to get a `r BiocStyle::Biocpkg("DEXSeq")` analysis started. See Appendix \@ref(preprocessing-within-r) and 
 Ref. (@parathyroidSEVignette) for details.
 
-# Standard analysis work-flow
+# Standard analysis workflow
 
 ## Loading and inspecting the example data
 
@@ -227,7 +227,7 @@ We can also access only the first five rows from the count belonging to the exon
 head( featureCounts(dxd), 5 )
 ```
 
-In both cases, the rows are labelled with gene IDs (here Flybase IDs), followed by a colon and the counting bin number. (As a counting bin corresponds to an exon or part of an exon, this ID is called the **feature ID** or **exon ID** within `r BiocStyle::Biocpkg("DEXSeq")`. The table content indicates the number of reads that have been mapped to each counting bin in the respective sample.
+In both cases, the rows are labelled with gene IDs (here Flybase IDs), followed by a colon and the counting bin number. Since a counting bin corresponds to an exon or part of an exon, this ID is called the **feature ID** or **exon ID** within `r BiocStyle::Biocpkg("DEXSeq")`. The table content indicates the number of reads that have been mapped to each counting bin in the respective sample.
 
 To see details on the counting bins, we also print the first 3 lines of the feature data annotation:
 
