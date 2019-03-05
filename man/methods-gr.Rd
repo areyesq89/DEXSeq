@@ -29,11 +29,11 @@
       A GRanges or GRangesList object.
   }
   \item{maxgap, minoverlap, type}{
-    See \code{\link[IRanges]{findOverlaps}} in the IRanges package for
+    See \code{findOverlaps} in the IRanges package for
     a description of these arguments.
   }
   \item{ignore.strand}{
-    See \code{\link[GenomicRanges]{findOverlaps}} in the GenomicRanges package for
+    See \code{findOverlaps} in the GenomicRanges package for
     a description of this.
   }
 
