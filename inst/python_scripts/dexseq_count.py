@@ -171,8 +171,6 @@ def clean_read_queue( queue, current_position ):
 if alignment == "sam":
    reader = HTSeq.SAM_Reader
 else:
-   if HTSeq.__version__ < '0.5.4p4':
-      raise SystemError, "If you are using alignment files in a bam format, please update your HTSeq to 0.5.4p4 or higher"
    reader = HTSeq.BAM_Reader
 
 
