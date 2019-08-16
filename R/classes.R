@@ -124,7 +124,7 @@ setValidity( "DEXSeqDataSet", function( object ) {
 } )
 
 setClass("DEXSeqResults",
-         contains = "DataFrame",
+         contains = "DFrame",
          representation = representation( modelFrameBM = "data.frame", sampleData="DataFrame", dispersionFunction = "function") )
 
 
