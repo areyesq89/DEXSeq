@@ -7,6 +7,7 @@ import(
   statmod, 
   biomaRt, 
   GenomicRanges,
+  S4Vectors,
   IRanges, 
   Rsamtools,
   DESeq2,
@@ -28,7 +29,6 @@ importFrom(stats, as.formula,
            runif, terms, weighted.mean)
 importFrom(utils, read.delim, read.table)
 importFrom(stats, relevel)
-importFrom(S4Vectors, DataFrame, queryHits)
 
 
 exportClasses( 
