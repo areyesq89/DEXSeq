@@ -4,30 +4,49 @@ setClass("DEXSeqDataSet",
 
 DEXSeqDataSet <- function( countData, sampleData, design= ~ sample + exon + condition:exon , featureID, groupID, featureRanges=NULL, transcripts=NULL, alternativeCountData=NULL)
 {
-    stopifnot( class( countData ) %in% c("matrix", "data.frame"))
+    ### Checking inputs ###
+    if( !(is( countData, "matrix" ) | is( countData, "data.frame" )) )
+      stop( "Unexpected input: the parameter 'countData' must be either a matrix or a data.frame", 
+            call.=FALSE )
     countData <- as.matrix( countData )
-    stopifnot( class( featureID ) %in% c("character", "factor"))
-    stopifnot( class( groupID ) %in% c("character", "factor"))
-    stopifnot( class( sampleData ) %in% c("data.frame"))
-    stopifnot( length(groupID) == nrow( countData ) )
-    stopifnot( length(featureID) == length( groupID ) )
-    stopifnot( nrow( sampleData ) == ncol( countData ) )
+    if( !( is( featureID, "character" ) | is( featureID, "factor" ) ) )
+      stop( "Unexpected input: the parameter 'featureID' must be either a character or a factor", 
+            call.=FALSE )
+    if( !( is( groupID, "character" ) | is( groupID, "factor" ) ) )
+      stop( "Unexpected input: the parameter 'groupID' must be either a character or a factor", 
+            call.=FALSE )
+    if( !is( sampleData, "data.frame" ) )
+      stop( "Unexpected input: the parameter 'sampleData' must be a data.frame", 
+            call.=FALSE )
+    rowNumbers <- nrow( countData )
+    if( length(groupID) != rowNumbers )
+      stop( "Unexpected length of 'groupID' parameter, it must be the same as the number of rows of countData", 
+            call.=FALSE )
+    if( length(featureID) != rowNumbers )
+      stop( "Unexpected length of 'featureID' parameter, it must be the same as the number of rows of countData", 
+            call.=FALSE )
+    if( nrow(sampleData) != ncol(countData) )
+      stop( "Unexpected number of rows of the 'sampleData' parameter, it must be the same as the number of columns of countData", 
+            call.=FALSE )
+    
     modelFrame <- cbind(
         sample = rownames(sampleData), sampleData )
     modelFrame <- rbind( cbind(modelFrame, exon = "this"),
                         cbind(modelFrame, exon = "others"))
     rownames(modelFrame) <- NULL
     colData <- DataFrame( modelFrame )
-
-    if( !"exon" %in% all.vars( design ) ){
-        stop("The formula does not specify a contrast with the variable 'exon'")
-    }
+    
+    if( !"exon" %in% all.vars( design ) )
+        stop("The design formula does not specify an interaction contrast with the variable 'exon'", 
+             call.=FALSE )
 
     allVars <- all.vars(design)
     if( any(!allVars %in% colnames( colData )) ){
         notPresent <- allVars[!allVars %in% colnames( colData ) ]
         notPresent <- paste(notPresent, collapse=",")
-        stop(sprintf("the variables '%s' of the parameter 'design' are not specified in the columns of the sampleData", notPresent ) )
+        stop(sprintf("The variables '%s', present in the design formula must be columns of 'sampleData'", 
+                     notPresent ),
+             call.=FALSE )
     }
 
     if( any( grepl(" |:", groupID ) | grepl(" |:", featureID) ) ) {
@@ -37,12 +56,12 @@ DEXSeqDataSet <- function( countData, sampleData, design= ~ sample + exon + cond
     }
 
     rownames( countData ) <- paste( groupID, featureID, sep=":" )
-    forCycle <- split( 1:nrow( countData ), as.character( groupID ) )
+    forCycle <- split( seq_len(nrow( countData )), as.character( groupID ) )
 
     if( is.null(alternativeCountData) ){
         others <- lapply( forCycle, function(i){
         sct <- countData[i, , drop = FALSE]
-        rs <- t(sapply(1:nrow(sct), function(r) colSums(sct[-r, , drop = FALSE])))
+        rs <- t( vapply( seq_len(nrow(sct)), function(r) colSums(sct[-r, , drop = FALSE]), numeric(ncol(countData) ) ) )
         rownames(rs) <- rownames(sct)
         rs })
         others <- do.call(rbind, others)
