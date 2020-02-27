@@ -1,3 +1,0 @@
-DONE Finalise man page of 'perGeneQValue.Rd'.
-
-DONE Document 'estimateDispersionsTRT' and 'testForDEU.TRT'.

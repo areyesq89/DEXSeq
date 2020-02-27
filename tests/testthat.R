@@ -1,4 +1,3 @@
 library("testthat")
-library("SummarizedBenchmark")
-
-test_check("SummarizedBenchmark")
+library("DEXSeq")
+test_check("DEXSeq")
