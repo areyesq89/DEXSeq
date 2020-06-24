@@ -192,7 +192,8 @@ getEffectsForPlotting <- function( coefs, groupingVar = "condition", averageOutE
 modelFrameSM <- function(object)
 {
     mfSmall <- as.data.frame( colData(object) )
-    mfSmall$exon <- relevel(mfSmall$exon, "others")
+    mfSmall$exon <- factor( mfSmall$exon, levels=c("others", "this") )
+    ##mfSmall$exon <- relevel( mfSmall$exon, "others" )
     mfSmall$dispersion <- NA
     mfSmall$count <- NA
     mfSmall
@@ -282,7 +283,8 @@ getEffectsForGene <- function( geneID, object, maxRowsMF, fitExpToVar)
     }else{
         mf <- object@sampleData
         mf <- rbind( data.frame(mf, exon="this"), data.frame(mf, exon="others"))
-        mf$exon <- relevel( mf$exon, "others" )
+        mf$exon <- factor( mf$exon, levels=c("others", "this") )
+        ##mf$exon <- relevel( mf$exon, "others" )
         countsThis <- object$countData[rt,]
         countsOthers <- sapply( rownames( countsThis ),
                                function(x){
