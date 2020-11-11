@@ -36,8 +36,6 @@ DEXSeqHTML <- function(object, genes=NULL, path="DEXSeqReport", file="testForDEU
    }else{
       gns <- genes
    }
-      
-   results[,c("dispersion", "pvalue", "padj")] <- round(results[,c("dispersion", "pvalue", "padj")], 3)
    
    if(!all(gns %in% object$groupID)){
       stop("The geneIDs provided are not in the ecs object")}
@@ -84,6 +82,7 @@ DEXSeqHTML <- function(object, genes=NULL, path="DEXSeqReport", file="testForDEU
       loc <- as.character(results$groupID) %in% as.character(gene)
       ### this makes the page where to explore the pvalues ###
       subres <- results[loc,]
+      subres[c("dispersion", "pvalue", "padj")] <- round(subres[c("dispersion", "pvalue", "padj")], 3)
       submatcol <- matcol[loc,]
       rownames(subres) <- NULL
       genpage <- openPage(paste(ptowrite, nameforlinks, "results.html", sep=""))
