@@ -3,7 +3,7 @@
 \docType{methods}
 \name{estimateDispersions}
 \alias{estimateDispersions}
-\alias{estimateDispersions,DEXSeqDataSet}
+\alias{estimateDispersions,DEXSeqDataSet-method}
 \title{Estimate the dispersions for a DEXSeqDataSet}
 \usage{
 \S4method{estimateDispersions}{DEXSeqDataSet}(

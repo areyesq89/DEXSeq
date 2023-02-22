@@ -34,4 +34,4 @@ test_that( "Funcion to create DEXSeqDataSet has the correct inputs", {
     res_glmgampoi_p2 <- DEXSeqResults( dxd_glmgampoi_p2 )
     expect_identical( res_glmgampoi$pvalue, res_glmgampoi_p2$pvalue )
 
-}
+} )

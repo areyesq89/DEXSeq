@@ -118,7 +118,7 @@ estimateDispersions.DEXSeqDataSet <- function( object, fitType=c("parametric","l
 
 #' @docType methods
 #' @name estimateDispersions
-#' @aliases estimateDispersions,DEXSeqDataSet
+#' @aliases estimateDispersions,DEXSeqDataSet-method
 #' @title Estimate the dispersions for a DEXSeqDataSet
 #'
 #' @param object A DEXSeqDataSet.
