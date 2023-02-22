@@ -7,7 +7,7 @@ Maintainer: Alejandro Reyes <alejandro.reyes.ds@gmail.com>
 Imports: BiocGenerics, biomaRt, hwriter, methods, stringr, Rsamtools,
         statmod, geneplotter, genefilter
 Depends: BiocParallel, Biobase, SummarizedExperiment, IRanges (>= 2.5.17),
-        GenomicRanges (>= 1.23.7), DESeq2 (>= 1.9.11), AnnotationDbi,
+        GenomicRanges (>= 1.23.7), DESeq2 (>= 1.39.6), AnnotationDbi,
 	RColorBrewer, S4Vectors (>= 0.23.18)
 Suggests: GenomicFeatures (>= 1.13.29), pasilla (>= 0.2.22),
         parathyroidSE, BiocStyle, knitr, rmarkdown, testthat,
