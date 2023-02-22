@@ -1,5 +1,16 @@
-rmDepCols <- function(m)
-{
+#' @import Biobase BiocGenerics hwriter methods stringr statmod biomaRt GenomicRanges S4Vectors IRanges Rsamtools DESeq2 BiocParallel geneplotter genefilter SummarizedExperiment
+#' @importFrom AnnotationDbi select
+#' @importFrom RColorBrewer brewer.pal
+#' @importFrom grDevices colorRamp colorRampPalette dev.off rgb svg
+#' @importFrom graphics abline axis hist layout mtext par plot.new plot.window rect segments
+#' @importFrom stats as.formula coefficients model.matrix runif terms weighted.mean
+#' @importFrom utils read.delim read.table
+#' @importFrom stats relevel
+#' @exportClass DEXSeqDataSet DEXSeqResults
+#' @exportMethod  plotMA counts estimateSizeFactors subsetByOverlaps findOverlaps `[` `$<-` `colData<-`
+#' @export geneIDs `geneIDs<-` groupIDs `groupIDs<-` exonIDs `exonIDs<-` featureIDs `featureIDs<-` DEXSeqHTML plotDEXSeq featureCounts perGeneQValue DEXSeqDataSet DEXSeqDataSetFromSE DEXSeqDataSetFromHTSeq DEXSeqResults estimateExonFoldChanges DEXSeq sampleAnnotation
+
+rmDepCols <- function(m){
     q <- qr(m)
     if (q$rank < ncol(m)) 
         m[, -q$pivot[(q$rank + 1):ncol(m)]]
@@ -26,11 +37,32 @@ vst <- function( x,  object ){
 }
 
 
+#' @name testForDEU
+#' @title Test for Differential Exon Usage
+#' @description This will perform a likelihood ratio test for differential
+#' exon usage. Internally, it calls the DESeq2 function \code{nbinomLRT}. 
+#' @param object A DEXSeqDataSet object.
+#' @param fullModel The full model formula.
+#' @param reducedModel Null model formula.
+#' @param BPPARAM A "BiocParallelParam" instance. See \code{?bplapply} for details.
+#' @param fitType Specifies what internal engine to use for fitting the GLMs. Options are "DESeq2" or "glmGamPoi".
+#' @details The information of the variables of the formulas
+#' should be present in the \code{colData} of the
+#' \code{DEXSeqDataSet} object.
+#' @return A \code{DEXSeqDataSet} with slots filled with information about the test.
+#'
+#' @examples
+#'
+#' data(pasillaDEXSeqDataSet, package="pasilla")
+#' dxd <- estimateSizeFactors( dxd )
+#' dxd <- estimateDispersions( dxd )
+#' dxd <- testForDEU( dxd )
+#' @export 
 testForDEU <-
   function(object,
            fullModel=design(object),
            reducedModel= ~ sample + exon,
-           BPPARAM=SerialParam() )
+           BPPARAM=SerialParam(), fitType=c("DESeq2", "glmGamPoi"))
 {
   if (is.null(sizeFactors(object)) & is.null(normalizationFactors(object))) {
     stop("first call estimateSizeFactors or provide a normalizationFactor matrix")
@@ -68,12 +100,14 @@ testForDEU <-
   splitParts <- sort( rep( seq_len( numParts ), length.out=nrow(object) ) )
   splitObject <- split( object, splitParts )
 
-  splitObject <- bplapply( splitObject,
-                          function(x, ... ){
-                              nbinomLRT( x, reduced = reducedModelMatrix, full=fullModelMatrix )
-                          },
-                          reducedModelMatrix=reducedModelMatrix, fullModelMatrix=fullModelMatrix,
-                          BPPARAM=BPPARAM )
+  splitObject <- bplapply(
+      splitObject,
+      function(x, ... ){
+          nbinomLRT( x, reduced = reducedModelMatrix, full=fullModelMatrix, type=fitType )
+      },
+      reducedModelMatrix=reducedModelMatrix, fullModelMatrix=fullModelMatrix,
+      fitType=fitType,
+      BPPARAM=BPPARAM )
 
   mergeObject <- do.call(rbind, splitObject)
   matchedNames <- match( rownames(object), rownames(mergeObject))  

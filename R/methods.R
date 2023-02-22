@@ -15,96 +15,136 @@ estimateSizeFactors.DEXSeqDataSet <- function(object, locfunc=median, geoMeans) 
 setMethod("estimateSizeFactors", signature(object="DEXSeqDataSet"),
           estimateSizeFactors.DEXSeqDataSet)
 
+estimateDispersions.DEXSeqDataSet <- function( object, fitType=c("parametric","local","mean", "glmGamPoi"),
+      maxit=100, niter=10, quiet=FALSE, formula=design(object), BPPARAM=SerialParam()) {
+      ## Temporary hack for backward compatibility with "old" DEXSeqDataSet
+      ## objects. Remove once all serialized DEXSeqDataSet objects around have
+      ## been updated.
+    if (!.hasSlot(object, "rowRanges"))
+        object <- updateObject(object)
+    if (is.null(sizeFactors(object)) & is.null(normalizationFactors(object))) {
+        stop("first call estimateSizeFactors or provide a normalizationFactor matrix before estimateDispersions")
+    }
+    if (!is.null(dispersions(object))){
+        if (!quiet) message("you had estimated dispersions, replacing these")
+        mcols(object) <- mcols(object)[,!(mcols(mcols(object))$type %in% c("intermediate","results"))]
+    }
+    stopifnot(length(maxit)==1)
+    fitType <- match.arg(fitType, choices=c("parametric","local","mean", "glmGamPoi"))
+    
+    allVars <- all.vars(formula)
+    if( any(!allVars %in% colnames( colData(object) )) ){
+        notPresent <- allVars[!allVars %in% colnames( colData(object) )]
+        notPresent <- paste(notPresent, collapse=",")
+        stop(sprintf("the variables '%s' of the parameter 'formula' are not specified in the columns of the colData", notPresent ))
+    }
 
-estimateDispersions.DEXSeqDataSet <-
-  function( object, fitType=c("parametric","local","mean"),
-    maxit=100, niter=10, quiet=FALSE, formula=design(object), BPPARAM=SerialParam())
-{
-  # Temporary hack for backward compatibility with "old" DEXSeqDataSet
-  # objects. Remove once all serialized DEXSeqDataSet objects around have
-  # been updated.
-  if (!.hasSlot(object, "rowRanges"))
-      object <- updateObject(object)
-  if (is.null(sizeFactors(object)) & is.null(normalizationFactors(object))) {
-    stop("first call estimateSizeFactors or provide a normalizationFactor matrix before estimateDispersions")
-  }
-  if (!is.null(dispersions(object))) {
-    if (!quiet) message("you had estimated dispersions, replacing these")
-    mcols(object) <- mcols(object)[,!(mcols(mcols(object))$type %in% c("intermediate","results"))]
-  }
-  stopifnot(length(maxit)==1)
-  fitType <- match.arg(fitType, choices=c("parametric","local","mean"))
+    if( fitType == "glmGamPoi" & !is(BPPARAM, "SerialParam") ){
+        message("\nParallelization has not been implemented for estimation of dispersions using glmGamPoi, using a single core for this estimation.\n")
+        BPPARAM <- SerialParam()
+    }
 
-  allVars <- all.vars(formula)
-  if( any(!allVars %in% colnames( colData(object) )) ){
-     notPresent <- allVars[!allVars %in% colnames( colData(object) )]
-     notPresent <- paste(notPresent, collapse=",")
-     stop(sprintf("the variables '%s' of the parameter 'formula' are not specified in the columns of the colData", notPresent ) )
-  }
-  
-  if( is( BPPARAM, "SerialParam" ) ){
-    numParts <- 1L
-  }else{
-    numParts <- BPPARAM$workers
-  }
-  
-  splitParts <- sort( rep( seq_len( numParts ), length.out=nrow(object) ) )
-  splitObject <- split( object, splitParts )
+    if( is( BPPARAM, "SerialParam" ) ){
+        numParts <- 1L
+    }else{
+        numParts <- BPPARAM$workers
+    }
+    
+    splitParts <- sort( rep( seq_len( numParts ), length.out=nrow(object) ) )
+    splitObject <- split( object, splitParts )
+    
+    modelMatrix <- rmDepCols(
+        model.matrix(formula, as.data.frame(colData(object))))
+    
+    glmType <- ifelse( fitType == "glmGamPoi", "glmGamPoi", "DESeq2" )
+    
+    splitObject <- bplapply( splitObject,
+        function(x, ... ){
+            estimateDispersionsGeneEst(x,
+                maxit=maxit, quiet=quiet,
+                modelMatrix = modelMatrix,
+                niter = niter, type=glmType ) },
+        maxit=maxit, quiet=quiet,
+        modelMatrix=modelMatrix,
+        glmType=glmType,
+        niter=niter,
+        BPPARAM=BPPARAM )
 
-  modelMatrix <- rmDepCols(
-    model.matrix(formula, as.data.frame(colData(object))))
+    mergeObject <- do.call( rbind, splitObject )
+    matchedNames <- match( rownames(object), rownames(mergeObject))
+    mcols(object) <- mcols( mergeObject )[matchedNames,]
+    assays(object) <- assays(mergeObject[matchedNames,])
+    
+    mcols(object)$baseMean <- rowMeans( featureCounts(object, normalized=TRUE) )
+    mcols(object)$baseVar <- mcols(object)$exonBaseVar
+    mcols(object)$allZero <-
+                    unname( rowSums( featureCounts(object)) == 0 |
+                        rowSums(counts(object)[, colData(object)$exon == "others"]) ==0 )
 
-  splitObject <- bplapply( splitObject,
-      function(x, ... ){
-#          library(DEXSeq)
-          estimateDispersionsGeneEst(x,
-              maxit=maxit, quiet=quiet,
-              modelMatrix = modelMatrix,
-              niter = niter)},
-                          maxit=maxit, quiet=quiet,
-                          modelMatrix=modelMatrix,
-                          niter=niter,
-                          BPPARAM=BPPARAM )
+    ## object <- estimateDispersionsFit(object, fitType=fitType, quiet=quiet)
+    object <- estimateDispersionsFit(object, fitType=fitType, quiet=quiet)
 
-  mergeObject <- do.call( rbind, splitObject )
-  matchedNames <- match( rownames(object), rownames(mergeObject))
-  mcols(object) <- mcols( mergeObject )[matchedNames,]
-  assays(object) <- assays(mergeObject[matchedNames,])
+    dispPriorVar <- estimateDispersionsPriorVar(object, modelMatrix=modelMatrix)
 
-  mcols(object)$baseMean <- rowMeans( featureCounts(object, normalized=TRUE) )
-  mcols(object)$baseVar <- mcols(object)$exonBaseVar
-  mcols(object)$allZero <- unname( rowSums( featureCounts(object)) == 0 |
-      rowSums(counts(object, normalized = TRUE)[, colData(object)$exon == "others"]) ==0 )
+    splitObject <- split( object, splitParts )
+    
+    splitObject <- bplapply( splitObject,
+        function(x, ... ){
+            estimateDispersionsMAP(x,
+                maxit=maxit,
+                quiet=quiet,
+                modelMatrix=modelMatrix,
+                dispPriorVar=dispPriorVar,
+                type=glmType)
+        },
+        maxit=maxit, quiet=quiet,
+        modelMatrix=modelMatrix,
+        dispPriorVar=dispPriorVar,
+        glmType=glmType,
+        BPPARAM=BPPARAM )
 
-  object <- estimateDispersionsFit(object, fitType=fitType, quiet=quiet)
-
-  dispPriorVar <- estimateDispersionsPriorVar(object, modelMatrix=modelMatrix)
-
-  splitObject <- split( object, splitParts )
-
-  splitObject <- bplapply( splitObject,
-      function(x, ... ){
-#          library(DEXSeq)
-          estimateDispersionsMAP(x,
-              maxit=maxit,
-              quiet=quiet,
-              modelMatrix=modelMatrix,
-              dispPriorVar=dispPriorVar)
-          },
-                          maxit=maxit, quiet=quiet,
-                          modelMatrix=modelMatrix,
-                          dispPriorVar=dispPriorVar,
-                          BPPARAM=BPPARAM )
-
-  mergeObject <- do.call( rbind, splitObject )
-  matchedNames <- match( rownames(object), rownames(mergeObject) )
-  mcols(object) <- mcols( mergeObject )[matchedNames,]
-  mcols(object)$baseMean <- unname( rowMeans( counts(object, normalized=TRUE) ) )
-  mcols(object)$baseVar <- unname( rowVars( counts(object, normalized=TRUE) ) )
-  mcols(object)$dispersion <- pmin( mcols(object)$dispersion, ncol(object) )
-  object
+    if( fitType == "glmGamPoi" ){
+        attr(object, "quasiLikelihood_df0") <- attr(splitObject[[1L]], "quasiLikelihood_df0")
+    }
+    
+    mergeObject <- do.call( rbind, splitObject )
+    matchedNames <- match( rownames(object), rownames(mergeObject) )
+    mcols(object) <- mcols( mergeObject )[matchedNames,]
+    mcols(object)$baseMean <- unname( rowMeans( counts(object, normalized=TRUE) ) )
+    mcols(object)$baseVar <- unname( rowVars( counts(object, normalized=TRUE) ) )
+    mcols(object)$dispersion <- pmin( mcols(object)$dispersion, ncol(object) )
+    object
 }
 
+#' @docType methods
+#' @name estimateDispersions
+#' @aliases estimateDispersions,DEXSeqDataSet
+#' @title Estimate the dispersions for a DEXSeqDataSet
+#'
+#' @param object A DEXSeqDataSet.
+#' @param fitType Either "parametric", "local", "mean" or "glmGamPoi"
+#' for the type of fitting of dispersions to the mean
+#' intensity. See ?estimateDispersions,DESeqDataSet-method for details.
+#' If "glmGamPoi" is selected, the GLM fitter from "glmGamPoi" is also
+#' used for estimating the dispersion estimates.
+#' @param  maxit Control parameter: maximum number of iterations to allow for convergence
+#' @param niter Number of times to iterate between estimation of means and estimation of dispersion.
+#' @param quiet Whether to print messages at each step.
+#' @param formula Formula used to fit the dispersion estimates.
+#' @param BPPARAM A "BiocParallelParam" instance. See \code{?bplapply} for details.
+#'
+#' @return A DEXSeqDataSet with the dispersion information filled in as metadata columns.
+#' @description This function obtains dispersion estimates for negative binomial distributed data for the specific case for DEXSeq.
+#'
+#' @details See ?estimateDispersions,DESeqDataSet-method for details.
+#'
+#' @examples
+#' data(pasillaDEXSeqDataSet, package="pasilla")
+#' dxd <- estimateSizeFactors( dxd )
+#' dxd <- estimateDispersions( dxd )
+#'
+#' @exportMethod estimateDispersions
+#' 
 setMethod( "estimateDispersions", signature(object="DEXSeqDataSet"),
           estimateDispersions.DEXSeqDataSet )
 

@@ -11,7 +11,7 @@ Depends: BiocParallel, Biobase, SummarizedExperiment, IRanges (>= 2.5.17),
 	RColorBrewer, S4Vectors (>= 0.23.18)
 Suggests: GenomicFeatures (>= 1.13.29), pasilla (>= 0.2.22),
         parathyroidSE, BiocStyle, knitr, rmarkdown, testthat,
-	pasillaBamSubset, GenomicAlignments
+	pasillaBamSubset, GenomicAlignments, roxygen2
 Enhances: 
 Description: The package is focused on finding differential exon usage
         using RNA-seq exon counts between samples with different
@@ -26,3 +26,5 @@ URL:
 biocViews: ImmunoOncology, Sequencing, RNASeq, DifferentialExpression, AlternativeSplicing, DifferentialSplicing, GeneExpression, Visualization
 Packaged: 2014-03-21 08:48:43 UTC; alejandro
 VignetteBuilder: knitr
+RoxygenNote: 7.2.3
+Encoding: UTF-8
