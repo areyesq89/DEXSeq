@@ -69,7 +69,7 @@ DEXSeqHTML <- function(object, genes=NULL, path="DEXSeqReport", file="testForDEU
    ######### COLOR LEGEND = I BET THERE IS A SMARTER WAY OF DOING THIS:
    j <- 4
    for(i in c(0.25, 0.1, 0.05, 0.01)){
-      matcol[which(results$padjust <= i),] <- m2col[j]
+      matcol[which(results$padj <= i),] <- m2col[j]
       j <- j-1
    }
    legend <- hwrite(c("<= 0.01", "<= 0.05", "<= 0.1", "<= 0.25", "> 0.25"), bgcolor=m2col)
