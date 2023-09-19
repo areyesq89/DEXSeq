@@ -4,7 +4,8 @@ test_that( "Funcion to create DEXSeqDataSet has the correct inputs", {
     data("pasillaDEXSeqDataSet", package="pasilla")
 
     dxd <- estimateSizeFactors( dxd )
-    
+
+    library(glmGamPoi)
     expect_message(
         dxd_glmgampoi <- estimateDispersions( dxd, fitType="glmGamPoi", BPPARAM=MulticoreParam(2), niter=2 ),
         "Parallelization has not been implemented for estimation" )
