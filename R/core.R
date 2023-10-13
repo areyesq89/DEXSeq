@@ -6,6 +6,7 @@
 #' @importFrom stats as.formula coefficients model.matrix runif terms weighted.mean
 #' @importFrom utils read.delim read.table
 #' @importFrom stats relevel
+#' @importFrom glmGamPoi glm_gp
 #' @exportClass DEXSeqDataSet DEXSeqResults
 #' @exportMethod  plotMA counts estimateSizeFactors subsetByOverlaps findOverlaps `[` `$<-` `colData<-`
 #' @export geneIDs `geneIDs<-` groupIDs `groupIDs<-` exonIDs `exonIDs<-` featureIDs `featureIDs<-` DEXSeqHTML plotDEXSeq featureCounts perGeneQValue DEXSeqDataSet DEXSeqDataSetFromSE DEXSeqDataSetFromHTSeq DEXSeqResults estimateExonFoldChanges DEXSeq sampleAnnotation

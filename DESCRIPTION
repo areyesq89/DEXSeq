@@ -11,8 +11,7 @@ Depends: BiocParallel, Biobase, SummarizedExperiment, IRanges (>= 2.5.17),
 	RColorBrewer, S4Vectors (>= 0.23.18)
 Suggests: GenomicFeatures (>= 1.13.29), pasilla (>= 0.2.22),
         parathyroidSE, BiocStyle, knitr, rmarkdown, testthat,
-	pasillaBamSubset, GenomicAlignments, roxygen2
-Enhances: glmGamPoi
+	pasillaBamSubset, GenomicAlignments, roxygen2, glmGamPoi
 Description: The package is focused on finding differential exon usage
         using RNA-seq exon counts between samples with different
         experimental designs. It provides functions that allows the
