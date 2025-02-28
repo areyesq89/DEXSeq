@@ -1,5 +1,5 @@
 ---
-title: "Inferring differential exon usage in RNA-Seq data with the DEXSeq package"
+Title: "Inferring differential exon usage in RNA-Seq data with the DEXSeq package"
 author:
 - name: Alejandro Reyes
   affiliation: Dana-Farber Cancer Institute, Boston, USA
@@ -132,7 +132,7 @@ well-designed experiment, we would specify the conditions of the experiment in t
 slot of the object. Since we have only two samples in our example, we just exemplify this step 
 by specify the sample names as conditions.
 
-```{r buildExonCountSet, eval=FALSE}
+```{r buildExonCountSet}
 library(DEXSeq)
 colData(se)$condition = factor(c("untreated1", "untreated3"))
 colData(se)$libType = factor(c("single-end", "paired-end"))
