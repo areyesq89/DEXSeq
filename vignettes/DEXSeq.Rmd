@@ -110,6 +110,7 @@ pasilla BAM files that are available through the `r BiocStyle::Biocpkg("pasillaB
 library(pasillaBamSubset)
 library(Rsamtools)
 library(GenomicAlignments)
+library(GenomeInfoDb)
 bamFiles = c( untreated1_chr4(), untreated3_chr4() )
 bamFiles = BamFileList( bamFiles )
 seqlevelsStyle(flattenedAnnotation) = "UCSC"
