@@ -110,6 +110,7 @@ pasilla BAM files that are available through the `r BiocStyle::Biocpkg("pasillaB
 library(pasillaBamSubset)
 library(Rsamtools)
 library(GenomicAlignments)
+library(GenomeInfoDb)
 bamFiles = c( untreated1_chr4(), untreated3_chr4() )
 bamFiles = BamFileList( bamFiles )
 seqlevelsStyle(flattenedAnnotation) = "UCSC"
@@ -431,7 +432,7 @@ some steps. We use the package `r BiocStyle::Biocpkg("BiocParallel")`, and imple
 parameter of the functions `estimateDispersions()`, `testForDEU()` and `estimateExonFoldChanges()`:
 
 ```{r para1,cache=TRUE,results='hide', eval=FALSE}
-BPPARAM = MultiCoreParam(4)
+BPPARAM = BiocParallel::MulticoreParam(4)
 dxd = estimateSizeFactors( dxd )
 dxd = estimateDispersions( dxd, BPPARAM=BPPARAM)
 dxd = testForDEU( dxd, BPPARAM=BPPARAM)

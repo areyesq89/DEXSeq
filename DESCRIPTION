@@ -1,17 +1,17 @@
 Package: DEXSeq
-Version: 1.53.1
+Version: 1.55.1
 Title: Inference of differential exon usage in RNA-Seq
 Author: Simon Anders <sanders@fs.tum.de> and Alejandro Reyes
         <alejandro.reyes.ds@gmail.com>
 Maintainer: Alejandro Reyes <alejandro.reyes.ds@gmail.com>
 Imports: BiocGenerics, biomaRt, hwriter, methods, stringr, Rsamtools,
-        statmod, geneplotter, genefilter
+        statmod, geneplotter, genefilter, RColorBrewer
 Depends: BiocParallel, Biobase, SummarizedExperiment, IRanges (>= 2.5.17),
         GenomicRanges (>= 1.23.7), DESeq2 (>= 1.39.6), AnnotationDbi,
-	RColorBrewer, S4Vectors (>= 0.23.18)
-Suggests: GenomicFeatures, txdbmaker, pasilla (>= 0.2.22),
+        S4Vectors (>= 0.23.18)
+Suggests: GenomeInfoDb, GenomicFeatures, txdbmaker, pasilla (>= 0.2.22),
         BiocStyle, knitr, rmarkdown, testthat,
-	pasillaBamSubset, GenomicAlignments, roxygen2, glmGamPoi
+        pasillaBamSubset, GenomicAlignments, roxygen2, glmGamPoi
 Description: The package is focused on finding differential exon usage
         using RNA-seq exon counts between samples with different
         experimental designs. It provides functions that allows the
@@ -23,7 +23,6 @@ Description: The package is focused on finding differential exon usage
 License: GPL (>= 3)
 URL:
 biocViews: ImmunoOncology, Sequencing, RNASeq, DifferentialExpression, AlternativeSplicing, DifferentialSplicing, GeneExpression, Visualization
-Packaged: 2014-03-21 08:48:43 UTC; alejandro
 VignetteBuilder: knitr
 RoxygenNote: 7.2.3
 Encoding: UTF-8
