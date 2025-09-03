@@ -432,7 +432,7 @@ some steps. We use the package `r BiocStyle::Biocpkg("BiocParallel")`, and imple
 parameter of the functions `estimateDispersions()`, `testForDEU()` and `estimateExonFoldChanges()`:
 
 ```{r para1,cache=TRUE,results='hide', eval=FALSE}
-BPPARAM = MultiCoreParam(4)
+BPPARAM = BiocParallel::MulticoreParam(4)
 dxd = estimateSizeFactors( dxd )
 dxd = estimateDispersions( dxd, BPPARAM=BPPARAM)
 dxd = testForDEU( dxd, BPPARAM=BPPARAM)
