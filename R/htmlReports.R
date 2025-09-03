@@ -125,7 +125,7 @@ DEXSeqHTML <- function(object, genes=NULL, path="DEXSeqReport", file="testForDEU
    genetable <- do.call(rbind, genetable)
    genetable <- cbind( geneID=rownames(genetable), genetable )
 
-   if(class(mart) == "Mart"){
+   if(is(mart, "Mart")){
       if(attributes(mart)$dataset != ""){
       forvalues <- strsplit(as.character(genetable$geneID), "\\+")
       names(forvalues) <- genetable$geneID
