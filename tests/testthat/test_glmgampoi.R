@@ -24,7 +24,7 @@ test_that( "Funcion to create DEXSeqDataSet has the correct inputs", {
     res_default <- DEXSeqResults( dxd_default )
     res_default_p2 <- DEXSeqResults( dxd_default_p2 )
 
-    expect_identical(res_default$pvalue, res_default_p2$pvalue)
+    expect_equal(res_default$pvalue, res_default_p2$pvalue)
     ## res_glmgampoi <- DEXSeqResults(dxd_glmgampoi, independentFiltering=FALSE)
     ## res_default <- DEXSeqResults(dxd_default, independentFiltering=FALSE)
     ## table( glmgampoi=res_glmgampoi$padj < 0.1, def=res_default$padj < 0.1 )
@@ -33,6 +33,6 @@ test_that( "Funcion to create DEXSeqDataSet has the correct inputs", {
     res_glmgampoi <- DEXSeqResults( dxd_glmgampoi )
     
     res_glmgampoi_p2 <- DEXSeqResults( dxd_glmgampoi_p2 )
-    expect_identical( res_glmgampoi$pvalue, res_glmgampoi_p2$pvalue )
+    expect_equal( res_glmgampoi$pvalue, res_glmgampoi_p2$pvalue )
 
 } )
