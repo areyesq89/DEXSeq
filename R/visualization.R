@@ -114,11 +114,11 @@ plotDEXSeq <- function( object, geneID, FDR=0.1, fitExpToVar="condition",
    ##### determine colors if not provided by user ######
    if(is.null(color)){
       if( numcond < 10 ){
-         color <- suppressWarnings( brewer.pal(numcond, "Set1")[seq_len(numcond)] )
+         color <- suppressWarnings(palette.colors(numcond, "Set 1")[seq_len(numcond)] )
       }else{
       color<-
           rgb(
-              colorRamp(brewer.pal(5, "Set1"))(seq(0, 1, length.out=numcond)),
+              colorRamp(palette.colors(5, "Set 1"))(seq(0, 1, length.out=numcond)),
               maxColorValue=255,
               alpha=175)
      }
